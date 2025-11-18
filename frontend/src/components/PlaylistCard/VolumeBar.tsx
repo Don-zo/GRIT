@@ -10,7 +10,7 @@ const VolumeBar: React.FC<VolumeBarProps> = ({ volume, onChange }) => {
   const getVolumeIcon = () => {
     if (volume === 0) return <VolumeX className="w-5 h-5" strokeWidth={1.5}/>;
     if (volume <= 50) return <Volume1 className="w-5 h-5" strokeWidth={1.5} />;
-    return <Volume2 className="w-5 h-5" strokeWidth={1.7} />;
+    return <Volume2 className="w-5 h-5" strokeWidth={1.5} />;
   };
 
   return (

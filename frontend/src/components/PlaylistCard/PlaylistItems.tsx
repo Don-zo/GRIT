@@ -1,6 +1,3 @@
-import { useState } from "react";
-import React from "react";
-
 interface PlaylistItemsProps {
     items: string[];
     selectedIndex?: number;

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from 'lucide-react';
 
 export default function playlistInput() {
