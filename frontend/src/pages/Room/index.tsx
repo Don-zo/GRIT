@@ -3,7 +3,7 @@ import TodoCamCard from "@/pages/Room/components/todo/TodoCamCard";
 
 const RoomPage = () => {
   return (
-    <div className="w-full h-screen flex items-center justify-center gap-8 p-8">
+    <div className="flex items-center justify-center w-full h-screen gap-8 p-8 bg-gray-darkest">
       <PlaylistCard />
       <TodoCamCard />
     </div>

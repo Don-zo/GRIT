@@ -21,7 +21,7 @@ export default function CustomCheckbox({
       <div
         className={`
           w-5 h-5 rounded-full flex items-center justify-center
-          border-[0.5px] border-green-semidark bg-[#f5f5f5]
+          border-[0.5px] border-green-semidark bg-white
           transition-all duration-200 ease-out
           ${checked ? "scale-110" : "scale-100"}
         `}
@@ -47,10 +47,7 @@ export default function CustomCheckbox({
       {/* 라벨 */}
       {label && (
         <span
-          className="
-            text-bodyMd text-[#2b2b2b]
-            transition-all duration-200 ease-out
-          "
+          className="transition-all duration-200 ease-out text-bodyMd text-gray-darkest"
           style={{
             fontFamily:
               '"Pretendard Variable", Pretendard, -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',

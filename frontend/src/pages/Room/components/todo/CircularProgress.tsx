@@ -61,7 +61,7 @@ export default function CircularProgress({
         style={{
           background: `conic-gradient(
             from -360deg,
-            #3E6D5B 0deg ${displayAngle}deg,
+            #3E7358 0deg ${displayAngle}deg,
             #C5C8C7 ${displayAngle}deg 360deg
           )`,
         }}
@@ -69,7 +69,7 @@ export default function CircularProgress({
 
       {/* 시작점 */}
       <div
-        className="absolute rounded-full bg-[#3E6D5B]"
+        className="absolute rounded-full bg-green-semidark"
         style={{
           top: "50%",
           left: "50%",
@@ -90,7 +90,7 @@ export default function CircularProgress({
       >
         <div className="relative w-full h-full">
           <div
-            className="absolute rounded-full bg-[#3E6D5B]"
+            className="absolute rounded-full bg-green-semidark"
             style={{
               top: "50%",
               left: "50%",
@@ -112,7 +112,7 @@ export default function CircularProgress({
         }}
       >
         <div
-          className="flex items-center justify-center rounded-full bg-[#3E6D5B] text-white font-semibold"
+          className="flex items-center justify-center font-semibold text-white rounded-full bg-green-semidark"
           style={{
             width: centerCircleSize,
             height: centerCircleSize,

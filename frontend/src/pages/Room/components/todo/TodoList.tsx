@@ -41,12 +41,12 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
   return (
     <div className="flex flex-col w-full mb-4">
       {/* 상단 카드 */}
-      <div className="bg-[#C5C8C7] w-full h-20 rounded-xl p-4 flex justify-between gap-4">
+      <div className="flex justify-between w-full h-20 gap-4 p-4 bg-gray-normal rounded-xl">
         <div className="flex items-center gap-4">
           <CircularProgress value={progress} />
           <div>
-            <div className="font-bold text-h5 text-[#183129]">{title}</div>
-            <div className="text-caption text-[#333333]">
+            <div className="font-bold text-h5 text-green-darkest">{title}</div>
+            <div className="text-caption text-gray-semidark">
               {total}개 중 {left}개가 남았어요!
             </div>
           </div>
@@ -81,13 +81,13 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
       >
         <div
           className={`
-            bg-[#E3E4E4] rounded-xl p-3 flex flex-col gap-2
+            bg-gray-light rounded-xl p-3 flex flex-col gap-2
             transition-all duration-500 ease-out
             ${open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"}
           `}
         >
           {items.map((item) => (
-            <div key={item.id} className="bg-[#C5C8C7] py-2 px-3 rounded-xl">
+            <div key={item.id} className="px-3 py-2 bg-gray-normal rounded-xl">
               <CustomCheckbox
                 checked={item.done}
                 onChange={() => toggleItem(item.id)}
