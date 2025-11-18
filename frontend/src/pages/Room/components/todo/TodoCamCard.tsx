@@ -1,13 +1,9 @@
-// src/components/todo/TodoCamCard.tsx
 import { useState } from "react";
-import ToggleBtn from "../ToggleBtn";
+import ToggleBtn from "@/components/ToggleBtn";
 import { BookCheck, CalendarClock } from "lucide-react";
 import TodoList from "./TodoList";
-import {
-  categoryDataByUser,
-  dayDataByUser,
-  type TodoGroup,
-} from "./todoData";
+import type { TodoGroup } from "@/types/todo";
+import { categoryDataByUser, dayDataByUser } from "@/mockdata/todoData";
 
 export default function TodoCamCard() {
   const tabs = ["이유민", "김윤영", "양준영", "이차현"];
@@ -70,9 +66,7 @@ export default function TodoCamCard() {
             />
           </div>
 
-          <div
-            className="flex-1 pb-8 space-y-4 overflow-y-auto "
-          >
+          <div className="flex-1 pb-8 space-y-4 overflow-y-auto ">
             {groupsToShow.map((group) => (
               <TodoList
                 key={group.id}
