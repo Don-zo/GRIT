@@ -1,0 +1,34 @@
+@theme {
+    --text-h1: 32px;
+    --leading-h1: 42px;
+    --font-weight-h1: 700;
+  
+    --text-h2: 24px;
+    --leading-h2: 34px;
+    --font-weight-h2: 600;
+  
+    --text-h3: 20px;
+    --leading-h3: 28px;
+    --font-weight-h3: 600;
+  
+    --text-h4: 18px;
+    --leading-h4: 26px;
+    --font-weight-h4: 500;
+  
+    --text-bodyLg: 16px;
+    --leading-bodyLg: 24px;
+    --font-weight-bodyLg: 400;
+  
+    --text-bodyMd: 14px;
+    --leading-bodyMd: 22px;
+    --font-weight-bodyMd: 400;
+  
+    --text-bodySm: 12px;
+    --leading-bodySm: 20px;
+    --font-weight-bodySm: 400;
+  
+    --text-caption: 10px;
+    --leading-caption: 14px;
+    --font-weight-caption: 400;
+}
+  
