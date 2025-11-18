@@ -1,0 +1,110 @@
+import { useRef, useState } from "react";
+import CircularProgress from "./CircularProgress";
+import CustomCheckbox from "../Checkbox";
+import { ChevronsDown, ChevronsUp } from "lucide-react";
+
+interface TodoItem {
+  id: number;
+  label: string;
+  done: boolean;
+}
+
+interface TodoListProps {
+  title: string;
+  initialItems: TodoItem[];
+}
+
+export default function TodoList({ title, initialItems }: TodoListProps) {
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<TodoItem[]>(() => initialItems);
+
+  // 🔥 애니메이션용 영역 높이
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [maxHeight, setMaxHeight] = useState(0);
+
+  const total = items.length;
+  const completed = items.filter((item) => item.done).length;
+  const left = total - completed;
+  const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+  const toggleItem = (id: number) => {
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, done: !item.done } : item
+      )
+    );
+  };
+
+  const handleToggle = () => {
+    // 열리는 순간에만 실제 높이를 한 번 측정해서 저장
+    if (!open && contentRef.current) {
+      setMaxHeight(contentRef.current.scrollHeight);
+    }
+    setOpen((prev) => !prev);
+  };
+
+  return (
+    <div className="flex flex-col w-full mb-4">
+      {/* 상단 카드 */}
+      <div className="bg-[#C5C8C7] w-full h-20 rounded-xl p-4 flex justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <CircularProgress value={progress} />
+          <div>
+            <div className="font-bold text-h5 text-[#183129]">{title}</div>
+            <div className="text-caption text-[#333333]">
+              {total}개 중 {left}개가 남았어요!
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleToggle}
+          className="
+            bg-[#A2ADA9] h-7 w-7 rounded-[10px] p-1 text-white 
+            flex items-center justify-center self-end transition-all
+          "
+        >
+          {open ? (
+            <ChevronsUp size={20} strokeWidth={1.5} />
+          ) : (
+            <ChevronsDown size={20} strokeWidth={1.5} />
+          )}
+        </button>
+      </div>
+
+      {/* 펼쳐지는 영역 (애니메이션) */}
+      <div
+        ref={contentRef}
+        style={{
+          maxHeight: open ? maxHeight : 0,
+          transition: "max-height 0.5s ease-out",
+        }}
+        className={`
+          overflow-hidden
+          ${open ? "mt-2" : ""}
+        `}
+      >
+        <div
+          className={`
+            bg-[#E3E4E4] rounded-xl p-3 flex flex-col gap-2
+            transition-all duration-500 ease-out
+            ${open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"}
+          `}
+        >
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="bg-[#C5C8C7] py-2 px-3 rounded-xl"
+            >
+              <CustomCheckbox
+                checked={item.done}
+                onChange={() => toggleItem(item.id)}
+                label={item.label}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
