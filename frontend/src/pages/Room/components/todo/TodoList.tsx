@@ -1,13 +1,8 @@
 import { useRef, useState } from "react";
 import CircularProgress from "./CircularProgress";
-import CustomCheckbox from "../Checkbox";
+import CustomCheckbox from "@/components/Checkbox";
 import { ChevronsDown, ChevronsUp } from "lucide-react";
-
-interface TodoItem {
-  id: number;
-  label: string;
-  done: boolean;
-}
+import type { TodoItem } from "@/types/todo";
 
 interface TodoListProps {
   title: string;
@@ -92,10 +87,7 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
           `}
         >
           {items.map((item) => (
-            <div
-              key={item.id}
-              className="bg-[#C5C8C7] py-2 px-3 rounded-xl"
-            >
+            <div key={item.id} className="bg-[#C5C8C7] py-2 px-3 rounded-xl">
               <CustomCheckbox
                 checked={item.done}
                 onChange={() => toggleItem(item.id)}

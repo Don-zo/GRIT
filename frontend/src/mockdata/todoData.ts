@@ -1,14 +1,4 @@
-export interface TodoItem {
-  id: number;
-  label: string;
-  done: boolean;
-}
-
-export interface TodoGroup {
-  id: string;
-  title: string;
-  items: TodoItem[];
-}
+import type { TodoGroup } from "@/types/todo";
 
 /* =========================================================
    🔥 1) CATEGORY DATA — 이름별

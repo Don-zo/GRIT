@@ -1,9 +1,4 @@
-import React from "react";
-
-interface ProgressBarProps {
-  progress: number; // 0 ~ 100
-  onChange: (value: number) => void;
-}
+import type { ProgressBarProps } from "@/types/playlist";
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ progress, onChange }) => {
   return (
@@ -26,7 +21,9 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, onChange }) => {
           [&::-webkit-slider-thumb]:bg-transparent
           [&::-webkit-slider-thumb]:border-none
         "
-        style={{ background: `linear-gradient(to right, #284F43 ${progress}%, #D1D5DB ${progress}%)`}}
+        style={{
+          background: `linear-gradient(to right, #284F43 ${progress}%, #D1D5DB ${progress}%)`,
+        }}
       />
     </div>
   );
