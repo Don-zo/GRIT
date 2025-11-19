@@ -1,11 +1,16 @@
-import PlaylistCard from "@/pages/Room/components/PlaylistCard/PlaylistCard";
-import TodoCamCard from "@/pages/Room/components/todo/TodoCamCard";
+import BottomBar from "@/pages/Room/components/BottomBar/BottomBar";
 
 const RoomPage = () => {
   return (
-    <div className="flex items-center justify-center w-full h-screen gap-8 p-8 bg-gray-darkest">
-      <PlaylistCard />
-      <TodoCamCard />
+    <div className="flex flex-col w-full h-screen bg-gray-darkest">
+      {/* 상단바 */}
+      
+      {/* 본 내용 */}
+      <div className="flex items-center justify-center flex-1">
+      </div>
+
+      {/* 하단바 */}
+      <BottomBar />
     </div>
   );
 };
