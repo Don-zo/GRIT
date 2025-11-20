@@ -1,4 +1,4 @@
-import CustomBtn from "@/pages/Room/components/BottomBar/CustomBtn";
+import CustomBtn from "@/pages/Room/components/CustomBtn";
 import { useState } from "react";
 import { Mic, MicOff, Video, VideoOff, Smile, X} from 'lucide-react';
 
@@ -33,16 +33,16 @@ export default function BottomBar() {
       {/* 이모티콘 */}
       <CustomBtn
         icon={<Smile />}
-        bgColor="bg-green-semidark"
+        bgColor="bg-gray-dark"
         onClick={() => console.log("이모티콘")}
       />
 
       {/* 뽀모도로 */}
       <CustomBtn
-        icon={<img src="/icons/ic_pomodoro.svg" className="w-6 h-7" />}
+        icon={<img src="/icons/ic_pomodoro.svg" className="w-6 h-[26px]" />}
         bgColor="bg-gray-dark"
         onClick={() => console.log("뽀모도로")}
-        className="py-[14px]"
+        className="py-[18px]"
       />
       
       {/* 나가기 */}
