@@ -1,13 +1,15 @@
 import CustomBtn from "@/pages/Room/components/CustomBtn";
 import { useState } from "react";
 import { Mic, MicOff, Video, VideoOff, Smile, X} from 'lucide-react';
+import EmojiModal from "./EmojiModal";
 
 export default function BottomBar() {
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const [emojiOpen, setEmojiOpen] = useState(false);
 
   return (
-    <div className="flex items-center justify-center w-full gap-4 h-25">
+    <div className="relative flex items-center justify-center w-full gap-4 h-25">
       {/* 마이크 on/off */}
       <CustomBtn
         isToggle
@@ -32,9 +34,21 @@ export default function BottomBar() {
 
       {/* 이모티콘 */}
       <CustomBtn
+        isToggle
+        isActive={emojiOpen}
         icon={<Smile />}
         bgColor="bg-gray-dark"
-        onClick={() => console.log("이모티콘")}
+        activeBgColor="bg-green-semidark"
+        onClick={() => setEmojiOpen(prev => !prev)}
+      />
+
+      {/* 이모지 모달 */}
+      <EmojiModal
+        open={emojiOpen}
+        onSelect={(emoji) => {
+          console.log(emoji, "를 선택하였습니다.");
+        }}
+        onClose={() => setEmojiOpen(false)}
       />
 
       {/* 뽀모도로 */}
