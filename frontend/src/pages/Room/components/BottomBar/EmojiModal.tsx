@@ -1,9 +1,5 @@
-interface EmojiModalProps {
-    open: boolean;
-    onSelect?: (emoji: string) => void;
-    onClose?: () => void;
-}
-  
+import type { EmojiModalProps } from "@/types/bottomBar";
+
 const EMOJIS = [
     "👍", "👎", "👏", "🤚", "❤️", "🫶", "🖕", "🙏", "👊", "🫨",
     "😪", "😭", "🤬", "🥵", "😱", "🙄", "😴", "🤮", "🤯", "️️☠️"
