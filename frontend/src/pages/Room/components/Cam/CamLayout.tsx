@@ -1,7 +1,12 @@
+import { NameBadge } from "./NameBadge";
+import Avatar from "./Avatar";
 import { getLayoutPreset } from "./layoutPresets";
 
 interface Participant {
   id: string;
+  name: string;
+  isMuted?: boolean;
+  onToggleMute?: () => void;
   video?: React.ReactNode; // 실제 비디오 스트림 컴포넌트
 }
 
@@ -35,14 +40,32 @@ export default function CamLayout({ participants }: { participants: Participant[
   return (
     <div className="relative w-full h-full bg-gray-darkest px-18 py-8">
       <div className={`grid ${gridClass} gap-7 w-full h-full`}>
-        {layout.map((box) => (
+        {layout.map((box, index) => {
+          const participant = participants[index];
+
+          if (!participant) {
+            return null;
+          }
+
+          return (
           <div
             key={box.id}
-            className={`rounded-3xl bg-green-dark ${box.className}`}
+              className={`relative rounded-3xl bg-green-dark overflow-hidden ${box.className}`}
           >
-            {/* video */}
-          </div>
-        ))}
+              <div className="flex items-center justify-center w-full h-full">
+                {participant.video ?? <Avatar />}
+              </div>
+
+              <div className="absolute left-4 bottom-4">
+                <NameBadge
+                  name={participant.name}
+                  isMuted={participant.isMuted ?? false}
+                  onToggleMute={participant.onToggleMute}
+                />
+              </div>
+            </div>
+          );
+        })}
 
         <div className="absolute z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           {/* 뽀모도로 타이머 자리 */}
