@@ -10,7 +10,11 @@ interface Participant {
   video?: React.ReactNode; // 실제 비디오 스트림 컴포넌트
 }
 
-export default function CamLayout({ participants }: { participants: Participant[] }) {
+export default function CamLayout({
+  participants,
+}: {
+  participants: Participant[];
+}) {
   const count = participants.length;
   const layout = getLayoutPreset(count);
 
@@ -37,8 +41,12 @@ export default function CamLayout({ participants }: { participants: Participant[
     }
   })();
 
+  const verticalPadding = count === 5 ? "py-18" : "py-8";
+
   return (
-    <div className="relative w-full h-full bg-gray-darkest px-18 py-8">
+    <div
+      className={`relative w-full h-full bg-gray-darkest px-18 ${verticalPadding}`}
+    >
       <div className={`grid ${gridClass} gap-7 w-full h-full`}>
         {layout.map((box, index) => {
           const participant = participants[index];
@@ -48,10 +56,10 @@ export default function CamLayout({ participants }: { participants: Participant[
           }
 
           return (
-          <div
-            key={box.id}
+            <div
+              key={box.id}
               className={`relative rounded-3xl bg-green-dark overflow-hidden ${box.className}`}
-          >
+            >
               <div className="flex items-center justify-center w-full h-full">
                 {participant.video ?? <Avatar />}
               </div>
