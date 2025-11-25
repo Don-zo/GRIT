@@ -4,6 +4,7 @@ import TopBar from "./components/TopBar/TopBar";
 import { NameBadge } from "./components/Cam/NameBadge";
 import Avatar from "./components/Cam/Avatar";
 import Pomodoro from "./components/Cam/Pomodoro";
+import CamLayout from "./components/Cam/CamLayout";
 
 type PomodoroConfig = {
   studyMinutes: number;
@@ -34,17 +35,8 @@ const RoomPage = () => {
       <TopBar />
 
       {/* 본 내용 */}
-      <div className="flex items-center justify-center flex-1">
-        <NameBadge
-          name="이유민이유민"
-          isMuted={muted}
-          onToggleMute={() => setMuted(!muted)}
-        />
-        <Avatar />
-        <Pomodoro
-          studyMinutes={pomodoroConfig?.studyMinutes ?? 45}
-          autoStart={pomodoroConfig?.enabled ?? false}
-        />
+      <div className="flex flex-1 mx-20 items-center justify-center">
+        <CamLayout participants={participants} />
       </div>
 
       {/* 하단바 */}
