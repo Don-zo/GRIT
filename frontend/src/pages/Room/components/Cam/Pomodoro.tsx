@@ -108,7 +108,7 @@ const Pomodoro: React.FC<PomodoroProps> = ({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke="#2A2E36"
+            stroke="#353535"
             strokeWidth={strokeWidth}
             fill="none"
           />
@@ -118,7 +118,7 @@ const Pomodoro: React.FC<PomodoroProps> = ({
               cx={size / 2}
               cy={size / 2}
               r={radius}
-              stroke="#353535"
+              stroke="#3E7358"
               strokeWidth={strokeWidth}
               fill="none"
               strokeLinecap="round"
@@ -144,7 +144,7 @@ const Pomodoro: React.FC<PomodoroProps> = ({
 
         <div className="absolute flex flex-col items-center">
           {!isStudy && (
-            <span className="text-[14px] text-sky-300 mb-1">쉬는시간</span>
+            <span className="text-[14px] text-green-normal mb-1">쉬는시간</span>
           )}
           <span className="text-white font-semibold text-[28px] tracking-wide">
             {formatTime(remaining)}
