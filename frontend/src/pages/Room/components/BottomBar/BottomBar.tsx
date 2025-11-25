@@ -1,12 +1,25 @@
 import CustomBtn from "@/pages/Room/components/CustomBtn";
 import { useState } from "react";
-import { Mic, MicOff, Video, VideoOff, Smile, X} from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Smile, X } from "lucide-react";
 import EmojiModal from "./EmojiModal";
+import PomodoroModal from "./PomodoroModal";
 
-export default function BottomBar() {
+type PomodoroConfig = {
+  studyMinutes: number;
+  breakMinutes: number;
+  repeat: number;
+  enabled: boolean;
+};
+
+type BottomBarProps = {
+  onPomodoroStart?: (config: PomodoroConfig) => void;
+};
+
+export default function BottomBar({ onPomodoroStart }: BottomBarProps) {
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [pomodoroOpen, setPomodoroOpen] = useState(false);
 
   return (
     <div className="relative flex items-center justify-center w-full gap-4 h-25">
@@ -18,7 +31,7 @@ export default function BottomBar() {
         activeIcon={<Mic />}           
         bgColor="bg-gray-dark"
         activeBgColor="bg-green-semidark"
-        onClick={() => setMicOn(prev => !prev)}
+        onClick={() => setMicOn((prev) => !prev)}
       />
 
       {/* 카메라 on/off */}
@@ -29,7 +42,7 @@ export default function BottomBar() {
         activeIcon={<Video />}
         bgColor="bg-gray-dark"
         activeBgColor="bg-green-semidark"
-        onClick={() => setCamOn(prev => !prev)}
+        onClick={() => setCamOn((prev) => !prev)}
       />
 
       {/* 이모티콘 */}
@@ -39,7 +52,13 @@ export default function BottomBar() {
         icon={<Smile />}
         bgColor="bg-gray-dark"
         activeBgColor="bg-green-semidark"
-        onClick={() => setEmojiOpen(prev => !prev)}
+        onClick={() =>
+          setEmojiOpen((prev) => {
+            const next = !prev;
+            if (next) setPomodoroOpen(false);
+            return next;
+          })
+        }
       />
 
       {/* 이모지 모달 */}
@@ -52,12 +71,29 @@ export default function BottomBar() {
       />
 
       {/* 뽀모도로 */}
-      <CustomBtn
-        icon={<img src="/icons/ic_pomodoro.svg" className="w-6 h-[26px]" />}
-        bgColor="bg-gray-dark"
-        onClick={() => console.log("뽀모도로")}
-        className="py-[18px]"
-      />
+      <div className="relative">
+        <CustomBtn
+          icon={<img src="/icons/ic_pomodoro.svg" className="w-6 h-[26px]" />}
+          onClick={() =>
+            setPomodoroOpen((prev) => {
+              const next = !prev;
+              if (next) setEmojiOpen(false);
+              return next;
+            })
+          }
+          className="py-[18px]"
+        />
+
+        {/* 뽀모도로 모달 */}
+        <PomodoroModal
+          open={pomodoroOpen}
+          onClose={() => setPomodoroOpen(false)}
+          onStart={(config) => {
+            onPomodoroStart?.(config);
+            setPomodoroOpen(false);
+          }}
+        />
+      </div>
       
       {/* 나가기 */}
       <CustomBtn
