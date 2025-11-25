@@ -73,7 +73,10 @@ export default function BottomBar({ onPomodoroStart }: BottomBarProps) {
       {/* 뽀모도로 */}
       <div className="relative">
         <CustomBtn
+          isToggle
+          isActive={pomodoroOpen} 
           icon={<img src="/icons/ic_pomodoro.svg" className="w-6 h-[26px]" />}
+          activeBgColor="bg-green-semidark"
           onClick={() =>
             setPomodoroOpen((prev) => {
               const next = !prev;
