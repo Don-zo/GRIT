@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 
 type PomodoroProps = {
   studyMinutes: number;
+  breakMinutes: number;
+  repeat?: number;
   autoStart?: boolean;
   size?: number;
   strokeWidth?: number;
@@ -11,43 +13,49 @@ type PomodoroProps = {
   onFinish?: () => void;
 };
 
-const ONE_HOUR_SECONDS = 3600;
-
 const Pomodoro: React.FC<PomodoroProps> = ({
   studyMinutes,
+  breakMinutes,
+  repeat = 1,
   autoStart = true,
   size = 200,
   strokeWidth = 30,
   className = "",
   onFinish,
 }) => {
-  const studySeconds = studyMinutes * 60;
-  const breakSeconds = Math.max(ONE_HOUR_SECONDS - studySeconds, 0);
+  const studySeconds = Math.max(studyMinutes, 0) * 60;
+  const breakSeconds = Math.max(breakMinutes, 0) * 60;
+  const cycleTotalSeconds = studySeconds + breakSeconds;
+  const totalRepeats = Math.max(repeat, 1);
 
-  const [seconds, setSeconds] = useState(0);
+  const [secondsInCycle, setSecondsInCycle] = useState(0);
+
+  const [currentRepeat, setCurrentRepeat] = useState(1);
   const [running, setRunning] = useState(autoStart);
 
-  const isStudy = seconds < studySeconds;
+  const isStudy = secondsInCycle < studySeconds;
 
   const phaseTotal = isStudy ? studySeconds : breakSeconds;
   const phaseElapsed = isStudy
-    ? seconds
-    : Math.min(seconds - studySeconds, breakSeconds);
+    ? secondsInCycle
+    : Math.min(secondsInCycle - studySeconds, breakSeconds);
   const remaining = Math.max(phaseTotal - phaseElapsed, 0);
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  const studyRatio = studySeconds / ONE_HOUR_SECONDS;
-  const breakRatio = breakSeconds / ONE_HOUR_SECONDS;
+  const studyRatio =
+    cycleTotalSeconds > 0 ? studySeconds / cycleTotalSeconds : 0;
+  const breakRatio =
+    cycleTotalSeconds > 0 ? breakSeconds / cycleTotalSeconds : 0;
 
   const redInnerProgress =
-    studySeconds > 0 ? Math.min(seconds, studySeconds) / studySeconds : 0;
+    studySeconds > 0 ? Math.min(secondsInCycle, studySeconds) / studySeconds : 0;
   const redVisibleLen = circumference * studyRatio * redInnerProgress;
 
   const blueInnerProgress =
     !isStudy && breakSeconds > 0
-      ? Math.min(seconds - studySeconds, breakSeconds) / breakSeconds
+      ? Math.min(secondsInCycle - studySeconds, breakSeconds) / breakSeconds
       : 0;
   const blueVisibleLen = circumference * breakRatio * blueInnerProgress;
 
@@ -61,17 +69,22 @@ const Pomodoro: React.FC<PomodoroProps> = ({
   };
 
   useEffect(() => {
-    if (!running) return;
+    if (!running || cycleTotalSeconds <= 0) return;
 
     const timer = setInterval(() => {
-      setSeconds((prev) => {
+      setSecondsInCycle((prev) => {
         const next = prev + 1;
 
-        if (next >= ONE_HOUR_SECONDS) {
-          clearInterval(timer);
-          setRunning(false);
-          onFinish?.();
-          return ONE_HOUR_SECONDS;
+        if (next >= cycleTotalSeconds) {
+          if (currentRepeat < totalRepeats) {
+            setCurrentRepeat((r) => r + 1);
+            return 0;
+          } else {
+            clearInterval(timer);
+            setRunning(false);
+            onFinish?.();
+            return cycleTotalSeconds;
+          }
         }
 
         return next;
@@ -79,12 +92,13 @@ const Pomodoro: React.FC<PomodoroProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [running, onFinish]);
+  }, [running, cycleTotalSeconds, totalRepeats, currentRepeat, onFinish]);
 
   useEffect(() => {
-    setSeconds(0);
+    setSecondsInCycle(0);
+    setCurrentRepeat(1);
     setRunning(autoStart);
-  }, [studyMinutes, autoStart]);
+  }, [studyMinutes, breakMinutes, repeat, autoStart]);
 
   return (
     <div
@@ -118,7 +132,7 @@ const Pomodoro: React.FC<PomodoroProps> = ({
               cx={size / 2}
               cy={size / 2}
               r={radius}
-              stroke="#3E7358"
+              stroke="#555555"
               strokeWidth={strokeWidth}
               fill="none"
               strokeLinecap="round"
@@ -144,10 +158,15 @@ const Pomodoro: React.FC<PomodoroProps> = ({
 
         <div className="absolute flex flex-col items-center">
           {!isStudy && (
-            <span className="text-[14px] text-green-normal mb-1">쉬는시간</span>
+            <span className="text-[14px] text-[#555555] mb-1">
+              쉬는시간
+            </span>
           )}
           <span className="text-white font-semibold text-[28px] tracking-wide">
             {formatTime(remaining)}
+          </span>
+          <span className="mt-1 leading-none text-gray-400 text-caption">
+            {currentRepeat} / {totalRepeats}
           </span>
         </div>
       </div>

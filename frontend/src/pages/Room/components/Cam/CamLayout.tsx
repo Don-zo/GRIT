@@ -1,3 +1,4 @@
+import React from "react";  
 import { NameBadge } from "./NameBadge";
 import Avatar from "./Avatar";
 import { getLayoutPreset } from "./layoutPresets";
@@ -10,11 +11,12 @@ interface Participant {
   video?: React.ReactNode; // 실제 비디오 스트림 컴포넌트
 }
 
-export default function CamLayout({
-  participants,
-}: {
+type CamLayoutProps = {
   participants: Participant[];
-}) {
+  pomodoro?: React.ReactNode;
+};
+
+export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
   const count = participants.length;
   const layout = getLayoutPreset(count);
 
@@ -42,6 +44,28 @@ export default function CamLayout({
   })();
 
   const verticalPadding = count === 5 ? "py-18" : "py-8";
+
+  const pomodoroPositionClass = (() => {
+    switch (count) {
+      case 1:
+        return "bottom-2 right-12";
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
+      case 6:
+        return "bottom-50 right-110";
+      case 7:
+        return "top-1/2 left-113 -translate-y-1/2";
+      case 8:
+      default:
+        return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
+    }
+  })();
+
+  const pomodoroSize = count <= 2 ? 200 : count <= 4 ? 200 : 200;
+
 
   return (
     <div
@@ -75,9 +99,17 @@ export default function CamLayout({
           );
         })}
 
-        <div className="absolute z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          {/* 뽀모도로 타이머 자리 */}
-        </div>
+        {pomodoro && (
+          <div
+            className={`absolute z-50 ${pomodoroPositionClass}`}
+          >
+            {React.isValidElement(pomodoro)
+              ? React.cloneElement(pomodoro as React.ReactElement<any>, {
+                  size: pomodoroSize,
+                })
+              : pomodoro}
+          </div>
+        )}
       </div>
     </div>
   );
