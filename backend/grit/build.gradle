@@ -23,6 +23,11 @@ dependencies {
 
     // LiveKit 서버 SDK (Java/Kotlin)
     implementation 'io.livekit:livekit-server:0.10.1'
+    // SpringDoc
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:3.0.1'
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor "org.projectlombok:lombok"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
