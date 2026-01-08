@@ -1,16 +1,23 @@
-export default function Avatar() {
+interface AvatarProps {
+    size?: number;
+}
+
+export default function Avatar({ size = 160 }: AvatarProps) {
     return (
         <div
             className="flex bg-green-semidark items-center justify-center rounded-full"
             style={{
-                width: 160,
-                height: 160,
+                width: size,
+                height: size,
             }}
         >
             <img
                 src="/icons/avatar.svg"
                 alt="avatar"
-                className="w-2/4 h-2/4"
+                style={{
+                    width: size * 0.5,
+                    height: size * 0.5,
+                }}
             />
         </div>
     );
