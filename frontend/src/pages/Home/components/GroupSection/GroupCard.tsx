@@ -11,7 +11,7 @@ export default function GroupCard({
     liveMembers,
 }: Group) {
     return (
-        <div className="w-full h-fit bg-gray-dark rounded-3xl shadow-lg/40">
+        <div className="w-full h-fit bg-gray-dark rounded-3xl shadow-xl/20">
             {/* 그룹 사진 (없으면 회색 배경) */}
             <div className="flex flex-col overflow-hidden relative aspect-square rounded-3xl w-full bg-gray-semidark">
                 {image && (

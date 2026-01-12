@@ -5,7 +5,7 @@ import { Plus, Users } from "lucide-react";
 
 export default function GroupSection() {
     return (
-        <section className="w-auto h-auto bg-gray-darker rounded-3xl px-16 py-16">
+        <section className="w-auto h-auto bg-[#2E3039] rounded-3xl px-16 py-16">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-16">
                 
                 <div className="flex flex-col gap-10">

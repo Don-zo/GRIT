@@ -12,7 +12,7 @@ const Button = ({ icon, label, onClick, className = "" }: ButtonProps) => {
         <button 
             onClick={onClick} 
             className={`
-                flex w-full items-center justify-center gap-7 rounded-3xl pr-1 py-3 shadow-lg/40
+                flex w-full items-center justify-center gap-7 rounded-3xl pr-1 py-3 shadow-xl/20
                 bg-green-semidark hover:bg-green-dark transition-colors text-green-light font-medium ${className}
             `}
         >
