@@ -17,6 +17,7 @@ export default {
         semidark: '#555555',
         dark: '#383B42',
         darker: '#2E3039',
+        darkest: '#1C1E27',
       },
       white: '#EEEEEE',
       tomato: '#A43F3D',
