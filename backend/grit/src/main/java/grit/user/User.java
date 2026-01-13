@@ -26,6 +26,10 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Setter
+    @Column(length = 40)
+    private String introduction;
+
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
