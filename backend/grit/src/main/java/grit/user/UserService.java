@@ -83,6 +83,12 @@ public class UserService {
         if (newRawPassword != null && !passwordEncoder.matches(newRawPassword, user.getPassword())) {
             user.setPassword(passwordEncoder.encode(newRawPassword));
         }
+
+        // introduction 수정
+        String newIntroduction = updateParam.getIntroduction();
+        if (newIntroduction != null) {
+            user.setIntroduction(newIntroduction);
+        }
     }
 
     // 회원 탈퇴
