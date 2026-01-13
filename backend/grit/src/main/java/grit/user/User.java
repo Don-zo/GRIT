@@ -1,31 +1,37 @@
-package grit;
+package grit.user;
 
 import java.time.LocalDateTime;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
-@Setter
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @Column(unique = true, nullable = false, length = 10)
     private String nickname;
 
     @Column(unique = true, nullable = false, length = 40)
     private String email;
 
+    @Setter
     @Column(nullable = false)
     private String password;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role = "USER";
+    private Role role = Role.USER;
 
-    @Column(name = "join_date", nullable = false)
-    private LocalDateTime joinDate = LocalDateTime.now();
+    @org.hibernate.annotations.CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime joinDate;
 }
