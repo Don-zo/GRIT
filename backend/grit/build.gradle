@@ -25,11 +25,14 @@ dependencies {
     implementation 'io.livekit:livekit-server:0.10.1'
     // SpringDoc
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:3.0.1'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor "org.projectlombok:lombok"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    runtimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
