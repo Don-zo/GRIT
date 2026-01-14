@@ -66,26 +66,44 @@ public class UserService {
     // 정보 수정
     @Transactional
     public void update(Long id, UpdateUserRequestDTO updateParam) {
-        User user = userRepository.findById(id)
+        User user = findUserById(id);
+
+        updateNickname(user, updateParam.getNickname());
+        updatePassword(user, updateParam.getPassword());
+        updateIntroduction(user, updateParam.getIntroduction());
+    }
+
+    // 사용자 조회 로직
+    private User findUserById(Long id) {
+        return userRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 회원입니다."));
+    }
 
-        // nickname 수정
-        String newNickname = updateParam.getNickname();
-        if (newNickname != null && !user.getNickname().equals(newNickname)) {
-            if (userRepository.existsByNickname(newNickname)) {
-                throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
-            }
-            user.setNickname(newNickname);
+    // 닉네임 수정
+    private void updateNickname(User user, String newNickname) {
+        if (newNickname == null) return;
+
+        if (user.getNickname().equals(newNickname))
+            throw new IllegalStateException("변경하려는 닉네임이 기존 닉네임과 동일합니다.");
+
+        if (userRepository.existsByNickname(newNickname))
+            throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
+
+        user.setNickname(newNickname);
+    }
+
+    // 비밀번호 수정
+    private void updatePassword(User user, String newPassword) {
+        if (newPassword == null) return;
+
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new IllegalStateException("변경하려는 비밀번호가 기존 비밀번호와 동일합니다.");
         }
+        user.setPassword(passwordEncoder.encode(newPassword));
+    }
 
-        // password 수정
-        String newRawPassword = updateParam.getPassword();
-        if (newRawPassword != null && !passwordEncoder.matches(newRawPassword, user.getPassword())) {
-            user.setPassword(passwordEncoder.encode(newRawPassword));
-        }
-
-        // introduction 수정
-        String newIntroduction = updateParam.getIntroduction();
+    // 한 줄 소개 수정
+    private void updateIntroduction(User user, String newIntroduction) {
         if (newIntroduction != null) {
             user.setIntroduction(newIntroduction);
         }

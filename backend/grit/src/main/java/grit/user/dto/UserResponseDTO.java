@@ -1,12 +1,13 @@
 package grit.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import grit.user.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-
+@JsonPropertyOrder({"id", "nickname", "email", "introduction"})
 public class UserResponseDTO {
     private Long id;
     private String nickname;
