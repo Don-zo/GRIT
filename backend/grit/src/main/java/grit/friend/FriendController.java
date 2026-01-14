@@ -20,7 +20,7 @@ public class FriendController {
 
         FriendResponseDTO addedFriend = friendService.addFriend(currentUserId, nickname);
 
-        return ResponseEntity.ok(addedFriend);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(addedFriend);
     }
 
     // 친구 제거
