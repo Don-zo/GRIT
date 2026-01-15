@@ -1,11 +1,14 @@
 import BaseModal from "@/components/BaseModal";
 
-type Props = {
+type CreateGroupModalProps = {
   open: boolean;
   onClose: () => void;
 };
 
-export default function CreateGroupModal({ open, onClose }: Props) {
+export default function CreateGroupModal({
+  open,
+  onClose,
+}: CreateGroupModalProps) {
   return (
     <BaseModal open={open} onClose={onClose}>
       <div className="w-full">

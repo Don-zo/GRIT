@@ -4,9 +4,11 @@ import GroupCard from "./GroupCard";
 import { groups } from "@/mockdata/groupData";
 import { Plus, Users } from "lucide-react";
 import CreateGroupModal from "@/pages/Home/components/Modals/CreateGroupModal";
+import JoinGroupModal from "@/pages/Home/components/Modals/JoinGroupModal";
 
 export default function GroupSection() {
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
+  const [isJoinGroupModalOpen, setIsJoinGroupModalOpen] = useState(false);
 
   return (
     <section className="w-auto h-auto bg-[#2E3039] rounded-3xl px-16 py-16">
@@ -28,6 +30,7 @@ export default function GroupSection() {
             }
             label="그룹 참여하기"
             className="flex-1 bg-green-semidark hover:bg-green-dark"
+            onClick={() => setIsJoinGroupModalOpen(true)}
           />
         </div>
 
@@ -46,6 +49,10 @@ export default function GroupSection() {
       <CreateGroupModal
         open={isCreateGroupModalOpen}
         onClose={() => setIsCreateGroupModalOpen(false)}
+      />
+      <JoinGroupModal
+        open={isJoinGroupModalOpen}
+        onClose={() => setIsJoinGroupModalOpen(false)}
       />
     </section>
   );
