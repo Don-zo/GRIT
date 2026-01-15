@@ -13,7 +13,7 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
           GRIT
         </h1>
 
-        <p className="mt-6 text-lg font-medium text-gray-200">
+        <p className="mt-6 text-md font-medium text-gray-200">
           초대 코드를 입력해주세요
         </p>
 
@@ -27,7 +27,7 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
 
         <button
           type="button"
-          className="mt-4 mb-8 h-14 w-full max-w-[360px] rounded-xl bg-[#3E7358] text-xl font-semibold text-white hover:bg-emerald-800 transition"
+          className="mt-4 mb-8 h-14 w-full max-w-[360px] rounded-xl bg-[#3E7358] text-lg font-semibold text-white hover:bg-emerald-800 transition"
         >
           참여하기
         </button>

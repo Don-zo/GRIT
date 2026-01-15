@@ -37,12 +37,12 @@ export default function CreateGroupModal({
 
           <input
             type="text"
-            className="h-12 w-full rounded-lg bg-white px-4 text-gray-900 outline-none"
+            className="h-14 w-full rounded-lg bg-white px-4 text-gray-900 outline-none"
           />
 
           <button
             type="button"
-            className="mt-4 h-12 w-full rounded-lg bg-[#3E7358] text-[#EDFFF4] text-sm font-semibold text-white hover:bg-emerald-800 transition"
+            className="mt-4 h-14 w-full rounded-lg bg-[#3E7358] text-[#EDFFF4] text-lg font-semibold text-white hover:bg-emerald-800 transition"
           >
             그룹 생성하기
           </button>
