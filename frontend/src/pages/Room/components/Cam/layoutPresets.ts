@@ -7,8 +7,8 @@ export function getLayoutPreset(count: number) {
   
       case 2:
         return [
-            { id: 1, className: "col-start-2 col-end-5" },
-            { id: 2, className: "col-start-2 col-end-5" },
+            { id: 1, className: "col-start-1" },
+            { id: 2, className: "col-start-2" },
         ];
   
         case 3:
@@ -24,7 +24,7 @@ export function getLayoutPreset(count: number) {
       case 4:
         return [
           { id: 1, className: "col-start-1" },
-          { id: 2, className: "col-start-2" },
+          { id: 2, className: "col-start-2", nameBadgeLeftSpacing: "pl-18" },
           { id: 3, className: "col-start-1" },
           { id: 4, className: "col-start-2" },
         ];
@@ -39,29 +39,29 @@ export function getLayoutPreset(count: number) {
           { id: 1, className: "col-span-2 col-start-1" },
           { id: 2, className: "col-span-2 col-start-3" },
           { id: 3, className: "col-span-2 col-start-5" },
-          { id: 4, className: "col-span-2 col-start-2" },
-          { id: 5, className: "col-span-2 col-start-4" },
+          { id: 4, className: "col-span-2 col-start-2", transform: "translateX(-96px)" },
+          { id: 5, className: "col-span-2 col-start-4", transform: "translateX(96px)" },
         ];
   
       case 6:
         return [
           { id: 1, className: "col-span-4 row-span-2" },
-          { id: 2, className: "col-span-2 col-start-5 row-start-1" },
-          { id: 3, className: "col-span-2 col-start-5 row-start-2" },
-          { id: 4, className: "col-span-2 col-start-1 row-start-3" },
-          { id: 5, className: "col-span-2 col-start-3 row-start-3" },
-          { id: 6, className: "col-span-2 col-start-5 row-start-3" },
+          { id: 2, className: "col-span-2 col-start-5 row-start-1", avatarSize: 100 },
+          { id: 3, className: "col-span-2 col-start-5 row-start-2", avatarSize: 100 },
+          { id: 4, className: "col-span-2 col-start-1 row-start-3", avatarSize: 100 },
+          { id: 5, className: "col-span-2 col-start-3 row-start-3", avatarSize: 100 },
+          { id: 6, className: "col-span-2 col-start-5 row-start-3", avatarSize: 100 },
         ];
 
       case 7:
         return [
           { id: 1, className: "col-span-2 row-span-3" },
-          { id: 2, className: "col-span-2 row-span-3" },
+          { id: 2, className: "col-span-2 row-span-3", nameBadgeLeftSpacing: "pl-18" },
           { id: 3, className: "col-span-2 row-span-3" },
           { id: 4, className: "col-span-2 row-span-3" },
-          { id: 5, className: "col-span-1 row-span-2 col-start-5 row-start-1" },
-          { id: 6, className: "col-span-1 row-span-2 col-start-5 row-start-3" },
-          { id: 7, className: "col-span-1 row-span-2 col-start-5 row-start-5" },
+          { id: 5, className: "col-span-1 row-span-2 col-start-5 row-start-1", avatarSize: 100 },
+          { id: 6, className: "col-span-1 row-span-2 col-start-5 row-start-3", avatarSize: 100 },
+          { id: 7, className: "col-span-1 row-span-2 col-start-5 row-start-5", avatarSize: 100 },
         ];
   
       case 8:

@@ -19,10 +19,12 @@ const Pomodoro: React.FC<PomodoroProps> = ({
   repeat = 1,
   autoStart = true,
   size = 200,
-  strokeWidth = 30,
+  strokeWidth,
   className = "",
   onFinish,
 }) => {
+  // strokeWidth가 제공되지 않으면 size에 비례하여 계산
+  const calculatedStrokeWidth = strokeWidth ?? size * 0.15;
   const studySeconds = Math.max(studyMinutes, 0) * 60;
   const breakSeconds = Math.max(breakMinutes, 0) * 60;
   const cycleTotalSeconds = studySeconds + breakSeconds;
@@ -41,7 +43,7 @@ const Pomodoro: React.FC<PomodoroProps> = ({
     : Math.min(secondsInCycle - studySeconds, breakSeconds);
   const remaining = Math.max(phaseTotal - phaseElapsed, 0);
 
-  const radius = (size - strokeWidth) / 2;
+  const radius = (size - calculatedStrokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
   const studyRatio =
@@ -123,7 +125,7 @@ const Pomodoro: React.FC<PomodoroProps> = ({
             cy={size / 2}
             r={radius}
             stroke="#353535"
-            strokeWidth={strokeWidth}
+            strokeWidth={calculatedStrokeWidth}
             fill="none"
           />
 
@@ -133,7 +135,7 @@ const Pomodoro: React.FC<PomodoroProps> = ({
               cy={size / 2}
               r={radius}
               stroke="#555555"
-              strokeWidth={strokeWidth}
+              strokeWidth={calculatedStrokeWidth}
               fill="none"
               strokeLinecap="round"
               strokeDasharray={`${blueVisibleLen} ${circumference}`}
@@ -147,7 +149,7 @@ const Pomodoro: React.FC<PomodoroProps> = ({
               cy={size / 2}
               r={radius}
               stroke="#A43F3D"
-              strokeWidth={strokeWidth}
+              strokeWidth={calculatedStrokeWidth}
               fill="none"
               strokeLinecap="round"
               strokeDasharray={`${redVisibleLen} ${circumference}`}
@@ -158,14 +160,23 @@ const Pomodoro: React.FC<PomodoroProps> = ({
 
         <div className="absolute flex flex-col items-center">
           {!isStudy && (
-            <span className="text-[14px] text-[#555555] mb-1">
+            <span 
+              className="text-[#555555] mb-1"
+              style={{ fontSize: `${size * 0.07}px` }}
+            >
               쉬는시간
             </span>
           )}
-          <span className="text-white font-semibold text-[28px] tracking-wide">
+          <span 
+            className="text-white font-semibold tracking-wide"
+            style={{ fontSize: `${size * 0.14}px` }}
+          >
             {formatTime(remaining)}
           </span>
-          <span className="mt-1 leading-none text-gray-400 text-caption">
+          <span 
+            className="mt-1 leading-none text-gray-400"
+            style={{ fontSize: `${size * 0.05}px` }}
+          >
             {currentRepeat} / {totalRepeats}
           </span>
         </div>
