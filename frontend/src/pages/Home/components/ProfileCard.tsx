@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Settings, MessageCircle } from "lucide-react";
 import Avatar from "@/pages/Room/components/Cam/Avatar";
-import BaseModal from "@/components/BaseModal";
+import SettingsModal from "@/pages/Home/components/Modals/SettingsModal";
 
 interface ProfileCardProps {
   userName?: string;
@@ -98,10 +98,7 @@ const ProfileCard = ({
       </div>
 
       {/* 설정 모달 */}
-      <BaseModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}>
-        <h2 className="text-xl font-bold text-white">개인정보 설정</h2>
-        <p className="mt-4 text-gray-300">여기에 설정 내용이 들어갑니다.</p>
-      </BaseModal>
+      <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 };

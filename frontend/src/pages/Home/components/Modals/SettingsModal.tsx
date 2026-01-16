@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import BaseModal from "@/components/BaseModal";
 
 type SettingsModalProps = {
@@ -6,6 +7,24 @@ type SettingsModalProps = {
 };
 
 export default function SettingsModal({ open, onClose }: SettingsModalProps) {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <BaseModal open={open} onClose={onClose}>
       <div className="w-full">
@@ -21,15 +40,33 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
           </h2>
 
           <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">
-            <button
-              type="button"
-              className="relative h-[180px] w-[180px] overflow-hidden rounded-2xl bg-white shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
-              aria-label="프로필 이미지 업로드"
-            >
-              <span className="absolute inset-0 grid place-items-center text-6xl font-light text-gray-300">
-                +
-              </span>
-            </button>
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={handleImageClick}
+                className="relative h-[180px] w-[180px] overflow-hidden rounded-2xl bg-white shadow-[0_14px_40px_rgba(0,0,0,0.35)] transition hover:opacity-80"
+                aria-label="프로필 이미지 업로드"
+              >
+                {previewImage ? (
+                  <img
+                    src={previewImage}
+                    alt="프로필 이미지 미리보기"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="absolute inset-0 grid place-items-center text-6xl font-light text-gray-300">
+                    +
+                  </span>
+                )}
+              </button>
+            </div>
 
             <div className="flex flex-col gap-5">
               <div>

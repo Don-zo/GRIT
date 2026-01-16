@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import BaseModal from "@/components/BaseModal";
 
 type GroupSettingsModalProps = {
@@ -9,6 +10,24 @@ export default function GroupSettingsModal({
   open,
   onClose,
 }: GroupSettingsModalProps) {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <BaseModal open={open} onClose={onClose}>
       <div className="flex w-full flex-col items-center pb-8">
@@ -21,14 +40,30 @@ export default function GroupSettingsModal({
 
         {/* 이미지 업로드 박스 */}
         <div className="flex justify-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+          />
           <button
             type="button"
-            className="relative h-40 w-40 overflow-hidden rounded-2xl bg-white shadow-md"
+            onClick={handleImageClick}
+            className="relative h-40 w-40 overflow-hidden rounded-2xl bg-white shadow-md transition hover:opacity-80"
             aria-label="그룹 이미지 업로드"
           >
-            <span className="absolute inset-0 grid place-items-center text-6xl font-light text-gray-300">
-              +
-            </span>
+            {previewImage ? (
+              <img
+                src={previewImage}
+                alt="그룹 이미지 미리보기"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="absolute inset-0 grid place-items-center text-6xl font-light text-gray-300">
+                +
+              </span>
+            )}
           </button>
         </div>
 
