@@ -1,6 +1,7 @@
-import React from "react";
+import { useState } from "react";
 import { Settings, MessageCircle } from "lucide-react";
 import Avatar from "@/pages/Room/components/Cam/Avatar";
+import SettingsModal from "@/pages/Home/components/Modals/SettingsModal";
 
 interface ProfileCardProps {
   userName?: string;
@@ -12,7 +13,7 @@ interface ProfileCardProps {
   targetTime?: string;
 }
 
-const ProfileCard: React.FC<ProfileCardProps> = ({
+const ProfileCard = ({
   userName = "김윤영",
   motivation = "앞으로 열심히 살자 아자스!",
   targetDate = "2026.01.23",
@@ -20,7 +21,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   examName = "sqld 시험",
   currentTime = "2:37:23",
   targetTime = "4:00:00",
-}) => {
+}: ProfileCardProps) => {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   const timeToSeconds = (timeStr: string): number => {
     const parts = timeStr.split(":").map(Number);
     if (parts.length === 3) {
@@ -36,7 +39,13 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     <div className="w-1/2 h-70 bg-green-dark rounded-2xl p-6">
       {/* 설정 아이콘 - 상단 우측 */}
       <div className="flex justify-end mb-4">
-        <Settings className="w-4 h-4 text-white cursor-pointer" strokeWidth={2} />
+        <button
+          type="button"
+          onClick={() => setIsSettingsOpen(true)}
+          aria-label="설정"
+        >
+          <Settings className="w-4 h-4 text-white cursor-pointer" strokeWidth={2} />
+        </button>
       </div>
 
       {/* 상단 섹션 */}
@@ -87,6 +96,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           />
         </div>
       </div>
+
+      {/* 설정 모달 */}
+      <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 };
