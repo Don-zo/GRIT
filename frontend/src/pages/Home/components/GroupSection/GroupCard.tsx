@@ -1,5 +1,7 @@
-import { Settings } from "lucide-react"
-import LiveBadge from "./LiveBadge"
+import { useState } from "react";
+import { Settings } from "lucide-react";
+import LiveBadge from "./LiveBadge";
+import GroupSettingsModal from "@/pages/Home/components/Modals/GroupSettingsModal";
 import type { Group } from "@/types/group";
 
 export default function GroupCard({
@@ -10,6 +12,8 @@ export default function GroupCard({
     totalMembers,
     liveMembers,
 }: Group) {
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
     return (
         <div className="w-full h-fit bg-gray-dark rounded-3xl shadow-xl/20">
             {/* 그룹 사진 (없으면 회색 배경) */}
@@ -22,7 +26,10 @@ export default function GroupCard({
                     {/* 라이브 뱃지 & 설정 아이콘 */}
                     <div className="flex justify-between p-4">
                         {isLive ? <LiveBadge /> : <div />}
-                        <button className="transition-transform hover:scale-110 pointer-events-auto">
+                        <button 
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="transition-transform hover:scale-110 pointer-events-auto"
+                        >
                             <Settings className="h-8 w-8 text-green-light" />
                         </button>
                     </div>
@@ -38,6 +45,11 @@ export default function GroupCard({
                     </div>
                 </div>
             </div>
+
+            <GroupSettingsModal 
+                open={isSettingsOpen} 
+                onClose={() => setIsSettingsOpen(false)} 
+            />
         </div>
     )
 }
