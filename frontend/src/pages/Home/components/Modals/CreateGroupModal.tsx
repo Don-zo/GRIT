@@ -1,3 +1,5 @@
+import { useMemo, useState } from "react";
+import { Copy } from "lucide-react";
 import BaseModal from "@/components/BaseModal";
 
 type CreateGroupModalProps = {
@@ -9,15 +11,37 @@ export default function CreateGroupModal({
   open,
   onClose,
 }: CreateGroupModalProps) {
+  const [showInviteCode, setShowInviteCode] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const inviteCode = useMemo(() => "J@KF!0", []);
+
+  const handleShowCode = () => {
+    setShowInviteCode(true);
+    setCopied(false);
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1200);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
     <BaseModal open={open} onClose={onClose}>
-      <div className="w-full">
+      <div className="relative w-full pb-20">
+        {/* 상단 로고 */}
         <div className="mb-10">
           <h1 className="text-3xl font-extrabold tracking-wide text-[#82C397]">
             GRIT
           </h1>
         </div>
 
+        {/* 이미지 업로드 박스 */}
         <div className="flex justify-center">
           <button
             type="button"
@@ -30,6 +54,7 @@ export default function CreateGroupModal({
           </button>
         </div>
 
+        {/* 폼 */}
         <div className="mx-auto mt-10 w-full max-w-[360px]">
           <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
             그룹 이름
@@ -42,7 +67,8 @@ export default function CreateGroupModal({
 
           <button
             type="button"
-            className="mt-4 h-14 w-full rounded-lg bg-[#3E7358] text-[#EDFFF4] text-lg font-semibold text-white hover:bg-emerald-800 transition"
+            onClick={handleShowCode}
+            className="mt-4 h-14 w-full rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition"
           >
             그룹 생성하기
           </button>
@@ -51,6 +77,26 @@ export default function CreateGroupModal({
             그룹에 참여 가능한 인원은 최대 8명입니다.
           </p>
         </div>
+
+        {showInviteCode && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+            <div className="pl-4 gap-1 flex items-center rounded-xl bg-white px-2 py-1">
+              <span className="text-sm font-bold text-[#3E7358]">
+                {inviteCode}
+              </span>
+
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="grid h-8 w-8 place-items-center rounded-lg cursor-pointer"
+                aria-label="초대코드 복사"
+                title="복사"
+              >
+                <Copy size={18} className="text-[#3E7358]" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </BaseModal>
   );
