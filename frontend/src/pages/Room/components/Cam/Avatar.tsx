@@ -2,7 +2,7 @@ interface AvatarProps {
     size?: number;
 }
 
-export default function Avatar({ size = 160 }: AvatarProps) {
+export default function Avatar({ size = 140 }: AvatarProps) {
     return (
         <div
             className="flex bg-green-semidark items-center justify-center rounded-full"
