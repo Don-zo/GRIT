@@ -16,7 +16,7 @@ public class FriendResponseDTO {
     @Schema(description = "친구의 닉네임", example = "그릿유저친구")
     private String nickname;
 
-    @Schema(description = "친구의 한 줄 소개", example = "그릿은 정말 좋은 서비스다")
+    @Schema(description = "친구의 한 줄 소개", example = "그릿은 정말 좋은 서비스다", nullable = true)
     private String introduction;
 
     public static FriendResponseDTO from(User user) {
