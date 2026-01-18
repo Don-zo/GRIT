@@ -1,9 +1,9 @@
 package grit.user;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
+import grit.group.entity.UserGroup;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-@ToString(exclude = "friends") // lombok 무한루프 방지용
+@ToString(exclude = {"userGroups", "friends"}) // lombok 무한루프 방지용
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +34,9 @@ public class User {
     @Column(length = 40)
     private String introduction;
 
+    @Setter
+    private String image;
+
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -43,7 +46,11 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime joinDate;
 
-    // 친구 관련
+    // group
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<UserGroup> userGroups = new ArrayList<>();
+
+    // friend
     @ManyToMany
     @JoinTable(
         name = "friendship",
