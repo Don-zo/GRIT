@@ -19,7 +19,7 @@ public class UserResponseDTO {
     @Schema(description = "이메일", example = "grit1234@a.com")
     private String email;
 
-    @Schema(description = "한 줄 소개", example = "오늘 하루도 파이팅")
+    @Schema(description = "한 줄 소개", example = "오늘 하루도 파이팅", nullable = true)
     private String introduction;
 
     // User 엔티티 -> DTO 변환
