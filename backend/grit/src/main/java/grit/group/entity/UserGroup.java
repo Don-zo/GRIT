@@ -1,4 +1,4 @@
-package grit.group;
+package grit.group.entity;
 
 import grit.user.User;
 import jakarta.persistence.*;
@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user_groups")

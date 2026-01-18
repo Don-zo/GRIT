@@ -3,7 +3,7 @@ package grit.user;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import grit.group.UserGroup;
+import grit.group.entity.UserGroup;
 import jakarta.persistence.*;
 import lombok.*;
 

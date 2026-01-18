@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class CreateGroupRequestDTO {
+public class UpdateGroupRequestDTO {
     private String name;
     private String imageUrl;
 }

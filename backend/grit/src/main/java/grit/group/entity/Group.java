@@ -1,4 +1,4 @@
-package grit.group;
+package grit.group.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,6 +9,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tb_groups")
@@ -22,10 +23,23 @@ public class Group {
     private String name;
 
     @Column(nullable = false)
-    private String description;
+    private int memberCount = 0;
 
-    private String image;
+    private String imageUrl;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
     private List<UserGroup> userGroups = new ArrayList<>();
+
+    public void increaseMemberCount() {
+        this.memberCount++;
+    }
+
+    public void decreaseMemberCount() {
+        this.memberCount--;
+    }
+
+    public void updateInfo(String name, String imageUrl) {
+        if (name != null) this.name = name;
+        if (imageUrl != null) this.imageUrl = imageUrl;
+    }
 }
