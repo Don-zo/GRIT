@@ -44,7 +44,7 @@ public class TodoService {
     @Transactional
     public Todo create(Long userId, CreateTodoRequestDTO request) {
         User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         Todo todo = new Todo();
         todo.setOwner(owner);
@@ -87,7 +87,7 @@ public class TodoService {
             todo.setDueDate(request.getDueDate());
         }
 
-        return todoRepository.save(todo);
+        return todo;
     }
 
     @Transactional

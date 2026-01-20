@@ -14,7 +14,6 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
 
     List<RoomMember> findByUserId(Long userId);
 
-    @Query("SELECT COUNT(rm) > 0 FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
-    boolean existsByRoomIdAndUserId(@Param("roomId") Long roomId, @Param("userId") Long userId);
+    boolean existsByRoomIdAndUserId(Long roomId, Long userId);
 }
 

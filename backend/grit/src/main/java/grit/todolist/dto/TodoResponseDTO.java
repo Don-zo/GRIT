@@ -46,17 +46,17 @@ public class TodoResponseDTO {
     private LocalDateTime updatedAt;
 
     public static TodoResponseDTO from(Todo todo) {
-        TodoResponseDTO response = new TodoResponseDTO();
-        response.setId(todo.getId());
-        response.setRoomId(todo.getRoom() != null ? todo.getRoom().getId() : null);
-        response.setOwnerId(todo.getOwner().getId());
-        response.setOwnerNickname(todo.getOwner().getNickname());
-        response.setContent(todo.getContent());
-        response.setIsDone(todo.getIsDone());
-        response.setSubjectCategory(todo.getSubjectCategory());
-        response.setDueDate(todo.getDueDate());
-        response.setCreatedAt(todo.getCreatedAt());
-        response.setUpdatedAt(todo.getUpdatedAt());
-        return response;
+        return new TodoResponseDTO(
+                todo.getId(),
+                todo.getRoom() != null ? todo.getRoom().getId() : null,
+                todo.getOwner().getId(),
+                todo.getOwner().getNickname(),
+                todo.getContent(),
+                todo.getIsDone(),
+                todo.getSubjectCategory(),
+                todo.getDueDate(),
+                todo.getCreatedAt(),
+                todo.getUpdatedAt()
+        );
     }
 }

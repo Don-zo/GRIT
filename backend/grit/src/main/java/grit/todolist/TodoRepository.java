@@ -14,10 +14,10 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     @Query("SELECT t FROM Todo t JOIN FETCH t.room JOIN FETCH t.owner WHERE t.room.id = :roomId AND t.owner.id = :ownerId")
     List<Todo> findByRoomIdAndOwnerIdWithRelations(@Param("roomId") Long roomId, @Param("ownerId") Long ownerId);
 
-    @Query("SELECT t FROM Todo t JOIN FETCH t.room JOIN FETCH t.owner WHERE t.owner.id = :ownerId")
+    @Query("SELECT t FROM Todo t LEFT JOIN FETCH t.room JOIN FETCH t.owner WHERE t.owner.id = :ownerId")
     List<Todo> findByOwnerIdWithRelations(@Param("ownerId") Long ownerId);
 
-    @Query("SELECT t FROM Todo t JOIN FETCH t.room JOIN FETCH t.owner WHERE t.id = :id")
+    @Query("SELECT t FROM Todo t LEFT JOIN FETCH t.room JOIN FETCH t.owner WHERE t.id = :id")
     Optional<Todo> findByIdWithRelations(@Param("id") Long id);
 }
 

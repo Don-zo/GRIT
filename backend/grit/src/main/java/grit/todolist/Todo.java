@@ -30,7 +30,7 @@ public class Todo {
     private String content;
 
     @Column(name = "is_done", nullable = false)
-    private Boolean isDone = false;
+    private boolean isDone = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "subject_category", nullable = false, length = 20)
@@ -39,11 +39,18 @@ public class Todo {
     @Column(name = "due_date")
     private LocalDate dueDate;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
 
     @PreUpdate
     public void preUpdate() {
