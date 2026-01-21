@@ -44,7 +44,7 @@ const ProfileCard = ({
           onClick={() => setIsSettingsOpen(true)}
           aria-label="설정"
         >
-          <Settings className="w-4 h-4 text-white cursor-pointer" strokeWidth={2} />
+        <Settings className="w-4 h-4 text-white cursor-pointer" strokeWidth={2} />
         </button>
       </div>
 

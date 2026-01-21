@@ -14,15 +14,15 @@ const HomePage = () => {
         {/* 좌측 사이드바 */}
         <LeftSidebar />
 
-        {/* 본 내용 */}
+      {/* 본 내용 */}
         <div className="flex-1">
-          <div className="flex items-center justify-center flex-1 mx-20 mt-10 gap-6">
-            <Achievement />
-            <ProfileCard />
-          </div>
+      <div className="flex items-center justify-center flex-1 mx-20 mt-10 gap-6">
+        <Achievement />
+        <ProfileCard />
+      </div>
 
-          <div className="m-20">
-            <GroupSection />
+      <div className="m-20">
+        <GroupSection />
           </div>
         </div>
       </div>
