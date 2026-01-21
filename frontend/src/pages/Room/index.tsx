@@ -58,13 +58,13 @@ const RoomPage = () => {
 
   const participants = [
     { id: "p1", name: "김윤영", isMuted: false },
-    { id: "p2", name: "양준영", isMuted: true },
-    { id: "p3", name: "이유민", isMuted: false },
-    { id: "p4", name: "이차현", isMuted: false },
-    { id: "p5", name: "김윤영김윤영", isMuted: true },
-    { id: "p6", name: "양준영양준영", isMuted: false },
-    { id: "p7", name: "이유민이유민", isMuted: true },
-    { id: "p8", name: "이차현이차현", isMuted: false },
+    // { id: "p2", name: "양준영", isMuted: true },
+    // { id: "p3", name: "이유민", isMuted: false },
+    // { id: "p4", name: "이차현", isMuted: false },
+    // { id: "p5", name: "김윤영김윤영", isMuted: true },
+    // { id: "p6", name: "양준영양준영", isMuted: false },
+    // { id: "p7", name: "이유민이유민", isMuted: true },
+    // { id: "p8", name: "이차현이차현", isMuted: false },
   ];
   const [muted, setMuted] = useState(false);
   const [pomodoroConfig, setPomodoroConfig] = useState<PomodoroConfig>({

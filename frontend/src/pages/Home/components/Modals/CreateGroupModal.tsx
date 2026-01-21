@@ -34,14 +34,12 @@ export default function CreateGroupModal({
   return (
     <BaseModal open={open} onClose={onClose}>
       <div className="flex w-full flex-col items-center pb-8">
-        {/* 상단 로고 */}
         <div className="mb-10">
           <h1 className="text-3xl font-extrabold tracking-wide text-[#82C397]">
             GRIT
           </h1>
         </div>
 
-        {/* 이미지 업로드 박스 */}
         <div className="flex justify-center">
           <button
             type="button"
@@ -54,7 +52,6 @@ export default function CreateGroupModal({
           </button>
         </div>
 
-        {/* 폼 */}
         <div className="mx-auto mt-10 w-full max-w-[360px]">
           <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
             그룹 이름
@@ -80,19 +77,19 @@ export default function CreateGroupModal({
 
         {showInviteCode && (
           <div className="mt-6 flex items-center gap-1 rounded-xl bg-white px-4 py-2">
-              <span className="text-sm font-bold text-[#3E7358]">
-                {inviteCode}
-              </span>
+            <span className="text-sm font-bold text-[#3E7358]">
+              {inviteCode}
+            </span>
 
-              <button
-                type="button"
-                onClick={handleCopy}
+            <button
+              type="button"
+              onClick={handleCopy}
               className="grid h-8 w-8 place-items-center rounded-lg cursor-pointer"
-                aria-label="초대코드 복사"
-                title="복사"
-              >
+              aria-label="초대코드 복사"
+              title="복사"
+            >
               <Copy size={18} className="text-[#3E7358]" />
-              </button>
+            </button>
           </div>
         )}
       </div>
