@@ -80,19 +80,19 @@ export default function CreateGroupModal({
 
         {showInviteCode && (
           <div className="mt-6 flex items-center gap-1 rounded-xl bg-white px-4 py-2">
-            <span className="text-sm font-bold text-[#3E7358]">
-              {inviteCode}
-            </span>
+              <span className="text-sm font-bold text-[#3E7358]">
+                {inviteCode}
+              </span>
 
-            <button
-              type="button"
-              onClick={handleCopy}
+              <button
+                type="button"
+                onClick={handleCopy}
               className="grid h-8 w-8 place-items-center rounded-lg cursor-pointer"
-              aria-label="초대코드 복사"
-              title="복사"
-            >
+                aria-label="초대코드 복사"
+                title="복사"
+              >
               <Copy size={18} className="text-[#3E7358]" />
-            </button>
+              </button>
           </div>
         )}
       </div>
