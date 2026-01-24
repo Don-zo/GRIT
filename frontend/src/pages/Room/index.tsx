@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "@/routes/path";
 import BottomBar from "@/pages/Room/components/BottomBar/BottomBar";
 import TopBar from "@/pages/Room/components/TopBar/TopBar";
 import Pomodoro from "@/pages/Room/components/Cam/Pomodoro";
 import CamLayout from "@/pages/Room/components/Cam/CamLayout";
+import VideoTile from "@/pages/Room/components/Cam/VideoTile";
 //livekit api 연동
 import { getLiveKitToken } from "@/apis/services/livekit";
 import { useLiveKit } from "@/hooks/useLiveKit";
@@ -16,18 +19,33 @@ type PomodoroConfig = {
 };
 
 const RoomPage = () => {
+  const navigate = useNavigate();
+
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [livekitTestStatus, setLivekitTestStatus] = useState(""); //테스트 상태메세지
 
   //token && serverUrl 있을 때만 연결
   const {
     isConnected,
-    participants: liveKitParticipants,
+    localParticipant,
+    participants: remoteParticipants,
+    room,
     error,
+    toggleMicrophone,
+    toggleCamera,
   } = useLiveKit({
     serverUrl: token ? LIVEKIT_URL : "",
     token: token || "",
   });
+
+  //나가기 핸들러
+  const handleLeaveRoom = () => {
+    if (room) {
+      room.disconnect();
+    }
+    navigate(PATHS.HOME);
+  };
+
   //테스트 버튼 클릭 핸들러
   const handleTestConnection = async () => {
     setLivekitTestStatus("토큰 요청하는 중");
@@ -47,7 +65,7 @@ const RoomPage = () => {
       setLivekitTestStatus("livekit 연결 성공");
       console.log("livekit 연결");
     }
-  }, [isConnected, liveKitParticipants]);
+  }, [isConnected, remoteParticipants]);
   //에러
   useEffect(() => {
     if (error) {
@@ -66,6 +84,26 @@ const RoomPage = () => {
     // { id: "p7", name: "이유민이유민", isMuted: true },
     // { id: "p8", name: "이차현이차현", isMuted: false },
   ];
+
+  // participants 참가자 목록
+  const allParticipants = [
+    {
+      id: "local",
+      name: "원래 있던 사람이라고 치자",
+      isMuted: false,
+      video: localParticipant ? (
+        <VideoTile participant={localParticipant} />
+      ) : null,
+    },
+    // 리모트 참가자들
+    ...remoteParticipants.map((p) => ({
+      id: p.identity,
+      name: p.name,
+      isMuted: p.isMuted,
+      video: <VideoTile videoTrack={p.videoTrack} audioTrack={p.audioTrack} />,
+    })),
+  ];
+
   const [muted, setMuted] = useState(false);
   const [pomodoroConfig, setPomodoroConfig] = useState<PomodoroConfig>({
     studyMinutes: 45,
@@ -112,7 +150,7 @@ const RoomPage = () => {
         {/* 연결 성공 시 참가자 수 표시 */}
         {isConnected && (
           <div className="bg-green-500/70 text-white text-xs p-2 rounded">
-            참가자: {liveKitParticipants.length}명
+            참가자: {remoteParticipants.length}명
           </div>
         )}
       </div>
@@ -123,7 +161,7 @@ const RoomPage = () => {
 
       {/* 본 내용 */}
       <div className="flex items-center justify-center flex-1 mx-20">
-        <CamLayout participants={participants} pomodoro={pomodoroNode} />
+        <CamLayout participants={allParticipants} pomodoro={pomodoroNode} />
       </div>
 
       {/* 하단바 */}
@@ -131,6 +169,9 @@ const RoomPage = () => {
         onPomodoroStart={(config) => {
           setPomodoroConfig(config);
         }}
+        onToggleMic={toggleMicrophone}
+        onToggleCam={toggleCamera}
+        onLeaveRoom={handleLeaveRoom}
       />
     </div>
   );

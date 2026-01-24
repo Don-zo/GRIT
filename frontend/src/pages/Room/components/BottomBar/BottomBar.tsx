@@ -13,13 +13,45 @@ type PomodoroConfig = {
 
 type BottomBarProps = {
   onPomodoroStart?: (config: PomodoroConfig) => void;
+  onToggleMic?: () => void;
+  onToggleCam?: () => void;
+  onLeaveRoom?: () => void;
 };
 
-export default function BottomBar({ onPomodoroStart }: BottomBarProps) {
+export default function BottomBar({
+  onPomodoroStart,
+  onToggleMic,
+  onToggleCam,
+  onLeaveRoom,
+}: BottomBarProps) {
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [pomodoroOpen, setPomodoroOpen] = useState(false);
+
+  const handleMicToggle = () => {
+    if (onToggleMic) {
+      onToggleMic();
+    } else {
+      setMicOn((prev) => !prev);
+    }
+  };
+
+  const handleCamToggle = () => {
+    if (onToggleCam) {
+      onToggleCam();
+    } else {
+      setCamOn((prev) => !prev);
+    }
+  };
+
+  const handleLeaveRoom = () => {
+    if (onLeaveRoom) {
+      onLeaveRoom();
+    } else {
+      console.log("바이 나 나감");
+    }
+  };
 
   return (
     <div className="relative flex items-center justify-center w-full gap-4 h-25">
@@ -27,11 +59,11 @@ export default function BottomBar({ onPomodoroStart }: BottomBarProps) {
       <CustomBtn
         isToggle
         isActive={micOn}
-        icon={<MicOff />}               
-        activeIcon={<Mic />}           
+        icon={<MicOff />}
+        activeIcon={<Mic />}
         bgColor="bg-gray-dark"
         activeBgColor="bg-green-semidark"
-        onClick={() => setMicOn((prev) => !prev)}
+        onClick={handleMicToggle}
       />
 
       {/* 카메라 on/off */}
@@ -42,7 +74,7 @@ export default function BottomBar({ onPomodoroStart }: BottomBarProps) {
         activeIcon={<Video />}
         bgColor="bg-gray-dark"
         activeBgColor="bg-green-semidark"
-        onClick={() => setCamOn((prev) => !prev)}
+        onClick={handleCamToggle}
       />
 
       {/* 이모티콘 */}
@@ -74,7 +106,7 @@ export default function BottomBar({ onPomodoroStart }: BottomBarProps) {
       <div className="relative">
         <CustomBtn
           isToggle
-          isActive={pomodoroOpen} 
+          isActive={pomodoroOpen}
           icon={<img src="/icons/ic_pomodoro.svg" className="w-6 h-[26px]" />}
           activeBgColor="bg-green-semidark"
           onClick={() =>
@@ -97,14 +129,9 @@ export default function BottomBar({ onPomodoroStart }: BottomBarProps) {
           }}
         />
       </div>
-      
-      {/* 나가기 */}
-      <CustomBtn
-        icon={<X />}
-        bgColor="bg-tomato"
-        onClick={() => console.log("나가기")}
-      />
 
+      {/* 나가기 */}
+      <CustomBtn icon={<X />} bgColor="bg-tomato" onClick={handleLeaveRoom} />
     </div>
   );
-};
+}
