@@ -1,16 +1,27 @@
 import { useState, useRef } from "react";
 import BaseModal from "@/components/BaseModal";
+import { updateGroup } from "@/apis/services/group";
 
 type GroupSettingsModalProps = {
   open: boolean;
   onClose: () => void;
+  groupId: number;
+  initialName?: string; //기존 그룹 이름
+  initialImage?: string; //기존 그룹 이미지
 };
 
 export default function GroupSettingsModal({
   open,
   onClose,
+  groupId,
+  initialName = "",
+  initialImage = "",
 }: GroupSettingsModalProps) {
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [groupName, setGroupName] = useState(initialName);
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    initialImage || null
+  );
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageClick = () => {
@@ -25,6 +36,33 @@ export default function GroupSettingsModal({
         setPreviewImage(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  //저장 버튼 핸들러
+  const handleSave = async () => {
+    if (!groupName.trim()) {
+      alert("그룹 이름을 입력해주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await updateGroup(groupId, 1, {
+        name: groupName,
+        imageUrl:
+          previewImage ||
+          "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
+      });
+
+      console.log("그룹 정보 수정 성공", response);
+      alert("그룹 정보 수정 성공"); //나중에 toast로 변경
+      onClose();
+    } catch (error) {
+      console.error("그룹 정보 수정 실패:", error);
+      alert("그룹 정보 수정 실패");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,14 +113,19 @@ export default function GroupSettingsModal({
 
           <input
             type="text"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
             className="h-14 w-full rounded-lg bg-white px-4 text-gray-900 outline-none"
+            placeholder="그룹 이름을 입력하세요"
           />
 
           <button
             type="button"
-            className="mt-4 h-14 w-full rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition"
+            onClick={handleSave}
+            disabled={isLoading}
+            className="mt-4 h-14 w-full rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
           >
-            그룹 정보 저장하기
+            {isLoading ? "저장 중..." : "그룹 정보 저장하기"}
           </button>
 
           <p className="mt-6 text-center text-xs text-[#D6FDE5]">

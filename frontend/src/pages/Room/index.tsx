@@ -23,11 +23,22 @@ const RoomPage = () => {
   const {
     isConnected,
     participants: liveKitParticipants,
+    room,
     error,
+    toggleMicrophone,
+    toggleCamera,
   } = useLiveKit({
     serverUrl: token ? LIVEKIT_URL : "",
     token: token || "",
   });
+
+  //나가기 핸들러
+  const handleLeaveRoom = () => {
+    if (room) {
+      room.disconnect();
+    }
+  };
+
   //테스트 버튼 클릭 핸들러
   const handleTestConnection = async () => {
     setLivekitTestStatus("토큰 요청하는 중");
@@ -131,6 +142,9 @@ const RoomPage = () => {
         onPomodoroStart={(config) => {
           setPomodoroConfig(config);
         }}
+        onToggleMic={toggleMicrophone}
+        onToggleCam={toggleCamera}
+        onLeaveRoom={handleLeaveRoom}
       />
     </div>
   );
