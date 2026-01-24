@@ -82,10 +82,9 @@ const RoomPage = () => {
 
   // participants 참가자 목록
   const allParticipants = [
-    // 로컬 참가자 = 나
     {
       id: "local",
-      name: "나",
+      name: "원래 있던 사람이라고 치자",
       isMuted: false,
       video: localParticipant ? (
         <VideoTile participant={localParticipant} />
@@ -96,7 +95,7 @@ const RoomPage = () => {
       id: p.identity,
       name: p.name,
       isMuted: p.isMuted,
-      video: p.videoTrack ? <VideoTile videoTrack={p.videoTrack} /> : null,
+      video: <VideoTile videoTrack={p.videoTrack} audioTrack={p.audioTrack} />,
     })),
   ];
 
