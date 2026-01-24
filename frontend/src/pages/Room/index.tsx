@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "@/routes/path";
 import BottomBar from "@/pages/Room/components/BottomBar/BottomBar";
 import TopBar from "@/pages/Room/components/TopBar/TopBar";
 import Pomodoro from "@/pages/Room/components/Cam/Pomodoro";
@@ -17,6 +19,8 @@ type PomodoroConfig = {
 };
 
 const RoomPage = () => {
+  const navigate = useNavigate();
+
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [livekitTestStatus, setLivekitTestStatus] = useState(""); //테스트 상태메세지
 
@@ -39,6 +43,7 @@ const RoomPage = () => {
     if (room) {
       room.disconnect();
     }
+    navigate(PATHS.HOME);
   };
 
   //테스트 버튼 클릭 핸들러
