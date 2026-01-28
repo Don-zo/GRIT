@@ -52,7 +52,7 @@ public class TodoResponseDTO {
                 todo.getOwner().getId(),
                 todo.getOwner().getNickname(),
                 todo.getContent(),
-                todo.getIsDone(),
+                todo.isDone(),
                 todo.getSubjectCategory(),
                 todo.getDueDate(),
                 todo.getCreatedAt(),

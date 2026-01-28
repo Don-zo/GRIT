@@ -1,6 +1,7 @@
 package grit.todolist;
 
 import grit.todolist.dto.CreateTodoRequestDTO;
+import grit.todolist.dto.DailyAchievementDTO;
 import grit.todolist.dto.TodoResponseDTO;
 import grit.todolist.dto.UpdateTodoRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -95,5 +96,16 @@ public class TodoController {
             @Parameter(description = "사용자 ID (PK)", example = "1") @RequestParam Long userId) {
         todoService.delete(todoId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "지난 7일간 일별 달성도 조회", description = "오늘을 제외한 지난 7일간의 일별 투두 달성도를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    @GetMapping("/api/users/{userId}/todos/achievement/last-7-days")
+    public ResponseEntity<List<DailyAchievementDTO>> getLast7DaysAchievement(
+            @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId) {
+        List<DailyAchievementDTO> achievements = todoService.getLast7DaysAchievement(userId);
+        return ResponseEntity.ok(achievements);
     }
 }
