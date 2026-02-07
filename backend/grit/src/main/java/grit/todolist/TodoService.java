@@ -53,7 +53,7 @@ public class TodoService {
         todo.setContent(request.getContent());
         todo.setSubjectCategory(request.getSubjectCategory());
         todo.setDueDate(request.getDueDate());
-        todo.setDone(false);
+        todo.setIsDone(false);
 
         if (request.getRoomId() != null) {
             if (!roomMemberRepository.existsByRoomIdAndUserId(request.getRoomId(), userId)) {
@@ -80,7 +80,7 @@ public class TodoService {
             todo.setContent(request.getContent());
         }
         if (request.getIsDone() != null) {
-            todo.setDone(request.getIsDone());
+            todo.setIsDone(request.getIsDone());
         }
         if (request.getSubjectCategory() != null) {
             todo.setSubjectCategory(request.getSubjectCategory());
