@@ -23,11 +23,13 @@ public class Group {
     private String name;
 
     @Column(nullable = false)
+    @Builder.Default
     private int memberCount = 0;
 
     private String imageUrl;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<UserGroup> userGroups = new ArrayList<>();
 
     public void increaseMemberCount() {
