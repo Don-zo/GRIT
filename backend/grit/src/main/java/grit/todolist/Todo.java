@@ -32,6 +32,10 @@ public class Todo {
     @Column(name = "is_done", nullable = false)
     private boolean isDone = false;
 
+    public void setIsDone(boolean isDone) {
+        this.isDone = isDone;
+    }
+
     @Enumerated(EnumType.STRING)
     @Column(name = "subject_category", nullable = false, length = 20)
     private SubjectCategory subjectCategory;
