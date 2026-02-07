@@ -4,7 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,8 +19,5 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 
     @Query("SELECT t FROM Todo t LEFT JOIN FETCH t.room JOIN FETCH t.owner WHERE t.id = :id")
     Optional<Todo> findByIdWithRelations(@Param("id") Long id);
-
-    @Query("SELECT t FROM Todo t WHERE t.owner.id = :ownerId AND t.dueDate IS NOT NULL AND t.dueDate >= :from AND t.dueDate <= :to")
-    List<Todo> findByOwnerIdAndDueDateBetween(@Param("ownerId") Long ownerId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 }
 

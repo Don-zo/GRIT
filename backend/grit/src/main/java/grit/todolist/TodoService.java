@@ -1,7 +1,6 @@
 package grit.todolist;
 
 import grit.todolist.dto.CreateTodoRequestDTO;
-import grit.todolist.dto.DailyAchievementDTO;
 import grit.todolist.dto.UpdateTodoRequestDTO;
 import grit.user.User;
 import grit.user.UserRepository;
@@ -14,9 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +51,7 @@ public class TodoService {
         todo.setContent(request.getContent());
         todo.setSubjectCategory(request.getSubjectCategory());
         todo.setDueDate(request.getDueDate());
-        todo.setDone(false);
+        todo.setIsDone(false);
 
         if (request.getRoomId() != null) {
             if (!roomMemberRepository.existsByRoomIdAndUserId(request.getRoomId(), userId)) {
@@ -80,7 +78,7 @@ public class TodoService {
             todo.setContent(request.getContent());
         }
         if (request.getIsDone() != null) {
-            todo.setDone(request.getIsDone());
+            todo.setIsDone(request.getIsDone());
         }
         if (request.getSubjectCategory() != null) {
             todo.setSubjectCategory(request.getSubjectCategory());
@@ -102,37 +100,6 @@ public class TodoService {
         }
 
         todoRepository.deleteById(todoId);
-    }
-
-    public List<DailyAchievementDTO> getLast7DaysAchievement(Long userId) {
-        LocalDate today = LocalDate.now();
-        LocalDate from = today.minusDays(7);
-        LocalDate to = today.minusDays(1);
-
-        List<Todo> todos = todoRepository.findByOwnerIdAndDueDateBetween(userId, from, to);
-
-        Map<LocalDate, List<Todo>> todosByDate = todos.stream()
-                .filter(todo -> todo.getDueDate() != null)
-                .collect(Collectors.groupingBy(Todo::getDueDate));
-
-        List<DailyAchievementDTO> result = new ArrayList<>();
-
-        for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
-            List<Todo> todosOfDay = todosByDate.getOrDefault(date, Collections.emptyList());
-
-            long total = todosOfDay.size();
-            long done = todosOfDay.stream()
-                    .filter(Todo::isDone)
-                    .count();
-
-            if (total == 0) {
-                result.add(new DailyAchievementDTO(date, null, null, null));
-            } else {
-                result.add(new DailyAchievementDTO(date, total, done));
-            }
-        }
-
-        return result;
     }
 }
 
