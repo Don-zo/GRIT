@@ -47,6 +47,7 @@ public class User {
     private LocalDateTime joinDate;
 
     // group
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<UserGroup> userGroups = new ArrayList<>();
 

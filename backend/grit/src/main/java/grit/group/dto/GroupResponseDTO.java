@@ -12,16 +12,19 @@ public class GroupResponseDTO {
     @Schema(description = "그룹 이름", example = "그룹 1")
     private final String name;
 
+    @Schema(description = "그룹 초대 코드", example = "23E!S@")
+    private final String inviteCode;
+
     @Schema(description = "현재 그룹원 수", example = "5")
     private final int memberCount;
 
     @Schema(description = "이미지 URL", example = "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png", nullable = true)
     private final String imageUrl;
 
-    // Entity -> DTO 변환
     public GroupResponseDTO(Group group) {
         this.id = group.getId();
         this.name = group.getName();
+        this.inviteCode = group.getInviteCode();
         this.memberCount = group.getMemberCount();
         this.imageUrl = group.getImageUrl();
     }

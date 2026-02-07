@@ -12,7 +12,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "tb_groups")
+@Table(name = "tb_groups", indexes = {
+        @Index(name = "idx_invite_code", columnList = "inviteCode")
+})
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,11 +24,16 @@ public class Group {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false, unique = true, length = 6)
+    private String inviteCode;
+
+    @Builder.Default
     @Column(nullable = false)
     private int memberCount = 0;
 
     private String imageUrl;
 
+    @Builder.Default
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
     private List<UserGroup> userGroups = new ArrayList<>();
 
