@@ -29,14 +29,12 @@ public class Group {
 
     @Builder.Default
     @Column(nullable = false)
-    @Builder.Default
     private int memberCount = 0;
 
     private String imageUrl;
 
     @Builder.Default
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    @Builder.Default
     private List<UserGroup> userGroups = new ArrayList<>();
 
     public void increaseMemberCount() {

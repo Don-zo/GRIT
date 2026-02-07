@@ -49,7 +49,6 @@ public class User {
     // group
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @Builder.Default
     private List<UserGroup> userGroups = new ArrayList<>();
 
     // friend
