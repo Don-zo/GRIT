@@ -1,5 +1,6 @@
 package grit.group;
 
+import grit.global.util.InviteCodeGenerator;
 import grit.group.dto.CreateGroupRequestDTO;
 import grit.group.dto.GroupResponseDTO;
 import grit.group.dto.UpdateGroupRequestDTO;
@@ -28,9 +29,12 @@ public class GroupService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
+        String inviteCode = generateInviteCode();
+
         Group group = Group.builder()
                 .name(groupRequest.getName())
                 .imageUrl(groupRequest.getImageUrl())
+                .inviteCode(inviteCode)
                 .build();
 
         group.increaseMemberCount();
@@ -45,16 +49,29 @@ public class GroupService {
         return new GroupResponseDTO(savedGroup);
     }
 
+    private String generateInviteCode() {
+        String code;
+        int retryCount = 0;
+        do {
+            code = InviteCodeGenerator.generate();
+            retryCount++;
+            if (retryCount > 10) {
+                throw new IllegalStateException("초대 코드 생성을 10회 이상 시도하였으나 실패하였습니다.");
+            }
+        } while (groupRepository.existsByInviteCode(code));
+        return code;
+    }
+
     // 그룹 가입
     @Transactional
-    public void joinGroup(Long userId, Long groupId) {
+    public GroupResponseDTO joinGroup(Long userId, String inviteCode) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("그룹을 찾을 수 없습니다."));
+        Group group = groupRepository.findByInviteCode(inviteCode)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 초대 코드입니다."));
 
-        boolean isAlreadyMember = userGroupRepository.existsByUserIdAndGroupId(userId, groupId);
+        boolean isAlreadyMember = userGroupRepository.existsByUserIdAndGroupId(userId, group.getId());
         if (isAlreadyMember) {
             throw new IllegalStateException("이미 가입된 그룹입니다.");
         }
@@ -65,8 +82,9 @@ public class GroupService {
                 .build();
 
         userGroupRepository.save(userGroup);
-
         group.increaseMemberCount();
+
+        return new GroupResponseDTO(group);
     }
 
     // 그룹 나가기(삭제)

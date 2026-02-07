@@ -40,22 +40,21 @@ public class GroupController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @Operation(summary = "그룹 가입", description = "기존에 생성된 그룹에 참여합니다.")
+    @Operation(summary = "그룹 가입", description = "초대 코드를 입력하여 그룹에 참여합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "가입 성공"),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 그룹 또는 사용자", content = @Content),
             @ApiResponse(responseCode = "409", description = "이미 가입된 그룹", content = @Content)
     })
-    @PostMapping("/{groupId}/join")
+    @PostMapping("/join/code")
     public ResponseEntity<GroupResponseDTO> joinGroup(
-            @Parameter(description = "가입할 그룹 ID", example = "10")
-            @PathVariable Long groupId,
             @Parameter(description = "가입 신청하는 사용자의 ID", example = "1")
-            @RequestParam Long userId) {
+            @RequestParam Long userId,
+            @Parameter(description = "가입할 그룹의 초대 코드", example = "10")
+            @RequestParam String inviteCode) {
 
-        groupService.joinGroup(userId, groupId);
+        GroupResponseDTO response = groupService.joinGroup(userId, inviteCode);
 
-        GroupResponseDTO response = groupService.getGroup(groupId);
         return ResponseEntity.ok(response);
     }
 
