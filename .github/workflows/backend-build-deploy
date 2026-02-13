@@ -1,0 +1,63 @@
+name: Backend Production CI/CD
+
+on:
+  push:
+    branches: [ "main", "dev/backend" ]
+
+jobs:
+  # [CI] GitHub Runner에서 빌드 + 테스트
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build
+          path: build/libs/*.jar
+          retention-days: 1
+
+  # [CD] Self-hosted Runner(서버)에서 배포 - 임시
+  cd:
+    needs: ci
+    runs-on: self-hosted
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+          path: ./temp_artifact
+
+      - name: Restart Application
+        run: |
+          TARGET=~/GRIT/backend
+          JAR_NAME=grit-app.jar
+          
+          mkdir -p $TARGET
+
+          # 기존 프로세스 종료
+          CURRENT_PID=$(pgrep -f $JAR_NAME)
+          if [ -n "$CURRENT_PID" ]; then
+            kill -15 $CURRENT_PID
+            sleep 10
+          fi
+
+          # 새 Jar 파일 이동 (덮어쓰기)
+          mv ./temp_artifact/*.jar $TARGET/$JAR_NAME
+          rm -rf ./temp_artifact
+
+          # 애플리케이션 실행
+          cd $TARGET
+          nohup java -jar $JAR_NAME > app.log 2>&1 &
