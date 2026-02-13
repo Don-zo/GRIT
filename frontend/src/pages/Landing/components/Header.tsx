@@ -1,6 +1,6 @@
 export default function Header() {
   return (
-    <header className="w-full bg-gray-100 px-10 py-4">
+    <header className="w-full bg-[#e7ecea] px-10 py-4 fixed z-[var(--z-header)]">
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <h1 className="text-3xl font-extrabold text-green-semidark/80">GRIT</h1>
 
