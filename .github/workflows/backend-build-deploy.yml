@@ -47,23 +47,29 @@ jobs:
 
       - name: Deploy
         run: |
-          # 배포 경로 및 파일명 설정
-          TARGET=~/GRIT/backend
+          # 1. 경로 및 변수 설정
+          TARGET=$HOME/GRIT/backend
           JAR_NAME=grit-app.jar
-          
           mkdir -p $TARGET
 
-          # 1. 기존 프로세스 종료 (PID 확인)
-          PID=$(pgrep -f $JAR_NAME)
+          # 2. 기존 프로세스 종료
+          PID=$(pgrep -f $JAR_NAME) || true
           if [ -n "$PID" ]; then
             kill -15 $PID
             sleep 10
+            kill -9 $PID 2>/dev/null || true
           fi
 
-          # 2. 새 Jar 파일 이동
-          find ./temp_artifact -name "*.jar" -exec mv {} $TARGET/$JAR_NAME \;
-          rm -rf ./temp_artifact
+          # 3. 새 Jar 파일 이동
+          if [ -d "./temp_artifact" ]; then
+            find ./temp_artifact -name "*.jar" -exec mv {} $TARGET/$JAR_NAME \;
+            rm -rf ./temp_artifact
+          else
+            echo "Error: Artifact not found"
+            exit 1
+          fi
 
-          # 3. 백그라운드 실행 (로그 저장)
+          # 4. 백그라운드 실행
           cd $TARGET
+          chmod +x $JAR_NAME
           nohup java -jar $JAR_NAME > app.log 2>&1 &
