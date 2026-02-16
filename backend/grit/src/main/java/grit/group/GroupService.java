@@ -1,5 +1,6 @@
 package grit.group;
 
+import grit.domain.member.entity.Member;
 import grit.global.util.InviteCodeGenerator;
 import grit.group.dto.CreateGroupRequestDTO;
 import grit.group.dto.GroupResponseDTO;
@@ -8,8 +9,7 @@ import grit.group.entity.Group;
 import grit.group.entity.UserGroup;
 import grit.group.repository.GroupRepository;
 import grit.group.repository.UserGroupRepository;
-import grit.user.User;
-import grit.user.UserRepository;
+import grit.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,12 +21,12 @@ import java.util.List;
 public class GroupService {
     private final GroupRepository groupRepository;
     private final UserGroupRepository userGroupRepository;
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
     // 그룹 생성
     @Transactional
     public GroupResponseDTO createGroup(Long userId, CreateGroupRequestDTO groupRequest) {
-        User user = userRepository.findById(userId)
+        Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         String inviteCode = generateInviteCode();
@@ -41,7 +41,7 @@ public class GroupService {
         Group savedGroup = groupRepository.save(group);
 
         UserGroup userGroup = UserGroup.builder()
-                .user(user)
+                .member(member)
                 .group(savedGroup)
                 .build();
         userGroupRepository.save(userGroup);
@@ -65,7 +65,7 @@ public class GroupService {
     // 그룹 가입
     @Transactional
     public GroupResponseDTO joinGroup(Long userId, String inviteCode) {
-        User user = userRepository.findById(userId)
+        Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Group group = groupRepository.findByInviteCode(inviteCode)
@@ -77,7 +77,7 @@ public class GroupService {
         }
 
         UserGroup userGroup = UserGroup.builder()
-                .user(user)
+                .member(member)
                 .group(group)
                 .build();
 

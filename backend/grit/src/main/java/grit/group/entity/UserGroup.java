@@ -1,6 +1,6 @@
 package grit.group.entity;
 
-import grit.user.User;
+import grit.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,7 +20,7 @@ public class UserGroup {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
