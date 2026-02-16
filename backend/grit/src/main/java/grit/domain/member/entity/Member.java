@@ -1,6 +1,7 @@
 package grit.domain.member.entity;
 
 import grit.domain.member.constant.Role;
+import grit.domain.member.constant.SocialProvider;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -21,11 +22,18 @@ public class Member {
     private Long id;
 
     @Setter
-    @Column(nullable = false, length = 10) // 소셜 로그인 닉네임 받기 전일 때 위해서 null 허용
+    @Column(unique = true, length = 10) // 소셜 로그인 닉네임 받기 전일 때 위해서 null 허용
     private String nickname;
 
     @Column(unique = true, nullable = false, length = 50)
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SocialProvider provider;
+
+    @Column(nullable = false)
+    private String providerId;
 
     @Setter
     @Column(length = 40)
