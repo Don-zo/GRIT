@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RoomMemberRepository extends JpaRepository<RoomMember, Long> {
-    Optional<RoomMember> findByRoomIdAndUserId(Long roomId, Long userId);
+    Optional<RoomMember> findByRoomIdAndMemberId(Long roomId, Long memberId);
 
-    List<RoomMember> findByRoomId(Long roomId);
+    List<RoomMember> findByRoomId(Long memberId);
 
-    List<RoomMember> findByUserId(Long userId);
+    List<RoomMember> findByMemberId(Long memberId);
 
-    boolean existsByRoomIdAndUserId(Long roomId, Long userId);
+    boolean existsByRoomIdAndMemberId(Long roomId, Long memberId);
 }
 

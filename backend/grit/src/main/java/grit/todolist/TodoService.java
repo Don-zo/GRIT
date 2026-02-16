@@ -28,7 +28,7 @@ public class TodoService {
     private final RoomRepository roomRepository;
 
     public List<Todo> findAll(Long roomId, Long userId, Long ownerId) {
-        if (!roomMemberRepository.existsByRoomIdAndUserId(roomId, userId)) {
+        if (!roomMemberRepository.existsByRoomIdAndMemberId(roomId, userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 방의 멤버가 아닙니다.");
         }
 
@@ -56,7 +56,7 @@ public class TodoService {
         todo.setIsDone(false);
 
         if (request.getRoomId() != null) {
-            if (!roomMemberRepository.existsByRoomIdAndUserId(request.getRoomId(), userId)) {
+            if (!roomMemberRepository.existsByRoomIdAndMemberId(request.getRoomId(), userId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 방의 멤버가 아닙니다.");
             }
             Room room = roomRepository.findById(request.getRoomId())
