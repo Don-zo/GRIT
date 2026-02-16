@@ -4,7 +4,7 @@ import grit.domain.member.constant.Role;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import grit.group.entity.UserGroup;
+import grit.domain.group.entity.MemberGroup;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -50,7 +50,7 @@ public class Member {
     // group
     @Builder.Default
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
-    private List<UserGroup> userGroups = new ArrayList<>();
+    private List<MemberGroup> memberGroups = new ArrayList<>();
 
     // friend
     @ManyToMany
