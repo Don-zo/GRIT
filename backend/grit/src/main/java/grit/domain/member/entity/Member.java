@@ -14,7 +14,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "members")
-@ToString(exclude = {"userGroups", "friends"}) // lombok 무한루프 방지용
+@ToString(exclude = {"memberGroups", "friends"}) // lombok 무한루프 방지용
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -67,7 +67,7 @@ public class MemberService {
     // 정보 수정
     @Transactional
     public void update(Long id, MemberUpdateRequestDto updateParam) {
-        Member member = findUserById(id);
+        Member member = findMemberById(id);
 
         updateNickname(member, updateParam.getNickname());
         updatePassword(member, updateParam.getPassword());
@@ -75,7 +75,7 @@ public class MemberService {
     }
 
     // 사용자 조회 로직
-    private Member findUserById(Long id) {
+    private Member findMemberById(Long id) {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 회원입니다."));
     }
