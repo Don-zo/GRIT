@@ -1,6 +1,6 @@
-package grit.group.repository;
+package grit.domain.group.repository;
 
-import grit.group.entity.Group;
+import grit.domain.group.entity.Group;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

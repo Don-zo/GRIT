@@ -1,14 +1,14 @@
-package grit.group;
+package grit.domain.group;
 
 import grit.domain.member.entity.Member;
 import grit.global.util.InviteCodeGenerator;
-import grit.group.dto.CreateGroupRequestDTO;
-import grit.group.dto.GroupResponseDTO;
-import grit.group.dto.UpdateGroupRequestDTO;
-import grit.group.entity.Group;
-import grit.group.entity.UserGroup;
-import grit.group.repository.GroupRepository;
-import grit.group.repository.UserGroupRepository;
+import grit.domain.group.dto.GroupCreateRequestDto;
+import grit.domain.group.dto.GroupInfoResponseDto;
+import grit.domain.group.dto.GroupUpdateRequestDto;
+import grit.domain.group.entity.Group;
+import grit.domain.group.entity.MemberGroup;
+import grit.domain.group.repository.GroupRepository;
+import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,12 +20,12 @@ import java.util.List;
 @Service
 public class GroupService {
     private final GroupRepository groupRepository;
-    private final UserGroupRepository userGroupRepository;
+    private final MemberGroupRepository memberGroupRepository;
     private final MemberRepository memberRepository;
 
     // 그룹 생성
     @Transactional
-    public GroupResponseDTO createGroup(Long userId, CreateGroupRequestDTO groupRequest) {
+    public GroupInfoResponseDto createGroup(Long userId, GroupCreateRequestDto groupRequest) {
         Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -40,13 +40,13 @@ public class GroupService {
         group.increaseMemberCount();
         Group savedGroup = groupRepository.save(group);
 
-        UserGroup userGroup = UserGroup.builder()
+        MemberGroup memberGroup = MemberGroup.builder()
                 .member(member)
                 .group(savedGroup)
                 .build();
-        userGroupRepository.save(userGroup);
+        memberGroupRepository.save(memberGroup);
 
-        return new GroupResponseDTO(savedGroup);
+        return new GroupInfoResponseDto(savedGroup);
     }
 
     private String generateInviteCode() {
@@ -64,38 +64,38 @@ public class GroupService {
 
     // 그룹 가입
     @Transactional
-    public GroupResponseDTO joinGroup(Long userId, String inviteCode) {
+    public GroupInfoResponseDto joinGroup(Long userId, String inviteCode) {
         Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Group group = groupRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 초대 코드입니다."));
 
-        boolean isAlreadyMember = userGroupRepository.existsByUserIdAndGroupId(userId, group.getId());
+        boolean isAlreadyMember = memberGroupRepository.existsByMemberIdAndGroupId(userId, group.getId());
         if (isAlreadyMember) {
             throw new IllegalStateException("이미 가입된 그룹입니다.");
         }
 
-        UserGroup userGroup = UserGroup.builder()
+        MemberGroup memberGroup = MemberGroup.builder()
                 .member(member)
                 .group(group)
                 .build();
 
-        userGroupRepository.save(userGroup);
+        memberGroupRepository.save(memberGroup);
         group.increaseMemberCount();
 
-        return new GroupResponseDTO(group);
+        return new GroupInfoResponseDto(group);
     }
 
     // 그룹 나가기(삭제)
     @Transactional
     public void deleteGroup(Long userId, Long groupId) {
-        UserGroup userGroup = userGroupRepository.findByUserIdAndGroupId(userId, groupId)
+        MemberGroup memberGroup = memberGroupRepository.findByMemberIdAndGroupId(userId, groupId)
                 .orElseThrow(() -> new IllegalArgumentException("참여 중인 그룹이 아닙니다."));
 
-        Group group = userGroup.getGroup();
+        Group group = memberGroup.getGroup();
 
-        userGroupRepository.delete(userGroup);
+        memberGroupRepository.delete(memberGroup);
 
         group.decreaseMemberCount();
 
@@ -107,8 +107,8 @@ public class GroupService {
 
     // 그룹 정보 수정
     @Transactional
-    public void updateGroup(Long userId, Long groupId, UpdateGroupRequestDTO updateRequest) {
-        boolean isMember = userGroupRepository.existsByUserIdAndGroupId(userId, groupId);
+    public void updateGroup(Long userId, Long groupId, GroupUpdateRequestDto updateRequest) {
+        boolean isMember = memberGroupRepository.existsByMemberIdAndGroupId(userId, groupId);
         if (!isMember) {
             throw new IllegalArgumentException("그룹 멤버만 수정할 수 있습니다.");
         }
@@ -121,20 +121,20 @@ public class GroupService {
 
     // 그룹 상세 조회
     @Transactional(readOnly = true)
-    public GroupResponseDTO getGroup(Long groupId) {
+    public GroupInfoResponseDto getGroup(Long groupId) {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("그룹을 찾을 수 없습니다."));
 
-        return new GroupResponseDTO(group);
+        return new GroupInfoResponseDto(group);
     }
 
     // 사용자가 속한 모든 그룹 조회
     @Transactional(readOnly = true)
-    public List<GroupResponseDTO> getMyGroups(Long userId) {
-        List<UserGroup> myUserGroups = userGroupRepository.findAllByUserId(userId);
+    public List<GroupInfoResponseDto> getMyGroups(Long userId) {
+        List<MemberGroup> myMemberGroups = memberGroupRepository.findAllByMemberId(userId);
 
-        return myUserGroups.stream()
-                .map(userGroup -> new GroupResponseDTO(userGroup.getGroup()))
+        return myMemberGroups.stream()
+                .map(memberGroup -> new GroupInfoResponseDto(memberGroup.getGroup()))
                 .toList();
     }
 }

@@ -1,11 +1,11 @@
-package grit.group.dto;
+package grit.domain.group.dto;
 
-import grit.group.entity.Group;
+import grit.domain.group.entity.Group;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-public class GroupResponseDTO {
+public class GroupInfoResponseDto {
     @Schema(description = "그룹 고유 ID (PK)", example = "10")
     private final Long id;
 
@@ -21,7 +21,7 @@ public class GroupResponseDTO {
     @Schema(description = "이미지 URL", example = "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png", nullable = true)
     private final String imageUrl;
 
-    public GroupResponseDTO(Group group) {
+    public GroupInfoResponseDto(Group group) {
         this.id = group.getId();
         this.name = group.getName();
         this.inviteCode = group.getInviteCode();
