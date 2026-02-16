@@ -1,10 +1,10 @@
 package grit.todolist;
 
+import grit.domain.member.entity.Member;
 import grit.todolist.dto.CreateTodoRequestDTO;
 import grit.todolist.dto.DailyAchievementDTO;
 import grit.todolist.dto.UpdateTodoRequestDTO;
-import grit.user.User;
-import grit.user.UserRepository;
+import grit.domain.member.repository.MemberRepository;
 import grit.room.Room;
 import grit.room.RoomMemberRepository;
 import grit.room.RoomRepository;
@@ -24,11 +24,11 @@ import java.util.stream.Collectors;
 public class TodoService {
     private final TodoRepository todoRepository;
     private final RoomMemberRepository roomMemberRepository;
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
     private final RoomRepository roomRepository;
 
     public List<Todo> findAll(Long roomId, Long userId, Long ownerId) {
-        if (!roomMemberRepository.existsByRoomIdAndUserId(roomId, userId)) {
+        if (!roomMemberRepository.existsByRoomIdAndMemberId(roomId, userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 방의 멤버가 아닙니다.");
         }
 
@@ -45,7 +45,7 @@ public class TodoService {
 
     @Transactional
     public Todo create(Long userId, CreateTodoRequestDTO request) {
-        User owner = userRepository.findById(userId)
+        Member owner = memberRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
         Todo todo = new Todo();
@@ -56,7 +56,7 @@ public class TodoService {
         todo.setIsDone(false);
 
         if (request.getRoomId() != null) {
-            if (!roomMemberRepository.existsByRoomIdAndUserId(request.getRoomId(), userId)) {
+            if (!roomMemberRepository.existsByRoomIdAndMemberId(request.getRoomId(), userId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 방의 멤버가 아닙니다.");
             }
             Room room = roomRepository.findById(request.getRoomId())

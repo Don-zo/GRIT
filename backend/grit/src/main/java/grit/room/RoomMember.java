@@ -1,6 +1,6 @@
 package grit.room;
 
-import grit.user.User;
+import grit.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "room_members", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"room_id", "user_id"})
+    @UniqueConstraint(columnNames = {"room_id", "member_id"})
 })
 public class RoomMember {
     @Id
@@ -23,8 +23,8 @@ public class RoomMember {
     private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     @Column(name = "joined_at", nullable = false)
     private LocalDateTime joinedAt = LocalDateTime.now();
