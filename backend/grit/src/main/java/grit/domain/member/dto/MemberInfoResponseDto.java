@@ -1,7 +1,7 @@
-package grit.user.dto;
+package grit.domain.member.dto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import grit.user.User;
+import grit.domain.member.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @JsonPropertyOrder({"id", "nickname", "email", "introduction"})
-public class UserResponseDTO {
+public class MemberInfoResponseDto {
     @Schema(description = "사용자 고유 ID (PK)", example = "1")
     private Long id;
 
@@ -23,10 +23,10 @@ public class UserResponseDTO {
     private String introduction;
 
     // User 엔티티 -> DTO 변환
-    public UserResponseDTO(User user) {
-        this.id = user.getId();
-        this.nickname = user.getNickname();
-        this.email = user.getEmail();
-        this.introduction = user.getIntroduction();
+    public MemberInfoResponseDto(Member member) {
+        this.id = member.getId();
+        this.nickname = member.getNickname();
+        this.email = member.getEmail();
+        this.introduction = member.getIntroduction();
     }
 }

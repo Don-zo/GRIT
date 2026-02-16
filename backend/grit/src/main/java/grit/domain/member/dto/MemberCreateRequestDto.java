@@ -1,13 +1,13 @@
-package grit.user.dto;
+package grit.domain.member.dto;
 
-import grit.user.User;
+import grit.domain.member.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class CreateUserRequestDTO {
+public class MemberCreateRequestDto {
     @Schema(description = "닉네임", example = "그릿유저")
     private String nickname;
 
@@ -18,8 +18,8 @@ public class CreateUserRequestDTO {
     private String email;
 
     // DTO를 엔티티로 변환
-    public User toEntity() {
-        return User.builder()
+    public Member toEntity() {
+        return Member.builder()
                 .email(this.email)
                 .password(this.password)
                 .nickname(this.nickname)

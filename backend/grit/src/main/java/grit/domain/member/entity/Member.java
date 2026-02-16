@@ -1,5 +1,6 @@
-package grit.user;
+package grit.domain.member.entity;
 
+import grit.domain.member.constant.Role;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -12,9 +13,9 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")
+@Table(name = "members")
 @ToString(exclude = {"userGroups", "friends"}) // lombok 무한루프 방지용
-public class User {
+public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -48,7 +49,7 @@ public class User {
 
     // group
     @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
     private List<UserGroup> userGroups = new ArrayList<>();
 
     // friend
@@ -59,15 +60,15 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "friend_id")
     )
     @Builder.Default
-    private Set<User> friends = new HashSet<>();
+    private Set<Member> friends = new HashSet<>();
 
-    public void addFriend(User user) {
-        this.friends.add(user);
-        user.getFriends().add(this);
+    public void addFriend(Member member) {
+        this.friends.add(member);
+        member.getFriends().add(this);
     }
 
-    public void removeFriend(User user) {
-        this.friends.remove(user);
-        user.getFriends().remove(this);
+    public void removeFriend(Member member) {
+        this.friends.remove(member);
+        member.getFriends().remove(this);
     }
 }

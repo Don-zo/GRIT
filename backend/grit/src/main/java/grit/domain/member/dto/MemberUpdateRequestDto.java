@@ -1,4 +1,4 @@
-package grit.user.dto;
+package grit.domain.member.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateUserRequestDTO {
+public class MemberUpdateRequestDto {
     @Schema(description = "닉네임", example = "그릿유저")
     private String nickname;
 
