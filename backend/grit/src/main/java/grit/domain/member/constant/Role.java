@@ -1,5 +1,5 @@
 package grit.domain.member.constant;
 
 public enum Role {
-    USER, ADMIN
+    PENDING, USER, ADMIN
 }
