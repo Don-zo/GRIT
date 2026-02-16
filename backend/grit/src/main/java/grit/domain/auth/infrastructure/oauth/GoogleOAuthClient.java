@@ -1,4 +1,4 @@
-package grit.domain.auth.client;
+package grit.domain.auth.infrastructure.oauth;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,7 +92,7 @@ public class GoogleOAuthClient {
                 .authorizationUri(AUTHORIZATION_URI)
                 .tokenUri(tokenUri)
                 .userInfoUri(userInfoUri)
-                .userNameAttributeName("sub")
+                .userNameAttributeName("id")
                 .clientName("Google")
                 .build();
     }
