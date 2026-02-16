@@ -1,4 +1,4 @@
-package grit.group.entity;
+package grit.domain.group.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,7 +35,7 @@ public class Group {
 
     @Builder.Default
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    private List<UserGroup> userGroups = new ArrayList<>();
+    private List<MemberGroup> memberGroups = new ArrayList<>();
 
     public void increaseMemberCount() {
         this.memberCount++;
