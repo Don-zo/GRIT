@@ -24,11 +24,10 @@ public class Member {
     @Column(unique = true, nullable = false, length = 10)
     private String nickname;
 
-    @Column(unique = true, nullable = false, length = 40)
+    @Column(unique = true, nullable = false, length = 50)
     private String email;
 
     @Setter
-    @Column(nullable = false)
     private String password;
 
     @Setter
@@ -56,7 +55,7 @@ public class Member {
     @ManyToMany
     @JoinTable(
         name = "friendship",
-        joinColumns = @JoinColumn(name = "user_id"),
+        joinColumns = @JoinColumn(name = "member_id"),
         inverseJoinColumns = @JoinColumn(name = "friend_id")
     )
     @Builder.Default

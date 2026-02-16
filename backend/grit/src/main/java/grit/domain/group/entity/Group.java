@@ -12,13 +12,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "tb_groups", indexes = {
-        @Index(name = "idx_invite_code", columnList = "inviteCode")
+@Table(name = "groups", indexes = {
+        @Index(name = "idx_invite_code", columnList = "invite_code")
 })
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "group_id")
     private Long id;
 
     @Column(nullable = false)
