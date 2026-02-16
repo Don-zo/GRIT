@@ -29,16 +29,16 @@ public class SecurityConfig {
 
     // HTTP 보안 설정
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable) // 테스트를 위해 CSRF 보안 잠시 끄기
+    public SecurityFilterChain filterChain(HttpSecurity http) {
+        http.csrf(AbstractHttpConfigurer::disable) // 테스트를 위해 CSRF 보안 잠시 끄기
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll() // 일단 모든 요청을 허용 (나중에 수정)
                 )
-                .addFilterBefore(new AuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new AuthenticationFilter(jwtProvider),
+                        UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
