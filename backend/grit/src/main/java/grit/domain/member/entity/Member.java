@@ -21,14 +21,11 @@ public class Member {
     private Long id;
 
     @Setter
-    @Column(unique = true, nullable = false, length = 10)
+    @Column(nullable = false, length = 10) // 소셜 로그인 닉네임 받기 전일 때 위해서 null 허용
     private String nickname;
 
     @Column(unique = true, nullable = false, length = 50)
     private String email;
-
-    @Setter
-    private String password;
 
     @Setter
     @Column(length = 40)
