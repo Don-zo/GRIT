@@ -1,6 +1,6 @@
-package grit.friend.dto;
+package grit.domain.friend.dto;
 
-import grit.user.User;
+import grit.domain.member.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class FriendResponseDTO {
+public class FriendResponseDto {
     @Schema(description = "친구의 사용자 고유 ID (PK)", example = "2")
     private Long friendId;
 
@@ -19,11 +19,11 @@ public class FriendResponseDTO {
     @Schema(description = "친구의 한 줄 소개", example = "그릿은 정말 좋은 서비스다", nullable = true)
     private String introduction;
 
-    public static FriendResponseDTO from(User user) {
-        return new FriendResponseDTO(
-                user.getId(),
-                user.getNickname(),
-                user.getIntroduction()
+    public static FriendResponseDto from(Member member) {
+        return new FriendResponseDto(
+                member.getId(),
+                member.getNickname(),
+                member.getIntroduction()
         );
     }
 }

@@ -1,6 +1,7 @@
-package grit.friend;
+package grit.domain.friend.controller;
 
-import grit.friend.dto.FriendResponseDTO;
+import grit.domain.friend.service.FriendService;
+import grit.domain.friend.dto.FriendResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,10 +29,10 @@ public class FriendController {
             @ApiResponse(responseCode = "409", description = "이미 친구로 등록된 사용자", content = @Content)
     })
     @PostMapping("/{nickname}")
-    public ResponseEntity<FriendResponseDTO> addFriend(@Parameter(description = "친구의 닉네임", example = "그릿유저친구") @PathVariable String nickname) {
+    public ResponseEntity<FriendResponseDto> addFriend(@Parameter(description = "친구의 닉네임", example = "그릿유저친구") @PathVariable String nickname) {
         Long currentUserId = 1L; // 임시 ID
 
-        FriendResponseDTO addedFriend = friendService.addFriend(currentUserId, nickname);
+        FriendResponseDto addedFriend = friendService.addFriend(currentUserId, nickname);
 
         return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(addedFriend);
     }
@@ -44,10 +45,10 @@ public class FriendController {
             @ApiResponse(responseCode = "404", description = "해당 닉네임의 친구가 존재하지 않음", content = @Content)
     })
     @DeleteMapping("/{nickname}")
-    public ResponseEntity<FriendResponseDTO> removeFriend(@Parameter(description = "친구의 닉네임", example = "그릿유저친구") @PathVariable String nickname) {
+    public ResponseEntity<FriendResponseDto> removeFriend(@Parameter(description = "친구의 닉네임", example = "그릿유저친구") @PathVariable String nickname) {
         Long currentUserId = 1L; // 임시 ID
 
-        FriendResponseDTO removedFriend = friendService.removeFriend(currentUserId, nickname);
+        FriendResponseDto removedFriend = friendService.removeFriend(currentUserId, nickname);
 
         return ResponseEntity.ok(removedFriend);
     }
@@ -59,7 +60,7 @@ public class FriendController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자 ID", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<List<FriendResponseDTO>> findFriends(@Parameter(description = "친구 목록을 조회할 사용자의 ID (PK)", example = "1") @PathVariable Long id) {
+    public ResponseEntity<List<FriendResponseDto>> findFriends(@Parameter(description = "친구 목록을 조회할 사용자의 ID (PK)", example = "1") @PathVariable Long id) {
         return ResponseEntity.ok(friendService.getFriendList(id));
     }
 }
