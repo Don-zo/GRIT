@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @JsonPropertyOrder({"id", "nickname", "email", "introduction"})
-public class MemberInfoResponseDto {
+public class MemberResponseDto {
     @Schema(description = "사용자 고유 ID (PK)", example = "1")
     private Long id;
 
@@ -22,8 +22,8 @@ public class MemberInfoResponseDto {
     @Schema(description = "한 줄 소개", example = "오늘 하루도 파이팅", nullable = true)
     private String introduction;
 
-    // User 엔티티 -> DTO 변환
-    public MemberInfoResponseDto(Member member) {
+    // Member 엔티티 -> DTO 변환
+    public MemberResponseDto(Member member) {
         this.id = member.getId();
         this.nickname = member.getNickname();
         this.email = member.getEmail();

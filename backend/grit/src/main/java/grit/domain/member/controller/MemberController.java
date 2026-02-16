@@ -3,8 +3,7 @@ package grit.domain.member.controller;
 import grit.domain.member.service.MemberService;
 import grit.domain.member.dto.MemberCreateRequestDto;
 import grit.domain.member.dto.MemberUpdateRequestDto;
-import grit.domain.member.dto.MemberInfoResponseDto;
-import grit.domain.member.entity.Member;
+import grit.domain.member.dto.MemberResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,7 +19,7 @@ import java.util.List;
 
 @Tag(name = "User", description = "사용자 관련 API")
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/members")
 @RequiredArgsConstructor
 public class MemberController {
     private final MemberService memberService;
@@ -32,15 +31,15 @@ public class MemberController {
             @ApiResponse(responseCode = "400", description = "입력값 누락 또는 형식이 올바르지 않음", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<MemberInfoResponseDto> create(@RequestBody MemberCreateRequestDto request) {
-        Member member = memberService.join(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new MemberInfoResponseDto(member));
+    public ResponseEntity<MemberResponseDto> create(@RequestBody MemberCreateRequestDto request) {
+        //Member member = memberService.join(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
 
     @Operation(summary = "전체 회원 조회", description = "전체 사용자를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
-    public ResponseEntity<List<MemberInfoResponseDto>> findAll() {
+    public ResponseEntity<List<MemberResponseDto>> findAll() {
         return ResponseEntity.ok(memberService.findAll());
     }
 
@@ -50,8 +49,8 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자 ID", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<MemberInfoResponseDto> findOne(@Parameter(description = "사용자 고유 ID (PK)", example = "1") @PathVariable Long id) {
-        MemberInfoResponseDto response = memberService.findOne(id);
+    public ResponseEntity<MemberResponseDto> findOne(@Parameter(description = "사용자 고유 ID (PK)", example = "1") @PathVariable Long id) {
+        MemberResponseDto response = memberService.findOne(id);
         return ResponseEntity.ok(response);
     }
 
@@ -63,10 +62,10 @@ public class MemberController {
             @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임", content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<MemberInfoResponseDto> update(@Parameter(description = "사용자 고유 ID (PK)", example = "1") @PathVariable Long id, @RequestBody MemberUpdateRequestDto updateParam) {
+    public ResponseEntity<MemberResponseDto> update(@Parameter(description = "사용자 고유 ID (PK)", example = "1") @PathVariable Long id, @RequestBody MemberUpdateRequestDto updateParam) {
         memberService.update(id, updateParam);
 
-        MemberInfoResponseDto updateUser = memberService.findOne(id);
+        MemberResponseDto updateUser = memberService.findOne(id);
         return ResponseEntity.ok(updateUser);
     }
 
