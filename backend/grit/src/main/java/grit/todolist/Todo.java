@@ -1,6 +1,6 @@
 package grit.todolist;
 
-import grit.user.User;
+import grit.domain.member.entity.Member;
 import grit.room.Room;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -24,7 +24,7 @@ public class Todo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
+    private Member owner;
 
     @Column(nullable = false, length = 500)
     private String content;
