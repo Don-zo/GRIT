@@ -2,7 +2,6 @@ package grit.domain.auth.infrastructure.jwt;
 
 import grit.domain.auth.entity.RefreshToken;
 import grit.domain.auth.repository.RefreshTokenRepository;
-import grit.domain.member.constant.Role;
 import grit.domain.member.entity.Member;
 import grit.global.exception.InvalidCredentialsException;
 import io.jsonwebtoken.Claims;
@@ -10,13 +9,13 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import javax.crypto.SecretKey;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,17 +24,21 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class JwtProvider {
 
     @Value("${jwt.secret}")
-    private String secretKey;
+    private String secret;
+
     @Value("${jwt.access-expiration}")
     private Long accessTokenTtl;
 
+    private SecretKey secretKey;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public JwtProvider(RefreshTokenRepository refreshTokenRepository) {
-        this.refreshTokenRepository = refreshTokenRepository;
+    @PostConstruct
+    private void init() {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public Authentication getAuthentication(String accessToken) {
@@ -56,7 +59,6 @@ public class JwtProvider {
     public String createAccessToken(Member member) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenTtl);
-        Key key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
         return Jwts.builder()
                 .subject(member.getId().toString())
@@ -65,7 +67,7 @@ public class JwtProvider {
                 .claim("role", member.getRole().name())
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(key)
+                .signWith(secretKey)
                 .compact();
     }
 
@@ -83,7 +85,7 @@ public class JwtProvider {
     private Claims getClaims(String accessToken) throws InvalidCredentialsException {
         try {
             return Jwts.parser()
-                    .verifyWith(getSigningKey())
+                    .verifyWith(secretKey)
                     .build()
                     .parseSignedClaims(accessToken)
                     .getPayload();
@@ -92,10 +94,5 @@ public class JwtProvider {
         } catch (MalformedJwtException e) {
             throw new InvalidCredentialsException("Malformed access token");
         }
-    }
-
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
