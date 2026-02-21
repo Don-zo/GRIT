@@ -19,10 +19,10 @@ public class AuthService {
     private final MemberService memberService;
 
     @Transactional
-    public Member authenticateWithGoogle(String code) {
-        OAuth2User oauth2User = googleOAuthClient.getOAuth2User(code);
+    public Member authenticateWithGoogle(String code, String redirectUri) {
+        OAuth2User oauth2User = googleOAuthClient.getOAuth2User(code, redirectUri);
 
-        String providerId = oauth2User.getAttribute("id");
+        String providerId = oauth2User.getName();
         String email = oauth2User.getAttribute("email");
 
         Optional<Member> member = memberService.getBySocialAccount(SocialProvider.GOOGLE, providerId);

@@ -29,7 +29,7 @@ public class AuthController {
     public ResponseEntity<AuthResponseDto> googleLogin(
             @Valid @RequestBody GoogleAuthRequestDto request) {
 
-        Member member = authService.authenticateWithGoogle(request.code());
+        Member member = authService.authenticateWithGoogle(request.code(), request.redirectUri());
         TokenPair tokenPair = tokenService.generateTokens(member);
         boolean isMemberPending = memberService.isMemberPending(member);
 

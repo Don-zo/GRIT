@@ -37,38 +37,38 @@ public class GoogleOAuthClient {
     @Value("${google.redirect-uri}")
     private String redirectUri;
 
-    public OAuth2User getOAuth2User(String code) {
-        OAuth2AccessTokenResponse tokenResponse = exchangeCodeForToken(code);
+    public OAuth2User getOAuth2User(String code, String redirectUri) {
+        OAuth2AccessTokenResponse tokenResponse = exchangeCodeForToken(code, redirectUri);
         return getUserInfo(tokenResponse.getAccessToken());
     }
 
-    private OAuth2AccessTokenResponse exchangeCodeForToken(String code) {
-        OAuth2AuthorizationCodeGrantRequest grantRequest = buildGrantRequest(code);
+    private OAuth2AccessTokenResponse exchangeCodeForToken(String code, String redirectUri) {
+        OAuth2AuthorizationCodeGrantRequest grantRequest = buildGrantRequest(code, redirectUri);
         RestClientAuthorizationCodeTokenResponseClient tokenClient =
                 new RestClientAuthorizationCodeTokenResponseClient();
         return tokenClient.getTokenResponse(grantRequest);
     }
 
-    private OAuth2AuthorizationCodeGrantRequest buildGrantRequest(String code) {
+    private OAuth2AuthorizationCodeGrantRequest buildGrantRequest(String code, String redirectUri) {
         ClientRegistration clientRegistration = buildClientRegistration();
-        OAuth2AuthorizationExchange exchange = buildAuthorizationExchange(code);
+        OAuth2AuthorizationExchange exchange = buildAuthorizationExchange(code, redirectUri);
         return new OAuth2AuthorizationCodeGrantRequest(clientRegistration, exchange);
     }
 
-    private OAuth2AuthorizationExchange buildAuthorizationExchange(String code) {
+    private OAuth2AuthorizationExchange buildAuthorizationExchange(String code, String redirectUri) {
         OAuth2AuthorizationRequest authRequest = OAuth2AuthorizationRequest
                 .authorizationCode()
                 .clientId(clientId)
                 .authorizationUri(AUTHORIZATION_URI)
                 .redirectUri(redirectUri)
                 .scope("profile", "email")
-                .state("state")
+                .state(null)
                 .build();
 
         OAuth2AuthorizationResponse authResponse = OAuth2AuthorizationResponse
                 .success(code)
                 .redirectUri(redirectUri)
-                .state("state")
+                .state(null)
                 .build();
 
         return new OAuth2AuthorizationExchange(authRequest, authResponse);
