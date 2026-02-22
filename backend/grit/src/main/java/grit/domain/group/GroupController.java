@@ -1,5 +1,6 @@
 package grit.domain.group;
 
+import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.group.dto.GroupCreateRequestDto;
 import grit.domain.group.dto.GroupInfoResponseDto;
 import grit.domain.group.dto.GroupUpdateRequestDto;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/groups")
 public class GroupController {
+
     private final GroupService groupService;
 
     @Operation(summary = "그룹 생성", description = "새로운 그룹을 생성합니다.")
@@ -31,12 +34,10 @@ public class GroupController {
     })
     @PostMapping
     public ResponseEntity<GroupInfoResponseDto> createGroup(
-            @Parameter(description = "그룹을 생성하는 사용자의 ID", example = "1")
-            @RequestParam Long userId, // 테스트용 Id
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @RequestBody GroupCreateRequestDto request) {
 
-        GroupInfoResponseDto response = groupService.createGroup(userId, request);
-
+        GroupInfoResponseDto response = groupService.createGroup(memberPrincipal.id(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -48,13 +49,11 @@ public class GroupController {
     })
     @PostMapping("/join/code")
     public ResponseEntity<GroupInfoResponseDto> joinGroup(
-            @Parameter(description = "가입 신청하는 사용자의 ID", example = "1")
-            @RequestParam Long userId,
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "가입할 그룹의 초대 코드", example = "10")
             @RequestParam String inviteCode) {
 
-        GroupInfoResponseDto response = groupService.joinGroup(userId, inviteCode);
-
+        GroupInfoResponseDto response = groupService.joinGroup(memberPrincipal.id(), inviteCode);
         return ResponseEntity.ok(response);
     }
 
@@ -76,10 +75,9 @@ public class GroupController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/my")
     public ResponseEntity<List<GroupInfoResponseDto>> getMyGroups(
-            @Parameter(description = "조회할 사용자의 ID", example = "1")
-            @RequestParam Long userId) {
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
 
-        List<GroupInfoResponseDto> response = groupService.getMyGroups(userId);
+        List<GroupInfoResponseDto> response = groupService.getMyGroups(memberPrincipal.id());
         return ResponseEntity.ok(response);
     }
 
@@ -91,13 +89,12 @@ public class GroupController {
     })
     @PutMapping("/{groupId}")
     public ResponseEntity<GroupInfoResponseDto> updateGroup(
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "수정할 그룹 ID", example = "10")
             @PathVariable Long groupId,
-            @Parameter(description = "요청하는 사용자의 ID", example = "1")
-            @RequestParam Long userId,
             @RequestBody GroupUpdateRequestDto updateRequest) {
 
-        groupService.updateGroup(userId, groupId, updateRequest);
+        groupService.updateGroup(memberPrincipal.id(), groupId, updateRequest);
 
         GroupInfoResponseDto response = groupService.getGroup(groupId);
         return ResponseEntity.ok(response);
@@ -110,10 +107,10 @@ public class GroupController {
     })
     @DeleteMapping("/{groupId}")
     public ResponseEntity<Void> leaveGroup(
-            @PathVariable Long groupId,
-            @RequestParam Long userId) {
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
+            @PathVariable Long groupId) {
 
-        groupService.deleteGroup(userId, groupId);
+        groupService.deleteGroup(memberPrincipal.id(), groupId);
         return ResponseEntity.noContent().build();
     }
 }
