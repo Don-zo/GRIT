@@ -1,10 +1,12 @@
 package grit.domain.member.service;
 
-import grit.domain.member.dto.MemberCreateRequestDto;
+import grit.domain.member.constant.Role;
+import grit.domain.member.constant.SocialProvider;
 import grit.domain.member.dto.MemberUpdateRequestDto;
-import grit.domain.member.dto.MemberInfoResponseDto;
+import grit.domain.member.dto.MemberResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
+import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,19 +20,16 @@ import java.util.NoSuchElementException;
 @Transactional
 public class MemberService {
     private final MemberRepository memberRepository;
-    private final PasswordEncoder passwordEncoder;
 
     // 회원 가입
-    public Member join(MemberCreateRequestDto request) {
-        validNickname(request.getNickname());
-        validEmail(request.getEmail());
-
-        String encodedPW = passwordEncoder.encode(request.getPassword());
+    public Member createMember(String email, SocialProvider provider, String providerId) {
+        validEmail(email);
 
         Member member = Member.builder()
-                .email(request.getEmail())
-                .nickname(request.getNickname())
-                .password(encodedPW)
+                .email(email)
+                .provider(provider)
+                .providerId(providerId)
+                .role(Role.PENDING)
                 .build();
 
         return memberRepository.save(member);
@@ -45,23 +44,25 @@ public class MemberService {
 
     // 이메일 중복 체크
     private void validEmail(String email) {
-        if (memberRepository.existsByEmail(email)) {
-            throw new IllegalStateException("이미 존재하는 이메일입니다.");
+        Optional<Member> member = memberRepository.findByEmail(email);
+        if (member.isPresent()) {
+            String providerDescription = member.get().getProvider().getDescription();
+            throw new IllegalStateException("이미 " + providerDescription + " 서비스를 통해 가입된 계정입니다.");
         }
     }
 
     // 회원 전체 조회
-    public List<MemberInfoResponseDto> findAll() {
+    public List<MemberResponseDto> findAll() {
         return memberRepository.findAll().stream()
-                .map(MemberInfoResponseDto::new)
+                .map(MemberResponseDto::new)
                 .toList();
     }
 
     // 단일 회원 조회
-    public MemberInfoResponseDto findOne(Long id) {
+    public MemberResponseDto findOne(Long id) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(id + " 회원을 찾을 수 없습니다."));
-        return new MemberInfoResponseDto(member);
+        return new MemberResponseDto(member);
     }
 
     // 정보 수정
@@ -70,7 +71,6 @@ public class MemberService {
         Member member = findMemberById(id);
 
         updateNickname(member, updateParam.getNickname());
-        updatePassword(member, updateParam.getPassword());
         updateIntroduction(member, updateParam.getIntroduction());
     }
 
@@ -84,23 +84,13 @@ public class MemberService {
     private void updateNickname(Member member, String newNickname) {
         if (newNickname == null) return;
 
-        if (member.getNickname().equals(newNickname))
+        if (newNickname.equals(member.getNickname()))
             throw new IllegalStateException("변경하려는 닉네임이 기존 닉네임과 동일합니다.");
 
         if (memberRepository.existsByNickname(newNickname))
             throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
 
         member.setNickname(newNickname);
-    }
-
-    // 비밀번호 수정
-    private void updatePassword(Member member, String newPassword) {
-        if (newPassword == null) return;
-
-        if (passwordEncoder.matches(newPassword, member.getPassword())) {
-            throw new IllegalStateException("변경하려는 비밀번호가 기존 비밀번호와 동일합니다.");
-        }
-        member.setPassword(passwordEncoder.encode(newPassword));
     }
 
     // 한 줄 소개 수정
@@ -116,4 +106,13 @@ public class MemberService {
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 회원입니다."));
         memberRepository.delete(member);
     }
+
+    public Optional<Member> getBySocialAccount(SocialProvider provider, String providerId) {
+        return memberRepository.findByProviderAndProviderId(provider, providerId);
+    }
+
+    public boolean isMemberPending(Member member) {
+        return member.getRole() == Role.PENDING;
+    }
+
 }

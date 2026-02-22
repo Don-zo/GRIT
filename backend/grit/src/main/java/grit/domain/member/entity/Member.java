@@ -1,6 +1,7 @@
 package grit.domain.member.entity;
 
 import grit.domain.member.constant.Role;
+import grit.domain.member.constant.SocialProvider;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -21,15 +22,18 @@ public class Member {
     private Long id;
 
     @Setter
-    @Column(unique = true, nullable = false, length = 10)
+    @Column(unique = true, length = 10) // 소셜 로그인 닉네임 받기 전일 때 위해서 null 허용
     private String nickname;
 
-    @Column(unique = true, nullable = false, length = 40)
+    @Column(unique = true, nullable = false, length = 50)
     private String email;
 
-    @Setter
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String password;
+    private SocialProvider provider;
+
+    @Column(nullable = false)
+    private String providerId;
 
     @Setter
     @Column(length = 40)
@@ -56,7 +60,7 @@ public class Member {
     @ManyToMany
     @JoinTable(
         name = "friendship",
-        joinColumns = @JoinColumn(name = "user_id"),
+        joinColumns = @JoinColumn(name = "member_id"),
         inverseJoinColumns = @JoinColumn(name = "friend_id")
     )
     @Builder.Default
