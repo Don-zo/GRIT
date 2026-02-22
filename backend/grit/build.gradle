@@ -33,6 +33,10 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
+    // Actuator & Micrometer
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'com.github.loki4j:loki-logback-appender:2.0.3'
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor "org.projectlombok:lombok"
