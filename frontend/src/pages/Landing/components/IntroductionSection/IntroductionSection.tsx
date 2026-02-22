@@ -4,20 +4,32 @@ import IntroductionCard from "@/pages/Landing/components/IntroductionSection/Int
 
 export default function IntroductionSection() {
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
+  const isScrollingRef = useRef(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          if (
+            entry.isIntersecting &&
+            entry.intersectionRatio >= 0.6 &&
+            !isScrollingRef.current
+          ) {
+            isScrollingRef.current = true;
             entry.target.scrollIntoView({
               behavior: "smooth",
               block: "center",
             });
+
+            setTimeout(() => {
+              isScrollingRef.current = false;
+            }, 1000);
           }
         });
       },
-      { threshold: 0.5 },
+      {
+        threshold: [0.5, 0.7, 1.0],
+      },
     );
 
     sectionsRef.current.forEach((section) => {

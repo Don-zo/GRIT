@@ -1,3 +1,6 @@
+import { useRef } from "react";
+import type { MouseEvent } from "react";
+
 type IntroductionCardProps = {
   functionName: string;
   functionDescription: string;
@@ -7,9 +10,38 @@ export default function IntroductionCard({
   functionName,
   functionDescription,
 }: IntroductionCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+
+    const card = cardRef.current;
+    const rect = card.getBoundingClientRect();
+
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+
+    const rotateY = x * 10;
+    const rotateX = -y * 10;
+
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+  };
+
+  const handleMouseLeave = () => {
+    if (!cardRef.current) return;
+    cardRef.current.style.transform =
+      "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+  };
+
   return (
     <div className="min-h-screen bg-[#e7ecea] flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-3xl bg-[#f3f4f3] rounded-2xl shadow-lg p-8 relative">
+      <div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className="w-full max-w-3xl bg-[#f3f4f3] rounded-2xl shadow-lg p-8 relative transition-transform duration-200 ease-out"
+        style={{ transformStyle: "preserve-3d" }}
+      >
         <div className="flex items-center gap-2 absolute top-5 left-5">
           <div className="w-3.5 h-3.5 rounded-full bg-[#f87171]"></div>
           <div className="w-3.5 h-3.5 rounded-full bg-[#facc15]"></div>
