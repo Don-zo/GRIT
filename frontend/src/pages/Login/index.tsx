@@ -1,4 +1,4 @@
-import SocialLoginButton from "@/components/auth/socialLoginButton";
+import SocialLoginButton from "@/components/auth/SocialLoginButton";
 
 const LoginPage = () => {
   return (
