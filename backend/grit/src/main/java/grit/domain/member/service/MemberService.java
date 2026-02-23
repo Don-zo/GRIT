@@ -9,7 +9,6 @@ import grit.domain.member.repository.MemberRepository;
 import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -59,10 +58,9 @@ public class MemberService {
     }
 
     // 단일 회원 조회
-    public MemberResponseDto findOne(Long id) {
-        Member member = memberRepository.findById(id)
+    public Member findOne(Long id) {
+        return memberRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(id + " 회원을 찾을 수 없습니다."));
-        return new MemberResponseDto(member);
     }
 
     // 정보 수정
