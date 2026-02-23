@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class TokenService {
+
     @Value("${jwt.refresh-expiration}")
     private Long refreshTokenTtl;
 
@@ -23,11 +24,31 @@ public class TokenService {
     @Transactional
     public TokenPair generateTokens(Member member) {
         String accessToken = jwtProvider.createAccessToken(member);
-        refreshTokenRepository.deleteByMember(member);
 
         RefreshToken refreshToken = RefreshToken.issue(member, Duration.ofMillis(refreshTokenTtl));
         refreshTokenRepository.save(refreshToken);
 
         return new TokenPair(accessToken, refreshToken.getToken());
+    }
+
+    @Transactional
+    public String refreshAccessToken(RefreshToken refreshToken) {
+        checkRefreshTokenValidity(refreshToken);
+        return jwtProvider.createAccessToken(refreshToken.getMember());
+    }
+
+    @Transactional
+    public RefreshToken getRefreshToken(String refreshTokenString) {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenString)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
+        checkRefreshTokenValidity(refreshToken);
+        return refreshToken;
+    }
+
+    private void checkRefreshTokenValidity(RefreshToken refreshToken) {
+        if (refreshToken.isExpired()) {
+            refreshTokenRepository.delete(refreshToken);
+            throw new IllegalArgumentException("Refresh token has expired");
+        }
     }
 }
