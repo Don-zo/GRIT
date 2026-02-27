@@ -24,7 +24,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json; charset=UTF-8");
 
-        ErrorResponseDto errorResponse = ErrorResponseDto.of("인증 정보가 없습니다.");
+        ErrorResponseDto errorResponse = ErrorResponseDto.of("인증 정보가 없거나 만료되었습니다.");
 
         String result = jsonMapper.writeValueAsString(errorResponse);
         response.getWriter().write(result);
