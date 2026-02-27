@@ -39,6 +39,11 @@ public class TokenService {
         return jwtProvider.createAccessToken(refreshToken.getMember());
     }
 
+    @Transactional
+    public void invalidateRefreshToken(String refreshTokenString) {
+        refreshTokenRepository.deleteByToken(refreshTokenString);
+    }
+
     private void checkRefreshTokenValidity(RefreshToken refreshToken) {
         if (refreshToken.isExpired()) {
             refreshTokenRepository.delete(refreshToken);
