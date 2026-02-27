@@ -41,7 +41,8 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
 
         return ResponseEntity.status(isMemberPending ? HttpStatus.CREATED : HttpStatus.OK).body(
-                new AuthResponseDto(new MemberResponseDto(member), tokenPair.accessToken(), isMemberPending));
+                new AuthResponseDto(new MemberResponseDto(member), tokenPair.accessToken(),
+                        isMemberPending));
     }
 
     @PostMapping("/refresh")
@@ -57,11 +58,14 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
+    public ResponseEntity<Void> logout(
+            HttpServletResponse response,
+            @CookieValue(value = "refresh_token", required = false) String refreshTokenString
+    ) {
+
         ResponseCookie cookie = cookieUtils.createEmptyRefreshTokenCookie();
         response.addHeader("Set-Cookie", cookie.toString());
-
-        tokenService.invalidateRefreshToken(cookie.getValue());
+        tokenService.invalidateRefreshToken(refreshTokenString);
         return ResponseEntity.ok().build();
     }
 }
