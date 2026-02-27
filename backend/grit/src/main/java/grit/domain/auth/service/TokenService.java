@@ -32,17 +32,11 @@ public class TokenService {
     }
 
     @Transactional
-    public String refreshAccessToken(RefreshToken refreshToken) {
-        checkRefreshTokenValidity(refreshToken);
-        return jwtProvider.createAccessToken(refreshToken.getMember());
-    }
-
-    @Transactional
-    public RefreshToken getRefreshToken(String refreshTokenString) {
+    public String refreshAccessToken(String refreshTokenString) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenString)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
         checkRefreshTokenValidity(refreshToken);
-        return refreshToken;
+        return jwtProvider.createAccessToken(refreshToken.getMember());
     }
 
     private void checkRefreshTokenValidity(RefreshToken refreshToken) {

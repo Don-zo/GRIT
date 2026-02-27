@@ -4,7 +4,6 @@ import grit.domain.auth.TokenPair;
 import grit.domain.auth.dto.AuthResponseDto;
 import grit.domain.auth.dto.GoogleAuthRequestDto;
 import grit.domain.auth.dto.RefreshResponseDto;
-import grit.domain.auth.entity.RefreshToken;
 import grit.domain.auth.service.AuthService;
 import grit.domain.auth.service.TokenService;
 import grit.domain.member.dto.MemberResponseDto;
@@ -53,9 +52,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        RefreshToken refreshToken = tokenService.getRefreshToken(refreshTokenString);
         return ResponseEntity.ok(
-                new RefreshResponseDto(tokenService.refreshAccessToken(refreshToken)));
+                new RefreshResponseDto(tokenService.refreshAccessToken(refreshTokenString)));
     }
 
     @PostMapping("/logout")
