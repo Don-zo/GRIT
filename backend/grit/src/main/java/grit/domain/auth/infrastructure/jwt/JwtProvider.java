@@ -1,9 +1,6 @@
 package grit.domain.auth.infrastructure.jwt;
 
-import grit.domain.auth.entity.RefreshToken;
-import grit.domain.auth.repository.RefreshTokenRepository;
 import grit.domain.member.entity.Member;
-import grit.global.exception.InvalidCredentialsException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -17,6 +14,7 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,7 +32,6 @@ public class JwtProvider {
     private Long accessTokenTtl;
 
     private SecretKey secretKey;
-    private final RefreshTokenRepository refreshTokenRepository;
 
     @PostConstruct
     private void init() {
@@ -71,18 +68,7 @@ public class JwtProvider {
                 .compact();
     }
 
-    public Member getMemberFromRefreshToken(String refreshTokenString)
-            throws InvalidCredentialsException {
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenString)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid refresh token"));
-        if (refreshToken.isExpired()) {
-            throw new InvalidCredentialsException("Refresh token has expired");
-        }
-
-        return refreshToken.getMember();
-    }
-
-    private Claims getClaims(String accessToken) throws InvalidCredentialsException {
+    private Claims getClaims(String accessToken) throws BadCredentialsException {
         try {
             return Jwts.parser()
                     .verifyWith(secretKey)
@@ -90,9 +76,9 @@ public class JwtProvider {
                     .parseSignedClaims(accessToken)
                     .getPayload();
         } catch (ExpiredJwtException e) {
-            throw new InvalidCredentialsException("Expired access token");
+            throw new BadCredentialsException("Expired access token");
         } catch (MalformedJwtException e) {
-            throw new InvalidCredentialsException("Malformed access token");
+            throw new BadCredentialsException("Malformed access token");
         }
     }
 }
