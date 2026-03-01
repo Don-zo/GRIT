@@ -20,6 +20,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponseDto.of(ex.getMessage()));
     }
 
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleEntityNotFound(EntityNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ProfileAlreadyInitializedException.class)
+    public ResponseEntity<ErrorResponseDto> handleEntityNotFound(ProfileAlreadyInitializedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponseDto> handleConstraintValidation(ConstraintViolationException ex) {
         String message = ex.getConstraintViolations().stream()
