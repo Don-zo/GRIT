@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRIT - 그룹</title>
+    <meta name="description" content="GRIT 그룹 관리 - 그룹 생성, 참가 및 화상회의">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">G</div>
+            <div class="sidebar-nav">
+                <a href="/main.html" class="sidebar-link" id="nav-home">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span class="tooltip">홈</span>
+                </a>
+                <a href="/groups.html" class="sidebar-link active" id="nav-groups">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span class="tooltip">그룹</span>
+                </a>
+                <a href="/friends.html" class="sidebar-link" id="nav-friends">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                    </svg>
+                    <span class="tooltip">친구</span>
+                </a>
+                <a href="/todo.html" class="sidebar-link" id="nav-todo">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    <span class="tooltip">투두</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>내 그룹</h1>
+                    <p>그룹 관리 및 화상회의</p>
+                </div>
+            </div>
+
+            <!-- 그룹 생성 / 참가 버튼 -->
+            <div class="action-row">
+                <button class="btn btn-primary" id="create-group-btn">+ 그룹 생성</button>
+                <button class="btn btn-outline" id="join-group-btn">코드로 참가</button>
+            </div>
+
+            <!-- 그룹 목록 -->
+            <div id="group-list" class="card-list">
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-avatar"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-meta"></div>
+                    </div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-avatar"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-meta"></div>
+                    </div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-avatar"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-meta"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="error-message" class="error-message"></div>
+        </main>
+    </div>
+
+    <!-- 그룹 생성 모달 -->
+    <div class="modal-overlay" id="create-modal">
+        <div class="modal">
+            <h2>그룹 생성</h2>
+            <div class="form-group">
+                <label for="create-name">그룹 이름 *</label>
+                <input type="text" id="create-name" class="form-input" placeholder="그룹 이름을 입력하세요" maxlength="30" />
+            </div>
+            <div class="form-group">
+                <label for="create-image">이미지 URL (선택)</label>
+                <input type="text" id="create-image" class="form-input" placeholder="https://..." />
+            </div>
+            <div id="create-error" class="error-message"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="create-cancel-btn">취소</button>
+                <button class="btn btn-primary" id="create-submit-btn">생성</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 그룹 참가 모달 -->
+    <div class="modal-overlay" id="join-modal">
+        <div class="modal">
+            <h2>코드로 참가</h2>
+            <div class="form-group">
+                <label for="invite-code">초대 코드 *</label>
+                <input type="text" id="invite-code" class="form-input" placeholder="초대 코드 입력" maxlength="10"
+                    style="letter-spacing: 2px; text-transform: uppercase;" />
+            </div>
+            <div id="join-error" class="error-message"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="join-cancel-btn">취소</button>
+                <button class="btn btn-primary" id="join-submit-btn">참가</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 그룹 상세 모달 -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal">
+            <div class="group-detail-header">
+                <div class="group-detail-image" id="detail-image">G</div>
+                <div class="group-detail-info">
+                    <h2 id="detail-name">그룹명</h2>
+                    <div class="meta" id="detail-member-count">멤버 0명</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <span class="label">초대 코드</span>
+                <span style="display:flex;align-items:center;gap:6px;">
+                    <span class="invite-code-value" id="detail-invite-code">------</span>
+                    <button class="copy-btn" id="copy-code-btn" title="복사"><svg width="16" height="16"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                        </svg></button>
+                </span>
+            </div>
+            <div id="detail-error" class="error-message"></div>
+            <div class="detail-actions" style="flex-direction:column;gap:10px;">
+                <button class="btn btn-primary btn-full" id="detail-video-btn"
+                    style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.934a.5.5 0 0 0-.752-.432L16 10.5" />
+                        <rect x="2" y="6" width="14" height="12" rx="2" />
+                    </svg>
+                    화상회의 참가
+                </button>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-outline" id="detail-edit-btn" style="flex:1;">수정</button>
+                    <button class="btn btn-outline" id="detail-close-btn" style="flex:1;">닫기</button>
+                    <button class="btn btn-danger" id="detail-leave-btn" style="flex:1;">나가기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 그룹 수정 모달 -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal">
+            <h2>그룹 수정</h2>
+            <input type="hidden" id="edit-group-id" />
+            <div class="form-group">
+                <label for="edit-name">그룹 이름 *</label>
+                <input type="text" id="edit-name" class="form-input" placeholder="그룹 이름을 입력하세요" maxlength="30" />
+            </div>
+            <div class="form-group">
+                <label for="edit-image">이미지 URL (선택)</label>
+                <input type="text" id="edit-image" class="form-input" placeholder="https://..." />
+            </div>
+            <div id="edit-error" class="error-message"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="edit-cancel-btn">취소</button>
+                <button class="btn btn-primary" id="edit-submit-btn">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="icons.js"></script>
+    <script src="utils.js"></script>
+    <script src="groups.js"></script>
+</body>
+
+</html>
