@@ -32,6 +32,10 @@ public class MemberService {
     }
 
     public boolean isNicknameTaken(Member currentMember, String nickname) {
+        if (nickname == null || nickname.isEmpty()) {
+            return true;
+        }
+
         if (nickname.equals(currentMember.getNickname())) {
             return false;
         }
@@ -58,7 +62,7 @@ public class MemberService {
     public void initializeProfile(
             Member member, String nickname, String introduction, String image) {
 
-        if (nickname != null && isNicknameTaken(member, nickname)) {
+        if (isNicknameTaken(member, nickname)) {
             throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
         }
         member.initializeProfile(nickname, introduction, image);
