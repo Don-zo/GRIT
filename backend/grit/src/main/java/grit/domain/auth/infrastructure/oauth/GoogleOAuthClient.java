@@ -1,8 +1,9 @@
 package grit.domain.auth.infrastructure.oauth;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
+import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -13,11 +14,9 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationExch
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponse;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class GoogleOAuthClient {
 
     private static final String AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -37,6 +36,17 @@ public class GoogleOAuthClient {
     @Value("${google.redirect-uri}")
     private String redirectUri;
 
+    private RestClientAuthorizationCodeTokenResponseClient tokenClient;
+    private DefaultOAuth2UserService userService;
+    private ClientRegistration clientRegistration;
+
+    @PostConstruct
+    private void init() {
+        this.tokenClient = new RestClientAuthorizationCodeTokenResponseClient();
+        this.userService = new DefaultOAuth2UserService();
+        this.clientRegistration = buildClientRegistration();
+    }
+
     public OAuth2User getOAuth2User(String code, String redirectUri) {
         OAuth2AccessTokenResponse tokenResponse = exchangeCodeForToken(code, redirectUri);
         return getUserInfo(tokenResponse.getAccessToken());
@@ -44,13 +54,10 @@ public class GoogleOAuthClient {
 
     private OAuth2AccessTokenResponse exchangeCodeForToken(String code, String redirectUri) {
         OAuth2AuthorizationCodeGrantRequest grantRequest = buildGrantRequest(code, redirectUri);
-        RestClientAuthorizationCodeTokenResponseClient tokenClient =
-                new RestClientAuthorizationCodeTokenResponseClient();
         return tokenClient.getTokenResponse(grantRequest);
     }
 
     private OAuth2AuthorizationCodeGrantRequest buildGrantRequest(String code, String redirectUri) {
-        ClientRegistration clientRegistration = buildClientRegistration();
         OAuth2AuthorizationExchange exchange = buildAuthorizationExchange(code, redirectUri);
         return new OAuth2AuthorizationCodeGrantRequest(clientRegistration, exchange);
     }
@@ -75,10 +82,7 @@ public class GoogleOAuthClient {
     }
 
     private OAuth2User getUserInfo(OAuth2AccessToken accessToken) {
-        ClientRegistration clientRegistration = buildClientRegistration();
         OAuth2UserRequest userRequest = new OAuth2UserRequest(clientRegistration, accessToken);
-
-        DefaultOAuth2UserService userService = new DefaultOAuth2UserService();
         return userService.loadUser(userRequest);
     }
 
