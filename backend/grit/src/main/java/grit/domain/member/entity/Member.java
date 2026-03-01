@@ -38,15 +38,12 @@ public class Member {
     @Column(nullable = false)
     private String providerId;
 
-    @Setter
     @Column(length = 40)
     private String introduction;
 
-    @Setter
     private String image;
 
     @Builder.Default
-    @Setter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.PENDING;

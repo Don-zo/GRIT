@@ -32,10 +32,6 @@ public class MemberService {
     }
 
     public boolean isNicknameTaken(Member currentMember, String nickname) {
-        if (nickname == null || nickname.isEmpty()) {
-            return true;
-        }
-
         if (nickname.equals(currentMember.getNickname())) {
             return false;
         }
