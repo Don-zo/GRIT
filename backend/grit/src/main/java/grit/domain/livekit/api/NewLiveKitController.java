@@ -44,7 +44,7 @@ public class NewLiveKitController {
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @RequestParam Long groupId) {
 
-        Member member = memberService.findOne(memberPrincipal.id());
+        Member member = memberService.findMemberById(memberPrincipal.id());
 
         AccessToken token = new AccessToken(apiKey, apiSecret);
         token.setName(member.getNickname());
