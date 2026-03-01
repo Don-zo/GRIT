@@ -33,7 +33,7 @@ public class MemberService {
 
     public boolean isNicknameTaken(Member currentMember, String nickname) {
         if (nickname.equals(currentMember.getNickname())) {
-            return true;
+            return false;
         }
 
         return memberRepository.existsByNickname(nickname);
@@ -58,19 +58,18 @@ public class MemberService {
     public void initializeProfile(
             Member member, String nickname, String introduction, String image) {
 
-        if (isNicknameTaken(member, nickname)) {
+        if (nickname != null && isNicknameTaken(member, nickname)) {
             throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
         }
         member.initializeProfile(nickname, introduction, image);
     }
-
 
     // 정보 수정
     @Transactional
     public void updateProfile(
             Member member, String nickname, String introduction, String image) {
 
-        if (isNicknameTaken(member, nickname)) {
+        if (nickname != null && isNicknameTaken(member, nickname)) {
             throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
         }
         member.updateProfile(nickname, introduction, image);

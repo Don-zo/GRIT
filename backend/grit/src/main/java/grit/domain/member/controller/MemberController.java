@@ -2,7 +2,6 @@ package grit.domain.member.controller;
 
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.member.dto.MemberNickNameAvailabilityResponseDto;
-import grit.domain.member.dto.MemberNicknameAvailabilityRequestDto;
 import grit.domain.member.dto.MemberProfileInitializeRequestDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
@@ -69,10 +68,10 @@ public class MemberController {
     @GetMapping("/nickname-availability")
     public ResponseEntity<MemberNickNameAvailabilityResponseDto> checkNicknameAvailability(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
-            @RequestParam MemberNicknameAvailabilityRequestDto requestDto) {
+            @RequestParam("nickname") String nickname) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
-        boolean isAvailable = !memberService.isNicknameTaken(member, requestDto.nickname());
+        boolean isAvailable = !memberService.isNicknameTaken(member, nickname);
         return ResponseEntity.status(isAvailable ? HttpStatus.OK : HttpStatus.CONFLICT)
                 .body(new MemberNickNameAvailabilityResponseDto(isAvailable));
     }
