@@ -8,6 +8,7 @@ import grit.domain.member.entity.Member;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +35,7 @@ public class TokenService {
     @Transactional
     public String refreshAccessToken(String refreshTokenString) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenString)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid refresh token"));
         checkRefreshTokenValidity(refreshToken);
         return jwtProvider.createAccessToken(refreshToken.getMember());
     }
@@ -46,8 +47,7 @@ public class TokenService {
 
     private void checkRefreshTokenValidity(RefreshToken refreshToken) {
         if (refreshToken.isExpired()) {
-            refreshTokenRepository.delete(refreshToken);
-            throw new IllegalArgumentException("Refresh token has expired");
+            throw new BadCredentialsException("Refresh token has expired");
         }
     }
 }
