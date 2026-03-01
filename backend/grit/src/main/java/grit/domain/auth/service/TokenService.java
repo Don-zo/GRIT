@@ -42,7 +42,9 @@ public class TokenService {
 
     @Transactional
     public void invalidateRefreshToken(String refreshTokenString) {
-        refreshTokenRepository.deleteByToken(refreshTokenString);
+        if (refreshTokenString != null) {
+            refreshTokenRepository.deleteByToken(refreshTokenString);
+        }
     }
 
     private void checkRefreshTokenValidity(RefreshToken refreshToken) {
