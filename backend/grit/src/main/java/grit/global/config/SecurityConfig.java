@@ -1,7 +1,7 @@
 package grit.global.config;
 
 import grit.domain.auth.infrastructure.jwt.AuthenticationFilter;
-import grit.domain.auth.infrastructure.jwt.JwtProvider;
+import grit.global.handler.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,7 +24,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtProvider jwtProvider;
+    private final AuthenticationFilter authenticationFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     // 암호화 도구 등록
     @Bean
@@ -56,10 +57,13 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/auth/google").permitAll()
                 )
-                .addFilterBefore(new AuthenticationFilter(jwtProvider),
-                        UsernamePasswordAuthenticationFilter.class);
+                .exceptionHandling(handler -> handler
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
+                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }
