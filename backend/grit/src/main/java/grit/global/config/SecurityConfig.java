@@ -59,6 +59,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/google").permitAll()
+                        .requestMatchers("/actuator", "/actuator/prometheus").permitAll()
                         .requestMatchers("/", "/**/*.html", "/**/*.css", "/**/*.js").permitAll()
                         .anyRequest().authenticated()
                 )
