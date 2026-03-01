@@ -90,6 +90,8 @@ public class Member {
     }
 
     public void updateProfile(String nickname, String introduction, String image) {
+        validateRoleForUpdate();
+
         updateIfPresent(nickname, val -> this.nickname = val, "닉네임");
         updateIfPresent(introduction, val -> this.introduction = val, "자기소개");
         updateIfPresent(image, val -> this.image = val, "이미지");
@@ -99,6 +101,12 @@ public class Member {
     private void validateRoleForInitialization() {
         if (this.role != Role.PENDING) {
             throw new ProfileAlreadyInitializedException("이미 프로필이 초기화된 회원입니다.");
+        }
+    }
+
+    private void validateRoleForUpdate() {
+        if (this.role == Role.PENDING) {
+            throw new ProfileAlreadyInitializedException("아직 프로필이 초기화되지 않은 회원입니다.");
         }
     }
 
