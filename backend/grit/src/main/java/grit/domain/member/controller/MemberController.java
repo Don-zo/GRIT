@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +49,7 @@ public class MemberController {
     @PatchMapping("/me/profile")
     public ResponseEntity<MemberResponseDto> patchProfile(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
-            @RequestBody MemberProfilePatchRequestDto requestDto) {
+            @Valid @RequestBody MemberProfilePatchRequestDto requestDto) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
         memberService.updateProfile(member, requestDto.getNickname(), requestDto.getIntroduction(), requestDto.getImage());
@@ -58,7 +59,7 @@ public class MemberController {
     @PostMapping("/me/profile")
     public ResponseEntity<MemberResponseDto> initializeProfile(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
-            @RequestBody MemberProfileInitializeRequestDto requestDto) {
+            @Valid @RequestBody MemberProfileInitializeRequestDto requestDto) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
         memberService.initializeProfile(member, requestDto.nickname(), requestDto.introduction(), requestDto.image());

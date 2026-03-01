@@ -2,15 +2,14 @@ package grit.domain.member.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public record MemberProfileInitializeRequestDto(
         @Schema(description = "닉네임", example = "그릿유저")
-        @NotNull @NotBlank
+        @NotBlank
         String nickname,
 
         @Schema(description = "한 줄 소개", example = "오늘 하루도 파이팅")
-        @NotNull @NotBlank
+        @NotBlank
         String introduction,
 
         @NotBlank
