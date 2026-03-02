@@ -1,6 +1,6 @@
 export const OAUTH_CONFIG = {
     GOOGLE: {
-        AUTH_URL: "https://accounts.google.com/o/oauth2/v2/auth",
+        AUTH_URL: import.meta.env.VITE_GOOGLE_AUTH_URL,
         CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         REDIRECT_URI: import.meta.env.VITE_GOOGLE_REDIRECT_URI,
         RESPONSE_TYPE: "code",

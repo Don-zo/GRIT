@@ -4,6 +4,7 @@ import LandingPage from "@/pages/Landing";
 import LoginPage from "@/pages/Login";
 import SignupPage from "@/pages/Signup";
 import RoomPage from "@/pages/Room";
+import GoogleOAuthRedirectPage from "@/pages/OAuthRedirect";
 import { PATHS } from "@/routes/path";
 
 export const router = createBrowserRouter([
@@ -26,5 +27,9 @@ export const router = createBrowserRouter([
   {
     path: PATHS.ROOM,
     element: <RoomPage />,
+  },
+  {
+    path: PATHS.GOOGLE_OAUTH_REDIRECT,
+    element: <GoogleOAuthRedirectPage />,
   },
 ]);
