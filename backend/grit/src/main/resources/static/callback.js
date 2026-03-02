@@ -73,6 +73,9 @@ async function sendCodeToBackend(code) {
             saveMemberInfo(data.member);
         }
 
+        // 최초 가입 여부 저장 — profile-setup.js에서 POST/PATCH 분기에 사용
+        localStorage.setItem('is_first_time_user', data.firstTimeUser ? 'true' : 'false');
+
         updateStatus('로그인 성공! 이동 중...');
 
         // firstTimeUser 여부에 따라 다른 페이지로 리다이렉트
