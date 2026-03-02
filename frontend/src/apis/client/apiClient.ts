@@ -24,7 +24,7 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 apiClient.interceptors.response.use(
@@ -32,7 +32,7 @@ apiClient.interceptors.response.use(
   (error) => {
     console.error("api 에러", error.response?.status, error.response?.data);
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;
