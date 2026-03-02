@@ -49,11 +49,21 @@
                     </svg>
                     <span class="tooltip">투두</span>
                 </a>
+                <div class="sidebar-separator"></div>
+                <a class="sidebar-link sidebar-logout" id="logout-link">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span class="tooltip">로그아웃</span>
+                </a>
             </div>
         </nav>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content todo-page">
             <div class="page-header">
                 <div class="page-header-left">
                     <h1>투두</h1>
@@ -64,49 +74,55 @@
                 </div>
             </div>
 
-            <!-- 달성도 섹션 -->
-            <div class="glass-card todo-achievement-card" id="achievement-section">
-                <div class="achievement-header">
-                    <h2>최근 7일 달성도</h2>
+            <div class="todo-body-layout">
+                <!-- 왼쪽: 필터 + 목록 -->
+                <div class="todo-main-col">
+                    <!-- 필터 탭 -->
+                    <div class="todo-filter-row">
+                        <div class="filter-tabs">
+                            <button class="filter-tab active" data-filter="all">전체</button>
+                            <button class="filter-tab" data-filter="pending">미완료</button>
+                            <button class="filter-tab" data-filter="done">완료</button>
+                        </div>
+                        <div class="filter-category">
+                            <select class="form-input form-input-sm" id="category-filter">
+                                <option value="">모든 카테고리</option>
+                                <option value="SCHOOL">학교 과제</option>
+                                <option value="PROJECT">프로젝트</option>
+                                <option value="CERT">자격증</option>
+                                <option value="ETC">기타</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 투두 목록 -->
+                    <div id="todo-list" class="todo-list">
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-title"></div>
+                        </div>
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-title"></div>
+                        </div>
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-title"></div>
+                        </div>
+                    </div>
+
+                    <div id="error-message" class="error-message"></div>
                 </div>
-                <div class="achievement-bars" id="achievement-bars">
-                    <div class="skeleton" style="height:80px;border-radius:8px;"></div>
+
+                <!-- 오른쪽: 달성도 -->
+                <div class="todo-side-col">
+                    <div class="glass-card todo-achievement-card" id="achievement-section">
+                        <div class="achievement-header">
+                            <h2>최근 7일 달성도</h2>
+                        </div>
+                        <div class="achievement-bars" id="achievement-bars">
+                            <div class="skeleton" style="height:100px;border-radius:8px;width:100%;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- 필터 탭 -->
-            <div class="todo-filter-row">
-                <div class="filter-tabs">
-                    <button class="filter-tab active" data-filter="all">전체</button>
-                    <button class="filter-tab" data-filter="pending">미완료</button>
-                    <button class="filter-tab" data-filter="done">완료</button>
-                </div>
-                <div class="filter-category">
-                    <select class="form-input" id="category-filter"
-                        style="padding: 6px 12px; height: auto; font-size: 13px;">
-                        <option value="">모든 카테고리</option>
-                        <option value="SCHOOL">학교 과제</option>
-                        <option value="PROJECT">프로젝트</option>
-                        <option value="CERT">자격증</option>
-                        <option value="ETC">기타</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- 투두 목록 -->
-            <div id="todo-list" class="todo-list">
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-title"></div>
-                </div>
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-title"></div>
-                </div>
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-title"></div>
-                </div>
-            </div>
-
-            <div id="error-message" class="error-message"></div>
         </main>
     </div>
 

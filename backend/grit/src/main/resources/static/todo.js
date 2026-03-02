@@ -42,14 +42,14 @@ function escapeHtml(str) {
 
 async function fetchTodos() {
     const userId = getMemberId();
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos`);
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos`);
     if (!response.ok) throw new Error('투두 목록을 불러오지 못했습니다.');
     return response.json();
 }
 
 async function fetchAchievement() {
     const userId = getMemberId();
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos/achievement/last-7-days`);
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos/achievement/last-7-days`);
     if (!response.ok) throw new Error('달성도를 불러오지 못했습니다.');
     return response.json();
 }
@@ -60,7 +60,7 @@ async function createTodo(content, subjectCategory, dueDate) {
     if (subjectCategory) body.subjectCategory = subjectCategory;
     if (dueDate) body.dueDate = dueDate;
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -74,7 +74,7 @@ async function createTodo(content, subjectCategory, dueDate) {
 
 async function updateTodo(todoId, patch) {
     const userId = getMemberId();
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}?userId=${userId}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}?userId=${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -89,7 +89,7 @@ async function updateTodo(todoId, patch) {
 
 async function deleteTodo(todoId) {
     const userId = getMemberId();
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}?userId=${userId}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}?userId=${userId}`, {
         method: 'DELETE'
     });
     if (response.status === 403) throw new Error('본인의 투두만 삭제할 수 있습니다.');
@@ -369,4 +369,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!checkAuth()) return;
     loadTodos();
     loadAchievement();
+});
+
+document.getElementById('logout-link').addEventListener('click', () => {
+    if (confirm('로그아웃 하시겠습니까?')) logout();
 });

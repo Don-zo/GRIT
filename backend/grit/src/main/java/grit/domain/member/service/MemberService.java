@@ -5,6 +5,7 @@ import grit.domain.member.constant.SocialProvider;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
 import grit.global.exception.EntityNotFoundException;
+import grit.global.exception.NicknameConflictException;
 import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +60,7 @@ public class MemberService {
             Member member, String nickname, String introduction, String image) {
 
         if (isNicknameTaken(member, nickname)) {
-            throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
+            throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
         member.initializeProfile(nickname, introduction, image);
     }
@@ -70,7 +71,7 @@ public class MemberService {
             Member member, String nickname, String introduction, String image) {
 
         if (nickname != null && isNicknameTaken(member, nickname)) {
-            throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
+            throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
         member.updateProfile(nickname, introduction, image);
     }

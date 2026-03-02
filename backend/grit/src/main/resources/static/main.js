@@ -7,25 +7,6 @@ const deleteAccountBtn = document.getElementById('delete-account-btn');
 const editProfileBtn = document.getElementById('edit-profile-btn');
 const errorMessage = document.getElementById('error-message');
 
-// 로그아웃
-async function logout() {
-    // 백엔드에 로그아웃 요청 (HttpOnly 쿠키 삭제)
-    try {
-        await fetch('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'include'
-        });
-    } catch (e) {
-        // 네트워크 오류 무시
-    }
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('member_id');
-    localStorage.removeItem('member_email');
-    localStorage.removeItem('member_nickname');
-    localStorage.removeItem('member_introduction');
-    window.location.href = '/index.html';
-}
-
 // 에러 메시지 표시
 function showError(message) {
     errorMessage.textContent = message;
@@ -51,8 +32,7 @@ async function fetchUserInfo() {
 
         if (!token || !memberId) throw new Error('인증 정보가 없습니다.');
 
-        // 백앤드는 JWT에서 사용자를 추출 (path var은 무시됨)
-        const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/${memberId}`);
+        const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me`);
 
         if (!response.ok) throw new Error('사용자 정보를 불러올 수 없습니다.');
 

@@ -26,7 +26,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ProfileAlreadyInitializedException.class)
-    public ResponseEntity<ErrorResponseDto> handleEntityNotFound(ProfileAlreadyInitializedException ex) {
+    public ResponseEntity<ErrorResponseDto> handleProfileAlreadyInitialized(ProfileAlreadyInitializedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ProfileNotInitializedException.class)
+    public ResponseEntity<ErrorResponseDto> handleProfileNotInitialized(ProfileNotInitializedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(NicknameConflictException.class)
+    public ResponseEntity<ErrorResponseDto> handleNicknameConflict(NicknameConflictException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
     }
 
@@ -49,4 +59,3 @@ public class GlobalExceptionHandler {
     }
 
 }
-
