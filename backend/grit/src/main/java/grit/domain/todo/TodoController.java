@@ -1,9 +1,9 @@
-package grit.todolist;
+package grit.domain.todo;
 
-import grit.todolist.dto.CreateTodoRequestDTO;
-import grit.todolist.dto.DailyAchievementDTO;
-import grit.todolist.dto.TodoResponseDTO;
-import grit.todolist.dto.UpdateTodoRequestDTO;
+import grit.domain.todo.dto.CreateTodoRequestDTO;
+import grit.domain.todo.dto.DailyAchievementDTO;
+import grit.domain.todo.dto.TodoResponseDTO;
+import grit.domain.todo.dto.UpdateTodoRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -38,28 +38,28 @@ public class TodoController {
         return ResponseEntity.ok(responses);
     }
 
-    @Operation(summary = "방별 투두 목록 조회", description = "특정 방의 투두 목록을 조회합니다.")
+    @Operation(summary = "그룹별 투두 목록 조회", description = "특정 그룹의 투두 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "403", description = "해당 방의 멤버가 아님", content = @Content)
+            @ApiResponse(responseCode = "403", description = "해당 그룹의 멤버가 아님", content = @Content)
     })
-    @GetMapping("/api/rooms/{roomId}/todos")
+    @GetMapping("/api/groups/{groupId}/todos")
     public ResponseEntity<List<TodoResponseDTO>> findAll(
-            @Parameter(description = "방 ID (PK)", example = "1") @PathVariable Long roomId,
+            @Parameter(description = "그룹 ID (PK)", example = "1") @PathVariable Long groupId,
             @Parameter(description = "사용자 ID (PK)", example = "1") @RequestParam Long userId,
             @Parameter(description = "작성자 ID (PK, 선택사항)", example = "1") @RequestParam(required = false) Long ownerId) {
-        List<Todo> todos = todoService.findAll(roomId, userId, ownerId);
+        List<Todo> todos = todoService.findAll(groupId, userId, ownerId);
         List<TodoResponseDTO> responses = todos.stream()
                 .map(TodoResponseDTO::from)
                 .toList();
         return ResponseEntity.ok(responses);
     }
 
-    @Operation(summary = "투두 생성", description = "새로운 투두를 생성합니다. 방 ID는 선택사항입니다.")
+    @Operation(summary = "투두 생성", description = "새로운 투두를 생성합니다. 그룹 ID는 선택사항입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "투두 생성 성공"),
-            @ApiResponse(responseCode = "403", description = "해당 방의 멤버가 아님", content = @Content),
-            @ApiResponse(responseCode = "404", description = "사용자 또는 방을 찾을 수 없음", content = @Content)
+            @ApiResponse(responseCode = "403", description = "해당 그룹의 멤버가 아님", content = @Content),
+            @ApiResponse(responseCode = "404", description = "사용자 또는 그룹을 찾을 수 없음", content = @Content)
     })
     @PostMapping("/api/users/{userId}/todos")
     public ResponseEntity<TodoResponseDTO> create(
@@ -109,3 +109,4 @@ public class TodoController {
         return ResponseEntity.ok(achievements);
     }
 }
+
