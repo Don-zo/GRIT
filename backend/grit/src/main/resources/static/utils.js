@@ -76,6 +76,20 @@
 })();
 
 // ────────────────────────────────────────
+// 공통 로그아웃
+// ────────────────────────────────────────
+
+window.logout = async function () {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) { /* ignore */ }
+    ['access_token', 'member_id', 'member_email', 'member_nickname',
+        'member_introduction', 'is_first_time_user']
+        .forEach(k => localStorage.removeItem(k));
+    window.location.href = '/index.html';
+};
+
+// ────────────────────────────────────────
 // Toast 알림 시스템
 // ────────────────────────────────────────
 
