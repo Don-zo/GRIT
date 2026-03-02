@@ -52,16 +52,15 @@ export default function CreateGroupModal({
     setIsLoading(true);
 
     try {
-      const result = await createGroup(1, {
+      const result = await createGroup(2, {
         name: groupName,
         imageUrl:
-          previewImage ||
           "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
       });
 
       console.log("그룹 생성 성공:", result);
 
-      setInviteCode(`GROUP-${result.id}`);
+      setInviteCode(result.inviteCode);
       setShowInviteCode(true);
     } catch (err) {
       console.error("그룹 생성 실패:", err);
