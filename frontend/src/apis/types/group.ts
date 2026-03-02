@@ -8,6 +8,7 @@ export interface CreateGroupRequest {
 export interface CreateGroupResponse {
   id: number;
   name: string;
+  inviteCode: string;
   memberCount: number;
   imageUrl: string;
 }

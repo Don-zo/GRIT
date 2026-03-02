@@ -1,43 +1,50 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Header from "@/pages/Landing/components/Header";
 import IntroductionCard from "@/pages/Landing/components/IntroductionSection/IntroductionCard";
 
 export default function IntroductionSection() {
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
+  const [currentSection, setCurrentSection] = useState(0);
   const isScrollingRef = useRef(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (
-            entry.isIntersecting &&
-            entry.intersectionRatio >= 0.6 &&
-            !isScrollingRef.current
-          ) {
-            isScrollingRef.current = true;
-            entry.target.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
+    const handleWheel = (e: WheelEvent) => {
+      if (isScrollingRef.current) {
+        e.preventDefault();
+        return;
+      }
 
-            setTimeout(() => {
-              isScrollingRef.current = false;
-            }, 1000);
-          }
+      const delta = e.deltaY;
+      let nextSection = currentSection;
+
+      if (delta > 0 && currentSection < sectionsRef.current.length - 1) {
+        nextSection = currentSection + 1;
+      } else if (delta < 0 && currentSection > 0) {
+        nextSection = currentSection - 1;
+      }
+
+      if (nextSection !== currentSection) {
+        e.preventDefault();
+        isScrollingRef.current = true;
+        setCurrentSection(nextSection);
+
+        sectionsRef.current[nextSection]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
         });
-      },
-      {
-        threshold: [0.5, 0.7, 1.0],
-      },
-    );
 
-    sectionsRef.current.forEach((section) => {
-      if (section) observer.observe(section);
-    });
+        setTimeout(() => {
+          isScrollingRef.current = false;
+        }, 1500);
+      }
+    };
 
-    return () => observer.disconnect();
-  }, []);
+    window.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, [currentSection]);
 
   return (
     <>
@@ -47,6 +54,7 @@ export default function IntroductionSection() {
         ref={(sec) => {
           sectionsRef.current[0] = sec;
         }}
+        className="h-screen"
       >
         <IntroductionCard
           functionName="캠스터디"
@@ -58,6 +66,7 @@ export default function IntroductionSection() {
         ref={(sec) => {
           sectionsRef.current[1] = sec;
         }}
+        className="h-screen"
       >
         <IntroductionCard
           functionName="뽀모도로"
@@ -69,6 +78,7 @@ export default function IntroductionSection() {
         ref={(sec) => {
           sectionsRef.current[2] = sec;
         }}
+        className="h-screen"
       >
         <IntroductionCard
           functionName="투두리스트 관리"
