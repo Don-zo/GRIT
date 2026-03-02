@@ -72,7 +72,7 @@ async function updateProfile(nickname, introduction) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 nickname,
-                introduction: introduction || '-',  // Member.validateAndGet이 null/blank 거부
+                introduction,
                 image: localStorage.getItem('member_image') || DEFAULT_IMAGE
             })
         });

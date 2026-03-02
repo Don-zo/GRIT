@@ -79,11 +79,9 @@ async function logout() {
             credentials: 'include'
         });
     } catch (e) { /* ignore */ }
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('member_id');
-    localStorage.removeItem('member_email');
-    localStorage.removeItem('member_nickname');
-    localStorage.removeItem('member_introduction');
+    ['access_token', 'member_id', 'member_email', 'member_nickname',
+        'member_introduction', 'is_first_time_user']
+        .forEach(k => localStorage.removeItem(k));
     window.location.href = '/index.html';
 }
 
