@@ -51,8 +51,7 @@ async function fetchUserInfo() {
 
         if (!token || !memberId) throw new Error('인증 정보가 없습니다.');
 
-        // 백앤드는 JWT에서 사용자를 추출 (path var은 무시됨)
-        const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/${memberId}`);
+        const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me`);
 
         if (!response.ok) throw new Error('사용자 정보를 불러올 수 없습니다.');
 

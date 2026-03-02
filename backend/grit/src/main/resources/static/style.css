@@ -1231,14 +1231,43 @@ textarea.form-input {
    Todo
    ═══════════════════════════════════════════ */
 
+/* Todo page — wider container */
+.todo-page {
+    max-width: 1100px;
+}
+
+/* Two-column body layout */
+.todo-body-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.todo-main-col {
+    flex: 1;
+    min-width: 0;
+}
+
+.todo-side-col {
+    width: 260px;
+    flex-shrink: 0;
+}
+
+/* Compact form input variant */
+.form-input-sm {
+    padding: 6px 12px;
+    height: auto;
+    font-size: 13px;
+}
+
 /* Achievement card */
 .todo-achievement-card {
-    margin-bottom: var(--space-6);
-    padding: var(--space-5);
+    margin-bottom: 24px;
+    padding: 20px;
 }
 
 .achievement-header {
-    margin-bottom: var(--space-4);
+    margin-bottom: 16px;
 }
 
 .achievement-header h2 {
@@ -1252,7 +1281,7 @@ textarea.form-input {
     display: flex;
     align-items: flex-end;
     gap: 8px;
-    height: 80px;
+    height: 100px;
 }
 
 .achievement-bar-item {
@@ -1295,8 +1324,8 @@ textarea.form-input {
 .todo-filter-row {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
+    gap: 12px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
 }
 
@@ -1474,6 +1503,14 @@ textarea.form-input {
     }
 
     .todo-filter-row {
-        gap: var(--space-2);
+        gap: 8px;
+    }
+
+    .todo-body-layout {
+        flex-direction: column;
+    }
+
+    .todo-side-col {
+        width: 100%;
     }
 }

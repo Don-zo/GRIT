@@ -56,7 +56,7 @@ function loadMemberInfo() {
 nicknameInput.addEventListener('input', () => updateCounter(nicknameInput, 'nickname-counter', 20));
 introductionInput.addEventListener('input', () => updateCounter(introductionInput, 'intro-counter', 200));
 
-// 프로필 초기 설정 (최초 가입 시) → POST /api/members/me/profile
+// 프로필 저장 — 최초 가입이면 POST (초기화), 수정이면 PATCH
 async function updateProfile(nickname, introduction) {
     try {
         const token = localStorage.getItem('access_token');
@@ -64,12 +64,15 @@ async function updateProfile(nickname, introduction) {
 
         const DEFAULT_IMAGE = `https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(localStorage.getItem('member_email') || 'grit')}`;
 
+        const isFirstTime = localStorage.getItem('is_first_time_user') !== 'false';
+        const method = isFirstTime ? 'POST' : 'PATCH';
+
         const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/profile`, {
-            method: 'POST',
+            method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 nickname,
-                introduction: introduction || '-',  // Member.validateAndGet이 null/blank 거부 → 기본값 '-'
+                introduction: introduction || '-',  // Member.validateAndGet이 null/blank 거부
                 image: localStorage.getItem('member_image') || DEFAULT_IMAGE
             })
         });
@@ -86,6 +89,9 @@ async function updateProfile(nickname, introduction) {
         else localStorage.removeItem('member_nickname');
         if (updated.introduction) localStorage.setItem('member_introduction', updated.introduction);
         else localStorage.removeItem('member_introduction');
+
+        // 초기화 완료 후 플래그 해제
+        localStorage.setItem('is_first_time_user', 'false');
 
         return updated;
     } catch (error) {

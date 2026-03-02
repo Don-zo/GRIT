@@ -197,3 +197,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!checkAuth()) return;
     loadFriends();
 });
+
+// 로그아웃
+async function logout() {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) { /* ignore */ }
+    ['access_token', 'member_id', 'member_email', 'member_nickname', 'member_introduction']
+        .forEach(k => localStorage.removeItem(k));
+    window.location.href = '/index.html';
+}
+
+document.getElementById('logout-link').addEventListener('click', () => {
+    if (confirm('로그아웃 하시겠습니까?')) logout();
+});
