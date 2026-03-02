@@ -1,6 +1,10 @@
 import SocialLoginButton from "@/components/auth/SocialLoginButton";
+import { redirectToGoogleAuth } from "@/utils/oauth";
 
 const SignupPage = () => {
+  const handleGoogleLogin = () => {
+    redirectToGoogleAuth();
+  };
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#f5f5f5]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(34,34,34,0)_0%,rgba(62,115,88,0.12)_100%)]" />
@@ -29,7 +33,10 @@ const SignupPage = () => {
               </p>
 
               <div className="mt-8 flex w-[320px] max-w-[92vw] flex-col items-center space-y-5">
-                <SocialLoginButton provider="google" />
+                <SocialLoginButton
+                  provider="google"
+                  onClick={handleGoogleLogin}
+                />
                 <SocialLoginButton provider="naver" />
                 <SocialLoginButton provider="kakao" />
               </div>
