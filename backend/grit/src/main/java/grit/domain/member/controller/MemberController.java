@@ -27,15 +27,15 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    @Operation(summary = "특정 회원 조회", description = "id를 이용하여 특정 사용자를 조회합니다.")
+    @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자의 정보를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자 ID", content = @Content)
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content)
     })
-    @GetMapping("/{id}")
+    @GetMapping("/me")
     public ResponseEntity<MemberResponseDto> findOne(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
-        Member member = memberService.findMemberById(memberPrincipal.id());
+        Member member = getAuthenticatedMember(memberPrincipal);
         return ResponseEntity.ok(new MemberResponseDto(member));
     }
 
@@ -51,8 +51,9 @@ public class MemberController {
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Valid @RequestBody MemberProfilePatchRequestDto requestDto) {
 
-        Member member = memberService.findMemberById(memberPrincipal.id());
-        memberService.updateProfile(member, requestDto.getNickname(), requestDto.getIntroduction(), requestDto.getImage());
+        Member member = getAuthenticatedMember(memberPrincipal);
+        memberService.updateProfile(member, requestDto.getNickname(), requestDto.getIntroduction(),
+                requestDto.getImage());
         return ResponseEntity.ok(new MemberResponseDto(member));
     }
 
@@ -61,8 +62,9 @@ public class MemberController {
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Valid @RequestBody MemberProfileInitializeRequestDto requestDto) {
 
-        Member member = memberService.findMemberById(memberPrincipal.id());
-        memberService.initializeProfile(member, requestDto.nickname(), requestDto.introduction(), requestDto.image());
+        Member member = getAuthenticatedMember(memberPrincipal);
+        memberService.initializeProfile(member, requestDto.nickname(), requestDto.introduction(),
+                requestDto.image());
         return ResponseEntity.ok(new MemberResponseDto(member));
     }
 
@@ -71,7 +73,7 @@ public class MemberController {
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @RequestParam("nickname") String nickname) {
 
-        Member member = memberService.findMemberById(memberPrincipal.id());
+        Member member = getAuthenticatedMember(memberPrincipal);
         boolean isAvailable = !memberService.isNicknameTaken(member, nickname);
         return ResponseEntity.status(isAvailable ? HttpStatus.OK : HttpStatus.CONFLICT)
                 .body(new MemberNickNameAvailabilityResponseDto(isAvailable));
@@ -86,8 +88,12 @@ public class MemberController {
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
 
-        Member member = memberService.findMemberById(memberPrincipal.id());
+        Member member = getAuthenticatedMember(memberPrincipal);
         memberService.delete(member);
         return ResponseEntity.noContent().build();
+    }
+
+    private Member getAuthenticatedMember(MemberPrincipal principal) {
+        return memberService.findMemberById(principal.id());
     }
 }
