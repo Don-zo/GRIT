@@ -3,6 +3,7 @@ package grit.domain.member.entity;
 import grit.domain.member.constant.Role;
 import grit.domain.member.constant.SocialProvider;
 import grit.global.exception.ProfileAlreadyInitializedException;
+import grit.global.exception.ProfileNotInitializedException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -81,7 +82,7 @@ public class Member {
         validateRoleForInitialization();
 
         this.nickname = validateAndGet(nickname, "닉네임");
-        this.introduction = validateAndGet(introduction, "자기소개");
+        this.introduction = requireNotNull(introduction, "자기소개");
         this.image = validateAndGet(image, "이미지");
         this.role = Role.USER;
     }
@@ -90,10 +91,9 @@ public class Member {
         validateRoleForUpdate();
 
         updateIfPresent(nickname, val -> this.nickname = val, "닉네임");
-        updateIfPresent(introduction, val -> this.introduction = val, "자기소개");
+        updateIfPresentAllowBlank(introduction, val -> this.introduction = val);
         updateIfPresent(image, val -> this.image = val, "이미지");
     }
-
 
     private void validateRoleForInitialization() {
         if (this.role != Role.PENDING) {
@@ -103,7 +103,7 @@ public class Member {
 
     private void validateRoleForUpdate() {
         if (this.role == Role.PENDING) {
-            throw new ProfileAlreadyInitializedException("아직 프로필이 초기화되지 않은 회원입니다.");
+            throw new ProfileNotInitializedException("아직 프로필이 초기화되지 않은 회원입니다.");
         }
     }
 
@@ -114,9 +114,22 @@ public class Member {
         return value;
     }
 
+    private String requireNotNull(String value, String fieldName) {
+        if (value == null) {
+            throw new IllegalArgumentException(fieldName + "은(는) 필수입니다.");
+        }
+        return value;
+    }
+
     private void updateIfPresent(String value, Consumer<String> setter, String fieldName) {
         if (value != null) {
             setter.accept(validateAndGet(value, fieldName));
+        }
+    }
+
+    private void updateIfPresentAllowBlank(String value, Consumer<String> setter) {
+        if (value != null) {
+            setter.accept(value);
         }
     }
 
