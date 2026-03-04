@@ -23,6 +23,14 @@ const draw = {
   }),
 };
 
+const dotFade = {
+  hidden: { opacity: 0 },
+  visible: ({ delay }: { delay: number }) => ({
+    opacity: 1,
+    transition: { opacity: { delay, duration: 1.2, ease: "easeOut" } },
+  }),
+};
+
 const strokeGap = 1;
 const strokePartGap = 0.5;
 
@@ -130,8 +138,8 @@ export default function GritLogo({ startDelay = 0.5 }: GritLogoProps) {
         strokeWidth={100}
         fill="transparent"
         strokeLinecap="round"
-        variants={draw}
-        custom={{ delay: tDot, duration: LETTER_DURATION["."] }}
+        variants={dotFade}
+        custom={{ delay: tDot }}
         initial="hidden"
         animate="visible"
       />
