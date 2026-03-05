@@ -93,6 +93,7 @@ public class Member {
         this.nickname = validateAndGet(nickname, "닉네임");
         this.introduction = requireNotNull(introduction, "자기소개");
         this.image = validateAndGet(image, "이미지");
+        validateDDayConsistency(dDayDate, dDayTitle);
         this.dDayDate = dDayDate;
         this.dDayTitle = dDayTitle;
         this.weeklyStudyTimeGoal = weeklyStudyTimeGoal;
@@ -109,7 +110,7 @@ public class Member {
         updateIfPresent(dDayDate, val -> this.dDayDate = val);
         updateIfPresent(dDayTitle, val -> this.dDayTitle = val);
         updateIfPresent(weeklyStudyTimeGoal, val -> this.weeklyStudyTimeGoal = val);
-
+        validateDDayConsistency(this.dDayDate, this.dDayTitle);
     }
 
     private void validateRoleForInitialization() {
@@ -121,6 +122,14 @@ public class Member {
     private void validateRoleForUpdate() {
         if (this.role == Role.PENDING) {
             throw new ProfileNotInitializedException("아직 프로필이 초기화되지 않은 회원입니다.");
+        }
+    }
+
+    private void validateDDayConsistency(LocalDate dDayDate, String dDayTitle) {
+        boolean hasDate = (dDayDate != null);
+        boolean hasTitle = (dDayTitle != null && !dDayTitle.isBlank());
+        if (hasDate != hasTitle) {
+            throw new IllegalArgumentException("D-Day 날짜와 제목은 함께 제공되거나 함께 비어 있어야 합니다.");
         }
     }
 
