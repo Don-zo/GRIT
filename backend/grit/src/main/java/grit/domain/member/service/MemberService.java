@@ -5,6 +5,8 @@ import grit.domain.member.constant.SocialProvider;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
 import grit.global.exception.EntityNotFoundException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import grit.global.exception.NicknameConflictException;
 import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,23 +59,25 @@ public class MemberService {
 
     @Transactional
     public void initializeProfile(
-            Member member, String nickname, String introduction, String image) {
+            Member member, String nickname, String introduction, String image,
+            LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
 
         if (isNicknameTaken(member, nickname)) {
             throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
-        member.initializeProfile(nickname, introduction, image);
+        member.initializeProfile(nickname, introduction, image, dDayDate, dDayTitle, weeklyStudyTimeGoal);
     }
 
     // 정보 수정
     @Transactional
     public void updateProfile(
-            Member member, String nickname, String introduction, String image) {
+            Member member, String nickname, String introduction, String image,
+            LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
 
         if (nickname != null && isNicknameTaken(member, nickname)) {
             throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
-        member.updateProfile(nickname, introduction, image);
+        member.updateProfile(nickname, introduction, image, dDayDate, dDayTitle, weeklyStudyTimeGoal);
     }
 
     // 회원 탈퇴
