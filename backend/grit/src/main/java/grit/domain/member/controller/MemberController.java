@@ -36,7 +36,7 @@ public class MemberController {
     public ResponseEntity<MemberResponseDto> findOne(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
         Member member = getAuthenticatedMember(memberPrincipal);
-        return ResponseEntity.ok(new MemberResponseDto(member));
+        return ResponseEntity.ok(MemberResponseDto.from(member));
     }
 
     @Operation(summary = "정보 수정", description = "사용자의 정보(닉네임, 비밀번호, 한 줄 소개)를 수정합니다. 3개 중 하나만 응답 바디에 적어도 정상적으로 수정됩니다.")
@@ -52,9 +52,10 @@ public class MemberController {
             @Valid @RequestBody MemberProfilePatchRequestDto requestDto) {
 
         Member member = getAuthenticatedMember(memberPrincipal);
-        memberService.updateProfile(member, requestDto.getNickname(), requestDto.getIntroduction(),
-                requestDto.getImage());
-        return ResponseEntity.ok(new MemberResponseDto(member));
+        memberService.updateProfile(member, requestDto.nickname(), requestDto.introduction(),
+                requestDto.image(), requestDto.dDayDate(), requestDto.dDayTitle(),
+                requestDto.weeklyStudyTimeGoal());
+        return ResponseEntity.ok(MemberResponseDto.from(member));
     }
 
     @PostMapping("/me/profile")
@@ -64,8 +65,9 @@ public class MemberController {
 
         Member member = getAuthenticatedMember(memberPrincipal);
         memberService.initializeProfile(member, requestDto.nickname(), requestDto.introduction(),
-                requestDto.image());
-        return ResponseEntity.ok(new MemberResponseDto(member));
+                requestDto.image(), requestDto.dDayDate(), requestDto.dDayTitle(),
+                requestDto.weeklyStudyTimeGoal());
+        return ResponseEntity.ok(MemberResponseDto.from(member));
     }
 
     @GetMapping("/nickname-availability")
