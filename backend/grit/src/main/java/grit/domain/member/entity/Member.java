@@ -4,7 +4,9 @@ import grit.domain.member.constant.Role;
 import grit.domain.member.constant.SocialProvider;
 import grit.global.exception.ProfileAlreadyInitializedException;
 import grit.global.exception.ProfileNotInitializedException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 import grit.domain.group.entity.MemberGroup;
@@ -18,7 +20,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "members")
-@ToString(exclude = {"memberGroups", "friends"}) // lombok 무한루프 방지용
+@ToString(exclude = { "memberGroups", "friends" }) // lombok 무한루프 방지용
 public class Member {
 
     @Id
@@ -42,7 +44,17 @@ public class Member {
     @Column(length = 40)
     private String introduction;
 
+    @Column
     private String image;
+
+    @Column
+    private LocalDate dDayDate;
+
+    @Column
+    private String dDayTitle;
+
+    @Column
+    private LocalTime weeklyStudyTimeGoal;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -60,11 +72,7 @@ public class Member {
 
     // friend
     @ManyToMany
-    @JoinTable(
-            name = "friendship",
-            joinColumns = @JoinColumn(name = "member_id"),
-            inverseJoinColumns = @JoinColumn(name = "friend_id")
-    )
+    @JoinTable(name = "friendship", joinColumns = @JoinColumn(name = "member_id"), inverseJoinColumns = @JoinColumn(name = "friend_id"))
     @Builder.Default
     private Set<Member> friends = new HashSet<>();
 
@@ -78,21 +86,30 @@ public class Member {
         member.getFriends().remove(this);
     }
 
-    public void initializeProfile(String nickname, String introduction, String image) {
+    public void initializeProfile(String nickname, String introduction, String image,
+            LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
         validateRoleForInitialization();
 
         this.nickname = validateAndGet(nickname, "닉네임");
         this.introduction = requireNotNull(introduction, "자기소개");
         this.image = validateAndGet(image, "이미지");
+        this.dDayDate = dDayDate;
+        this.dDayTitle = dDayTitle;
+        this.weeklyStudyTimeGoal = weeklyStudyTimeGoal;
         this.role = Role.USER;
     }
 
-    public void updateProfile(String nickname, String introduction, String image) {
+    public void updateProfile(String nickname, String introduction, String image,
+            LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
         validateRoleForUpdate();
 
         updateIfPresent(nickname, val -> this.nickname = val, "닉네임");
         updateIfPresentAllowBlank(introduction, val -> this.introduction = val);
         updateIfPresent(image, val -> this.image = val, "이미지");
+        updateIfPresent(dDayDate, val -> this.dDayDate = val);
+        updateIfPresent(dDayTitle, val -> this.dDayTitle = val);
+        updateIfPresent(weeklyStudyTimeGoal, val -> this.weeklyStudyTimeGoal = val);
+
     }
 
     private void validateRoleForInitialization() {
@@ -124,6 +141,12 @@ public class Member {
     private void updateIfPresent(String value, Consumer<String> setter, String fieldName) {
         if (value != null) {
             setter.accept(validateAndGet(value, fieldName));
+        }
+    }
+
+    private <T> void updateIfPresent(T value, Consumer<T> setter) {
+        if (value != null) {
+            setter.accept(value);
         }
     }
 

@@ -41,7 +41,7 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
 
         return ResponseEntity.status(isMemberPending ? HttpStatus.CREATED : HttpStatus.OK).body(
-                new AuthResponseDto(new MemberResponseDto(member), tokenPair.accessToken(),
+                new AuthResponseDto(MemberResponseDto.from(member), tokenPair.accessToken(),
                         isMemberPending));
     }
 
