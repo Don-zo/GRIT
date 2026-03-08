@@ -35,6 +35,11 @@ public class LiveKitController2 {
     private final MemberService memberService;
     private final LiveKitService liveKitService;
 
+    private static final List<SupportReactionsResponseDto> SUPPORTED_REACTIONS =
+            Arrays.stream(ReactionEmoji.values())
+                    .map(e -> new SupportReactionsResponseDto(e.name(), e.getEmoji()))
+                    .toList();
+
     @Operation(summary = "LiveKit 토큰 발급", description = "화상 회의 참여를 위한 LiveKit 액세스 토큰을 발급합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "토큰 발급 성공")
@@ -52,11 +57,7 @@ public class LiveKitController2 {
     @GetMapping("/reactions")
     public ResponseEntity<List<SupportReactionsResponseDto>> getSupportReactions() {
 
-        return ResponseEntity.ok(
-                Arrays.stream(ReactionEmoji.values())
-                        .map(e -> new SupportReactionsResponseDto(e.name(), e.getEmoji()))
-                        .toList()
-        );
+        return ResponseEntity.ok(SUPPORTED_REACTIONS);
     }
 
     @PostMapping("/reaction")
