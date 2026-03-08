@@ -41,7 +41,7 @@ public class LiveKitController2 {
             @PathVariable Long groupId) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
-        AccessToken token = liveKitService.generateToken(member, roomName(groupId));
+        AccessToken token = liveKitService.generateToken(member, groupId);
         return ResponseEntity.ok(Map.of("token", token.toJwt()));
     }
 
@@ -52,11 +52,7 @@ public class LiveKitController2 {
             @Valid @RequestBody LiveKitReactionRequestDto requestDto) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
-        liveKitService.sendReaction(member, roomName(groupId), requestDto.emoji());
+        liveKitService.sendReaction(member, groupId, requestDto.emoji());
         return ResponseEntity.noContent().build();
-    }
-
-    private String roomName(Long groupId) {
-        return "group:" + groupId;
     }
 }
