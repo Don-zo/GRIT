@@ -6,6 +6,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -77,7 +78,7 @@ public class JwtProvider {
                     .getPayload();
         } catch (ExpiredJwtException e) {
             throw new BadCredentialsException("Expired access token");
-        } catch (MalformedJwtException e) {
+        } catch (MalformedJwtException | SignatureException e) {
             throw new BadCredentialsException("Malformed access token");
         }
     }
