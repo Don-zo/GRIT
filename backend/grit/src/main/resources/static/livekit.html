@@ -617,29 +617,8 @@
         const { Room, RoomEvent } = LivekitClient;
         const WS_URL = 'wss://grit-livekit.jun0.dev:7880';
 
-        // 백엔드 ReactionEmoji enum과 1:1 매핑
-        const REACTION_EMOJIS = [
-            { name: 'THUMBS_UP', char: '👍' },
-            { name: 'THUMBS_DOWN', char: '👎' },
-            { name: 'CLAP', char: '👏' },
-            { name: 'RAISED_HAND', char: '✋' },
-            { name: 'HEART', char: '❤️' },
-            { name: 'HEART_HANDS', char: '🫶' },
-            { name: 'MIDDLE_FINGER', char: '🖕' },
-            { name: 'PRAY', char: '🙏' },
-            { name: 'FIST', char: '✊' },
-            { name: 'WOW', char: '😮' },
-            { name: 'PLEADING', char: '🥺' },
-            { name: 'CRY', char: '😭' },
-            { name: 'ANGRY', char: '🤬' },
-            { name: 'SAD', char: '😢' },
-            { name: 'SCREAM', char: '😱' },
-            { name: 'ROLLING_EYES', char: '🙄' },
-            { name: 'SLEEP', char: '😴' },
-            { name: 'NAUSEATED', char: '🤢' },
-            { name: 'MIND_BLOWN', char: '🤯' },
-            { name: 'SKULL', char: '💀' },
-        ];
+        // 백엔드 API에서 동적으로 로드
+        let REACTION_EMOJIS = [];
 
         let room = null;
         let isMicOn = true;
@@ -653,9 +632,25 @@
         const groupName = urlParams.get('groupName') || `Group #${groupId}`;
 
         // ────────────────────────────────────────
+        // 리액션 목록 API에서 가져오기
+        // ────────────────────────────────────────
+        async function fetchSupportedReactions() {
+            try {
+                const res = await apiFetch(`/api/group/${groupId}/livekit/reactions`);
+                if (!res.ok) throw new Error('리액션 목록 로드 실패');
+                const data = await res.json();
+                // API 응답: [{ name, emoji }]
+                REACTION_EMOJIS = data.map(r => ({ name: r.name, char: r.emoji }));
+            } catch (err) {
+                console.error('리액션 목록 로드 오류:', err);
+                REACTION_EMOJIS = [];
+            }
+        }
+
+        // ────────────────────────────────────────
         // 초기화
         // ────────────────────────────────────────
-        function init() {
+        async function init() {
             if (!localStorage.getItem('access_token')) {
                 window.location.href = '/index.html';
                 return;
@@ -670,6 +665,7 @@
             document.getElementById('group-id-display').textContent = groupName;
             document.getElementById('connect-overlay').style.display = 'flex';
 
+            await fetchSupportedReactions();
             buildReactionPicker();
         }
 
