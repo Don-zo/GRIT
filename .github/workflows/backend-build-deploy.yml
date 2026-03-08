@@ -78,4 +78,4 @@ jobs:
           fi
           chmod +x $JAR_NAME
           export RUNNER_TRACKING_ID=""
-          nohup java -jar $JAR_NAME > app.log 2>&1 &
+          nohup java -jar $JAR_NAME --spring.profiles.active=prod > app.log 2>&1 &
