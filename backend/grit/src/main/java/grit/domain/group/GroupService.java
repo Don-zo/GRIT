@@ -19,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class GroupService {
+
     private final GroupRepository groupRepository;
     private final MemberGroupRepository memberGroupRepository;
     private final MemberRepository memberRepository;
@@ -71,7 +72,8 @@ public class GroupService {
         Group group = groupRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 초대 코드입니다."));
 
-        boolean isAlreadyMember = memberGroupRepository.existsByMemberIdAndGroupId(userId, group.getId());
+        boolean isAlreadyMember = memberGroupRepository.existsByMemberIdAndGroupId(userId,
+                group.getId());
         if (isAlreadyMember) {
             throw new IllegalStateException("이미 가입된 그룹입니다.");
         }
@@ -136,5 +138,10 @@ public class GroupService {
         return myMemberGroups.stream()
                 .map(memberGroup -> new GroupInfoResponseDto(memberGroup.getGroup()))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isMemberInGroup(Member member, Long groupId) {
+        return memberGroupRepository.existsByMemberIdAndGroupId(member.getId(), groupId);
     }
 }
