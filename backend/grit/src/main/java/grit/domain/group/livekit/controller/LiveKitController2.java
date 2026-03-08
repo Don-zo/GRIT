@@ -1,7 +1,9 @@
 package grit.domain.group.livekit.controller;
 
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
+import grit.domain.group.livekit.constraint.ReactionEmoji;
 import grit.domain.group.livekit.dto.LiveKitReactionRequestDto;
+import grit.domain.group.livekit.dto.SupportReactionsResponseDto;
 import grit.domain.group.livekit.service.LiveKitService;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
@@ -11,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +47,16 @@ public class LiveKitController2 {
         Member member = memberService.findMemberById(memberPrincipal.id());
         AccessToken token = liveKitService.generateToken(member, groupId);
         return ResponseEntity.ok(Map.of("token", token.toJwt()));
+    }
+
+    @GetMapping("/reactions")
+    public ResponseEntity<List<SupportReactionsResponseDto>> getSupportReactions() {
+
+        return ResponseEntity.ok(
+                Arrays.stream(ReactionEmoji.values())
+                        .map(e -> new SupportReactionsResponseDto(e.name(), e.getEmoji()))
+                        .toList()
+        );
     }
 
     @PostMapping("/reaction")
