@@ -26,10 +26,10 @@ public class LiveKitService {
     @Value("${livekit.url}")
     private String url;
 
-    @Value("${livekit.api-key}")
+    @Value("${livekit.api.key}")
     private String apiKey;
 
-    @Value("${livekit.api-secret}")
+    @Value("${livekit.api.secret}")
     private String apiSecret;
 
     private final GroupService groupService;
