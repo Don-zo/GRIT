@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import type { Variants } from "motion/react";
 
 const VIEW_BOX = "0 0 1520 416";
 const STROKE_COLOR = "#447C60";
@@ -11,7 +12,7 @@ const LETTER_DURATION: Record<string, number> = {
   ".": 2,
 };
 
-const draw = {
+const draw: Variants = {
   hidden: { pathLength: 0, opacity: 0 },
   visible: ({ delay, duration }: { delay: number; duration: number }) => ({
     pathLength: 1,
@@ -23,7 +24,7 @@ const draw = {
   }),
 };
 
-const dotFade = {
+const dotFade: Variants = {
   hidden: { opacity: 0 },
   visible: ({ delay }: { delay: number }) => ({
     opacity: 1,
@@ -82,7 +83,10 @@ export default function GritLogo({ startDelay = 0.5 }: GritLogoProps) {
         strokeWidth={90}
         fill="transparent"
         variants={draw}
-        custom={{ delay: tR + strokePartGap, duration: LETTER_DURATION.R * 0.5 }}
+        custom={{
+          delay: tR + strokePartGap,
+          duration: LETTER_DURATION.R * 0.5,
+        }}
         initial="hidden"
         animate="visible"
       />
@@ -92,7 +96,10 @@ export default function GritLogo({ startDelay = 0.5 }: GritLogoProps) {
         strokeWidth={90}
         fill="transparent"
         variants={draw}
-        custom={{ delay: tR + strokePartGap * 2, duration: LETTER_DURATION.R * 0.5 }}
+        custom={{
+          delay: tR + strokePartGap * 2,
+          duration: LETTER_DURATION.R * 0.5,
+        }}
         initial="hidden"
         animate="visible"
       />
@@ -126,7 +133,10 @@ export default function GritLogo({ startDelay = 0.5 }: GritLogoProps) {
         strokeWidth={90}
         fill="transparent"
         variants={draw}
-        custom={{ delay: tT + strokePartGap, duration: LETTER_DURATION.T * 0.55 }}
+        custom={{
+          delay: tT + strokePartGap,
+          duration: LETTER_DURATION.T * 0.55,
+        }}
         initial="hidden"
         animate="visible"
       />
