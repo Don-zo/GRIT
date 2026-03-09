@@ -15,6 +15,11 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(OAuthLoginFailedException.class)
+    public ResponseEntity<ErrorResponseDto> handleOAuthLoginFailed(OAuthLoginFailedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponseDto> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponseDto.of(ex.getMessage()));

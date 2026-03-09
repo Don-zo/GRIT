@@ -1,6 +1,8 @@
 package grit.domain.auth.infrastructure.oauth;
 
+import grit.global.exception.OAuthLoginFailedException;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
@@ -9,6 +11,8 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationExchange;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
@@ -16,6 +20,7 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResp
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class GoogleOAuthClient {
 
@@ -48,8 +53,18 @@ public class GoogleOAuthClient {
     }
 
     public OAuth2User getOAuth2User(String code, String redirectUri) {
-        OAuth2AccessTokenResponse tokenResponse = exchangeCodeForToken(code, redirectUri);
-        return getUserInfo(tokenResponse.getAccessToken());
+        try {
+            OAuth2AccessTokenResponse tokenResponse = exchangeCodeForToken(code, redirectUri);
+            return getUserInfo(tokenResponse.getAccessToken());
+        } catch (OAuth2AuthorizationException e) {
+            OAuth2Error error = e.getError();
+
+            log.warn("Google OAuth token 교환 실패: errorCode={}, description={}",
+                    error != null ? error.getErrorCode() : "N/A",
+                    error != null ? error.getDescription() : "N/A");
+
+            throw new OAuthLoginFailedException("OAuth 로그인에 실패했습니다. 다시 시도해주세요.");
+        }
     }
 
     private OAuth2AccessTokenResponse exchangeCodeForToken(String code, String redirectUri) {
