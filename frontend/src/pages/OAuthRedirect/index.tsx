@@ -1,12 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "@/routes/path";
+import { loginGoogle } from "@/apis/services/auth";
 
 const GoogleOAuthRedirectPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const hasCalledApi = useRef(false);
 
   useEffect(() => {
+    if (hasCalledApi.current) {
+      return;
+    }
+    hasCalledApi.current = true;
+
     const handleCallback = async () => {
       const minLoadingTime = new Promise((resolve) =>
         setTimeout(resolve, 1000),
@@ -31,10 +38,21 @@ const GoogleOAuthRedirectPage = () => {
 
       try {
         //console.log("인증 코드", code);
+        const { member, firstTimeUser } = await loginGoogle(code);
+
         await minLoadingTime;
-        navigate(PATHS.SIGNUP);
+
+        console.log("로그인 성공", member.nickname);
+
+        if (firstTimeUser) {
+          navigate(PATHS.HOME); //추후 프로필 설정 모달로 이동 구현
+        } else {
+          navigate(PATHS.HOME);
+        }
       } catch (error) {
-        console.error("로그인 도중 오류", error);
+        await minLoadingTime;
+        console.error("9로그인 도중 오류", error);
+        alert("오류");
         navigate(PATHS.SIGNUP);
       }
     };
