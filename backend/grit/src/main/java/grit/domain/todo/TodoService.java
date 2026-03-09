@@ -15,7 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +31,9 @@ public class TodoService {
     private final GroupRepository groupRepository;
 
     public List<Todo> findAll(Long groupId, Long userId, Long ownerId) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "그룹을 찾을 수 없습니다.");
+        }
         if (!memberGroupRepository.existsByMemberIdAndGroupId(userId, groupId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
         }
@@ -57,11 +63,11 @@ public class TodoService {
 
         if (request.getGroupId() != null) {
             Long groupId = request.getGroupId();
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "그룹을 찾을 수 없습니다."));
             if (!memberGroupRepository.existsByMemberIdAndGroupId(userId, groupId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
             }
-            Group group = groupRepository.findById(groupId)
-                    .orElseThrow(() -> new NoSuchElementException("그룹을 찾을 수 없습니다."));
             todo.setGroup(group);
         }
 
@@ -71,7 +77,7 @@ public class TodoService {
     @Transactional
     public Todo update(Long todoId, Long userId, UpdateTodoRequestDTO request) {
         Todo todo = todoRepository.findByIdWithRelations(todoId)
-                .orElseThrow(() -> new NoSuchElementException("투두를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
 
         if (!todo.getOwner().getId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 수정할 수 있습니다.");
@@ -96,7 +102,7 @@ public class TodoService {
     @Transactional
     public void delete(Long todoId, Long userId) {
         Todo todo = todoRepository.findByIdWithRelations(todoId)
-                .orElseThrow(() -> new NoSuchElementException("투두를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
 
         if (!todo.getOwner().getId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 삭제할 수 있습니다.");
@@ -113,7 +119,6 @@ public class TodoService {
         List<Todo> todos = todoRepository.findByOwnerIdAndDueDateBetween(userId, from, to);
 
         Map<LocalDate, List<Todo>> todosByDate = todos.stream()
-                .filter(todo -> todo.getDueDate() != null)
                 .collect(Collectors.groupingBy(Todo::getDueDate));
 
         List<DailyAchievementDTO> result = new ArrayList<>();

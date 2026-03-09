@@ -1,5 +1,6 @@
 package grit.domain.todo;
 
+import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.todo.dto.CreateTodoRequestDTO;
 import grit.domain.todo.dto.DailyAchievementDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
@@ -13,7 +14,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -30,7 +33,9 @@ public class TodoController {
     })
     @GetMapping("/api/users/{userId}/todos")
     public ResponseEntity<List<TodoResponseDTO>> findByUserId(
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId) {
+        validateUserId(memberPrincipal, userId);
         List<Todo> todos = todoService.findByUserId(userId);
         List<TodoResponseDTO> responses = todos.stream()
                 .map(TodoResponseDTO::from)
@@ -45,10 +50,10 @@ public class TodoController {
     })
     @GetMapping("/api/groups/{groupId}/todos")
     public ResponseEntity<List<TodoResponseDTO>> findAll(
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "그룹 ID (PK)", example = "1") @PathVariable Long groupId,
-            @Parameter(description = "사용자 ID (PK)", example = "1") @RequestParam Long userId,
             @Parameter(description = "작성자 ID (PK, 선택사항)", example = "1") @RequestParam(required = false) Long ownerId) {
-        List<Todo> todos = todoService.findAll(groupId, userId, ownerId);
+        List<Todo> todos = todoService.findAll(groupId, memberPrincipal.id(), ownerId);
         List<TodoResponseDTO> responses = todos.stream()
                 .map(TodoResponseDTO::from)
                 .toList();
@@ -63,8 +68,10 @@ public class TodoController {
     })
     @PostMapping("/api/users/{userId}/todos")
     public ResponseEntity<TodoResponseDTO> create(
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId,
             @RequestBody CreateTodoRequestDTO request) {
+        validateUserId(memberPrincipal, userId);
         Todo todo = todoService.create(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(TodoResponseDTO.from(todo));
     }
@@ -77,10 +84,10 @@ public class TodoController {
     })
     @PutMapping("/api/todos/{todoId}")
     public ResponseEntity<TodoResponseDTO> update(
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
-            @Parameter(description = "사용자 ID (PK)", example = "1") @RequestParam Long userId,
             @RequestBody UpdateTodoRequestDTO request) {
-        Todo todo = todoService.update(todoId, userId, request);
+        Todo todo = todoService.update(todoId, memberPrincipal.id(), request);
         return ResponseEntity.ok(TodoResponseDTO.from(todo));
     }
 
@@ -92,21 +99,27 @@ public class TodoController {
     })
     @DeleteMapping("/api/todos/{todoId}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
-            @Parameter(description = "사용자 ID (PK)", example = "1") @RequestParam Long userId) {
-        todoService.delete(todoId, userId);
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
+            @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId) {
+        todoService.delete(todoId, memberPrincipal.id());
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "지난 7일간 일별 달성도 조회", description = "오늘을 제외한 지난 7일간의 일별 투두 달성도를 조회합니다.")
+    @Operation(summary = "지난 7일간 일별 달성도 조회", description = "오늘을 제외한 지난 7일간의 일별 투두 달성도를 조회합니다. 로그인한 사용자 본인의 데이터만 조회 가능합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
-    @GetMapping("/api/users/{userId}/todos/achievement/last-7-days")
+    @GetMapping("/api/me/todos/achievement/last-7-days")
     public ResponseEntity<List<DailyAchievementDTO>> getLast7DaysAchievement(
-            @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId) {
-        List<DailyAchievementDTO> achievements = todoService.getLast7DaysAchievement(userId);
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
+        List<DailyAchievementDTO> achievements = todoService.getLast7DaysAchievement(memberPrincipal.id());
         return ResponseEntity.ok(achievements);
+    }
+
+    private void validateUserId(MemberPrincipal memberPrincipal, Long userId) {
+        if (!memberPrincipal.id().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 리소스에 대한 접근 권한이 없습니다.");
+        }
     }
 }
 

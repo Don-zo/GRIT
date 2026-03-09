@@ -22,7 +22,7 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     @Query("SELECT t FROM Todo t LEFT JOIN FETCH t.group g JOIN FETCH t.owner WHERE t.id = :id")
     Optional<Todo> findByIdWithRelations(@Param("id") Long id);
 
-    @Query("SELECT t FROM Todo t WHERE t.owner.id = :ownerId AND t.dueDate IS NOT NULL AND t.dueDate >= :from AND t.dueDate <= :to")
+    @Query("SELECT t FROM Todo t WHERE t.owner.id = :ownerId AND t.dueDate BETWEEN :from AND :to")
     List<Todo> findByOwnerIdAndDueDateBetween(@Param("ownerId") Long ownerId,
                                               @Param("from") LocalDate from,
                                               @Param("to") LocalDate to);
