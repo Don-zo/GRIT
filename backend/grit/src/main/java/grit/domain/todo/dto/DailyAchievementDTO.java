@@ -1,4 +1,4 @@
-package grit.todolist.dto;
+package grit.domain.todo.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,3 +20,4 @@ public class DailyAchievementDTO {
         this.achievementRate = (totalCount == 0) ? 0 : (int) Math.round(doneCount * 100.0 / totalCount);
     }
 }
+

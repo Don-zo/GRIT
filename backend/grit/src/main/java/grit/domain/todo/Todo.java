@@ -1,7 +1,7 @@
-package grit.todolist;
+package grit.domain.todo;
 
+import grit.domain.group.entity.Group;
 import grit.domain.member.entity.Member;
-import grit.room.Room;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,8 +19,8 @@ public class Todo {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id")
-    private Room room;
+    @JoinColumn(name = "group_id")
+    private Group group;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)

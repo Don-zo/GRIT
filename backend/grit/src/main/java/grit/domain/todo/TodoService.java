@@ -1,13 +1,13 @@
-package grit.todolist;
+package grit.domain.todo;
 
+import grit.domain.group.entity.Group;
+import grit.domain.group.repository.MemberGroupRepository;
+import grit.domain.group.repository.GroupRepository;
 import grit.domain.member.entity.Member;
-import grit.todolist.dto.CreateTodoRequestDTO;
-import grit.todolist.dto.DailyAchievementDTO;
-import grit.todolist.dto.UpdateTodoRequestDTO;
 import grit.domain.member.repository.MemberRepository;
-import grit.room.Room;
-import grit.room.RoomMemberRepository;
-import grit.room.RoomRepository;
+import grit.domain.todo.dto.CreateTodoRequestDTO;
+import grit.domain.todo.dto.DailyAchievementDTO;
+import grit.domain.todo.dto.UpdateTodoRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,19 +23,19 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class TodoService {
     private final TodoRepository todoRepository;
-    private final RoomMemberRepository roomMemberRepository;
+    private final MemberGroupRepository memberGroupRepository;
     private final MemberRepository memberRepository;
-    private final RoomRepository roomRepository;
+    private final GroupRepository groupRepository;
 
-    public List<Todo> findAll(Long roomId, Long userId, Long ownerId) {
-        if (!roomMemberRepository.existsByRoomIdAndMemberId(roomId, userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 방의 멤버가 아닙니다.");
+    public List<Todo> findAll(Long groupId, Long userId, Long ownerId) {
+        if (!memberGroupRepository.existsByMemberIdAndGroupId(userId, groupId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
         }
 
         if (ownerId != null) {
-            return todoRepository.findByRoomIdAndOwnerIdWithRelations(roomId, ownerId);
+            return todoRepository.findByGroupIdAndOwnerIdWithRelations(groupId, ownerId);
         } else {
-            return todoRepository.findByRoomIdWithRelations(roomId);
+            return todoRepository.findByGroupIdWithRelations(groupId);
         }
     }
 
@@ -55,13 +55,14 @@ public class TodoService {
         todo.setDueDate(request.getDueDate());
         todo.setIsDone(false);
 
-        if (request.getRoomId() != null) {
-            if (!roomMemberRepository.existsByRoomIdAndMemberId(request.getRoomId(), userId)) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 방의 멤버가 아닙니다.");
+        if (request.getGroupId() != null) {
+            Long groupId = request.getGroupId();
+            if (!memberGroupRepository.existsByMemberIdAndGroupId(userId, groupId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
             }
-            Room room = roomRepository.findById(request.getRoomId())
-                    .orElseThrow(() -> new NoSuchElementException("방을 찾을 수 없습니다."));
-            todo.setRoom(room);
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new NoSuchElementException("그룹을 찾을 수 없습니다."));
+            todo.setGroup(group);
         }
 
         return todoRepository.save(todo);
