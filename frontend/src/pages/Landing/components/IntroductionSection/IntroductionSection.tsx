@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import Header from "@/pages/Landing/components/Header";
 import IntroductionCard from "@/pages/Landing/components/IntroductionSection/IntroductionCard";
 
 export default function IntroductionSection() {
@@ -48,8 +47,6 @@ export default function IntroductionSection() {
 
   return (
     <>
-      <Header />
-
       <section
         ref={(sec) => {
           sectionsRef.current[0] = sec;

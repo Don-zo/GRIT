@@ -8,6 +8,7 @@ import type {
 import { OAUTH_CONFIG } from "@/apis/constants/oauth";
 import { AUTH_GOOGLE_ENDPOINT } from "@/apis/constants/endpoints";
 import { AUTH_REFRESH_ENDPOINT } from "@/apis/constants/endpoints";
+import { AUTH_LOGOUT_ENDPOINT } from "@/apis/constants/endpoints";
 import type { RefreshTokenResponse } from "@/apis/types/auth";
 
 //구글에서 받은 code를 백엔드로 전송
@@ -62,4 +63,38 @@ export const refreshAccessToken = async (): Promise<string> => {
     localStorage.setItem("auth-storage", JSON.stringify(parsed));
   }
   return accessToken;
+};
+
+//로그인한 사용자 정보 가져오기
+export const getCurrentUser = (): Member | null => {
+  try {
+    const authStorage = localStorage.getItem("auth-storage");
+    if (!authStorage) return null;
+
+    const { state } = JSON.parse(authStorage);
+    return state?.member || null;
+  } catch (error) {
+    console.error("사용자 정보 오류", error);
+    return null;
+  }
+};
+
+//로그아웃
+export const logout = async (): Promise<void> => {
+  try {
+    await apiClient.post(
+      AUTH_LOGOUT_ENDPOINT,
+      {},
+      {
+        withCredentials: true,
+      },
+    );
+    console.log("로그아웃 성공");
+  } catch (error) {
+    console.error(error);
+    console.log("로그아웃 실패");
+  } finally {
+    localStorage.removeItem("auth-storage");
+    console.log("로컬 데이터 삭제");
+  }
 };

@@ -5,5 +5,6 @@ export const LIVEKIT_TOKEN_ENDPOINT = "/livekit/token";
 
 export const AUTH_GOOGLE_ENDPOINT = "/api/auth/google";
 export const AUTH_REFRESH_ENDPOINT = "/api/auth/refresh";
+export const AUTH_LOGOUT_ENDPOINT = "/api/auth/logout";
 
 export const GROUPS_ENDPOINT = "/api/groups";
