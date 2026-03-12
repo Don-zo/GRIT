@@ -5,6 +5,7 @@ import grit.domain.member.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.UUID;
 
 public record MemberResponseDto(
         @Schema(description = "사용자 고유 ID (PK)", example = "1")
@@ -31,12 +32,26 @@ public record MemberResponseDto(
 
     // Member 엔티티 -> DTO 변환
     public static MemberResponseDto from(Member member) {
+        UUID img = member.getImage();
         return new MemberResponseDto(
                     member.getId(),
                     member.getNickname(),
                     member.getEmail(),
                     member.getIntroduction(),
-                    member.getImage(),
+                    img != null ? img.toString() : null,
+                    member.getDDayDate(),
+                    member.getDDayTitle(),
+                    member.getWeeklyStudyTimeGoal()
+        );
+    }
+
+    public static MemberResponseDto from(Member member, String imageUrl) {
+        return new MemberResponseDto(
+                    member.getId(),
+                    member.getNickname(),
+                    member.getEmail(),
+                    member.getIntroduction(),
+                    imageUrl,
                     member.getDDayDate(),
                     member.getDDayTitle(),
                     member.getWeeklyStudyTimeGoal()
