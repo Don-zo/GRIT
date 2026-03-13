@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import Modal from "@/components/Modal";
+import { Divider } from "@/components/Divider";
 
 type ProfileSettingsModalProps = {
   open: boolean;
@@ -99,7 +100,7 @@ export default function ProfileSettingsModal({
             </div>
           </section>
 
-          <div className="my-8 h-px w-full bg-[#82C397]/30" />
+          <Divider />
 
           <section className="w-full">
             <h3 className="text-lg font-semibold text-[#D6FDE5]">D-day 설정</h3>
@@ -128,7 +129,7 @@ export default function ProfileSettingsModal({
             </div>
           </section>
 
-          <div className="my-8 h-px w-full bg-[#82C397]/30" />
+          <Divider />
 
           <section className="w-full">
             <div className="flex items-end justify-between">
