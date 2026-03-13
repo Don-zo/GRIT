@@ -5,6 +5,7 @@ import { ModalBody } from "./ModalBody";
 import { ModalContent } from "./ModalContent";
 import { ModalFooter } from "./ModalFooter";
 import { ModalCloseButton } from "./ModalCloseButton";
+import { ModalTitle } from "./ModalTitle";
 
 type ModalContextType = {
   isOpen: boolean;
@@ -48,5 +49,6 @@ Modal.Header = ModalHeader;
 Modal.Body = ModalBody;
 Modal.Footer = ModalFooter;
 Modal.CloseButton = ModalCloseButton;
+Modal.Title = ModalTitle;
 
 export default Modal;
