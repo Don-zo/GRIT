@@ -1,6 +1,7 @@
 package grit.domain.group.entity;
 
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class Group {
     @Column(nullable = false)
     private int memberCount = 0;
 
-    private String imageUrl;
+    private UUID imageName;
 
     @Builder.Default
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
@@ -44,8 +45,8 @@ public class Group {
         this.memberCount--;
     }
 
-    public void updateInfo(String name, String imageUrl) {
+    public void updateInfo(String name, UUID imageName) {
         if (name != null) this.name = name;
-        if (imageUrl != null) this.imageUrl = imageUrl;
+        if (imageName != null) this.imageName = imageName;
     }
 }
