@@ -52,11 +52,11 @@ async function fetchMyGroups() {
     return response.json();
 }
 
-async function createGroup(name, imageUrl) {
+async function createGroup(name, imageName) {
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/groups`, {
         method: 'POST',
         headers: authHeaders(),
-        body: JSON.stringify({ name, imageUrl: imageUrl || null })
+        body: JSON.stringify({ name, imageName: imageName || null })
     });
     if (!response.ok) {
         const err = await response.json().catch(() => ({}));
@@ -79,11 +79,11 @@ async function joinGroup(inviteCode) {
     return response.json();
 }
 
-async function updateGroup(groupId, name, imageUrl) {
+async function updateGroup(groupId, name, imageName) {
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/groups/${groupId}`, {
         method: 'PUT',
         headers: authHeaders(),
-        body: JSON.stringify({ name, imageUrl: imageUrl || null })
+        body: JSON.stringify({ name, imageName: imageName || null })
     });
     if (response.status === 403) throw new Error('수정 권한이 없습니다.');
     if (!response.ok) {
@@ -105,6 +105,89 @@ async function leaveGroup(groupId) {
 }
 
 // ────────────────────────────────────────
+// 이미지 업로드 공통
+// ────────────────────────────────────────
+
+function setupImageUpload(inputId, previewId, containerId, hiddenInputId) {
+    const inputEl = document.getElementById(inputId);
+    const containerEl = document.getElementById(containerId);
+    
+    // 프리뷰 클릭 시 파일 선택
+    containerEl.addEventListener('click', () => inputEl.click());
+
+    // 파일 선택 시 프리뷰 변경
+    inputEl.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // 5MB 제한
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('이미지 크기는 5MB 이하여야 합니다.');
+            inputEl.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => setPreviewImage(previewId, e.target.result);
+        reader.readAsDataURL(file);
+        
+        // 새로운 파일이 선택되었음을 표시 (UUID 초기화)
+        document.getElementById(hiddenInputId).value = '';
+    });
+}
+
+function setPreviewImage(previewId, imageUrl) {
+    const previewEl = document.getElementById(previewId);
+    if (!previewEl) return;
+    
+    // 모달용 .banner-image-placeholder
+    const placeholder = previewEl.querySelector('.banner-image-placeholder');
+    let img = previewEl.querySelector('img');
+
+    if (imageUrl) {
+        if (!img) {
+            img = document.createElement('img');
+            previewEl.insertBefore(img, previewEl.firstChild);
+        }
+        img.src = imageUrl;
+        if (placeholder) placeholder.style.display = 'none';
+        
+        // Remove old onerror to prevent loop
+        img.onerror = function() {
+            this.remove();
+            if (placeholder) placeholder.style.display = 'flex';
+        };
+    } else {
+        if (img) img.remove();
+        if (placeholder) placeholder.style.display = 'flex';
+    }
+}
+
+async function uploadGroupImage(file, wrapperId) {
+    const wrapper = document.getElementById(wrapperId);
+    wrapper.classList.add('uploading');
+
+    try {
+        const urlRes = await apiFetch('/api/groups/image-upload-url');
+        if (!urlRes.ok) throw new Error('업로드 URL 발급 실패');
+        
+        const { fileName, uploadUrl } = await urlRes.json();
+
+        const uploadRes = await fetch(uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: { 'Content-Type': file.type }
+        });
+
+        if (!uploadRes.ok) throw new Error('S3 업로드 실패');
+
+        return fileName;
+    } finally {
+        wrapper.classList.remove('uploading');
+    }
+}
+
+// ────────────────────────────────────────
 // 렌더링
 // ────────────────────────────────────────
 
@@ -121,19 +204,28 @@ function renderGroupList(groups) {
     }
 
     container.innerHTML = groups.map(group => `
-        <div class="item-card clickable" onclick="openDetailModal(${group.id}, '${escapeAttr(group.name)}', '${escapeAttr(group.inviteCode)}', ${group.memberCount}, '${escapeAttr(group.imageUrl || '')}')">
-            ${group.imageUrl
-            ? `<img class="item-avatar square" src="${escapeAttr(group.imageUrl)}" alt="${escapeAttr(group.name)}" onerror="this.outerHTML='<div class=\\'item-avatar square\\'>${escapeHtml(group.name.charAt(0))}</div>'" />`
-            : `<div class="item-avatar square">${escapeHtml(group.name.charAt(0))}</div>`
-        }
-            <div class="item-info">
-                <h3>${escapeHtml(group.name)}</h3>
-                <div class="meta">
-                    <span>멤버 ${group.memberCount}명</span>
+        <div class="group-card" onclick="openDetailModal(${group.id}, '${escapeAttr(group.name)}', '${escapeAttr(group.inviteCode)}', ${group.memberCount}, '${escapeAttr(group.imageUrl || '')}')">
+            <div class="group-card-image">
+                ${group.imageUrl
+                    ? `<img src="${escapeAttr(group.imageUrl)}" alt="${escapeAttr(group.name)}" onerror="this.outerHTML='<div class=\\'group-card-placeholder\\'>${escapeHtml(group.name.charAt(0))}</div>'" />`
+                    : `<div class="group-card-placeholder">${escapeHtml(group.name.charAt(0))}</div>`
+                }
+            </div>
+            <div class="group-card-content">
+                <h3 class="group-card-title">${escapeHtml(group.name)}</h3>
+                <div class="group-card-meta">
+                    <div class="group-card-meta-left">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>${group.memberCount}명</span>
+                    </div>
                     <span class="invite-code">${escapeHtml(group.inviteCode)}</span>
                 </div>
             </div>
-            <span class="item-arrow">${ICONS.chevronRight}</span>
         </div>
     `).join('');
 }
@@ -169,7 +261,9 @@ async function loadGroups() {
 
 document.getElementById('create-group-btn').addEventListener('click', () => {
     document.getElementById('create-name').value = '';
-    document.getElementById('create-image').value = '';
+    document.getElementById('create-image-input').value = '';
+    document.getElementById('create-image-name').value = '';
+    setPreviewImage('create-image-preview', null);
     hideError('create-error');
     openModal('create-modal');
 });
@@ -179,7 +273,7 @@ document.getElementById('create-cancel-btn').addEventListener('click', () => clo
 document.getElementById('create-submit-btn').addEventListener('click', async () => {
     hideError('create-error');
     const name = document.getElementById('create-name').value.trim();
-    const imageUrl = document.getElementById('create-image').value.trim();
+    const imageInput = document.getElementById('create-image-input');
 
     if (!name) {
         showError('create-error', '그룹 이름을 입력해주세요.');
@@ -191,7 +285,12 @@ document.getElementById('create-submit-btn').addEventListener('click', async () 
     btn.textContent = '생성 중...';
 
     try {
-        const group = await createGroup(name, imageUrl);
+        let imageName = null;
+        if (imageInput.files.length > 0) {
+            imageName = await uploadGroupImage(imageInput.files[0], 'create-image-upload');
+        }
+
+        const group = await createGroup(name, imageName);
         closeModal('create-modal');
         toast.success(`'${group.name}' 그룹이 생성되었습니다.`);
         await loadGroups();
@@ -264,11 +363,13 @@ function openDetailModal(id, name, inviteCode, memberCount, imageUrl) {
     document.getElementById('detail-invite-code').textContent = inviteCode;
 
     const imageEl = document.getElementById('detail-image');
+    // Save raw image URL for Edit modal
+    imageEl.dataset.rawUrl = imageUrl || '';
+
     if (imageUrl) {
-        imageEl.outerHTML = `<img class="group-detail-image" id="detail-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(name)}" onerror="this.outerHTML='<div class=\\'group-detail-image\\' id=\\'detail-image\\'>${escapeHtml(name.charAt(0))}</div>'" />`;
+        imageEl.outerHTML = `<img class="group-detail-image" id="detail-image" data-raw-url="${escapeAttr(imageUrl)}" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(name)}" onerror="this.outerHTML='<div class=\\'group-detail-image\\' id=\\'detail-image\\' data-raw-url=\\'\\'>${escapeHtml(name.charAt(0))}</div>'" />`;
     } else {
-        imageEl.textContent = name.charAt(0);
-        imageEl.tagName === 'IMG' && (imageEl.outerHTML = `<div class="group-detail-image" id="detail-image">${escapeHtml(name.charAt(0))}</div>`);
+        imageEl.outerHTML = `<div class="group-detail-image" id="detail-image" data-raw-url="">${escapeHtml(name.charAt(0))}</div>`;
     }
 
     openModal('detail-modal');
@@ -314,9 +415,21 @@ document.getElementById('detail-video-btn').addEventListener('click', () => {
 
 document.getElementById('detail-edit-btn').addEventListener('click', () => {
     const name = document.getElementById('detail-name').textContent;
+    const imageUrl = document.getElementById('detail-image').dataset.rawUrl;
+    
     document.getElementById('edit-group-id').value = currentGroupId;
     document.getElementById('edit-name').value = name;
-    document.getElementById('edit-image').value = '';
+    document.getElementById('edit-image-input').value = '';
+    
+    setPreviewImage('edit-image-preview', imageUrl || null);
+    
+    // Edit 시 기존 이미지를 유지하는 경우 UUID를 알 방법이 없으므로,
+    // 새 이미지가 없을 경우 서버에 image 필드를 아예 안 보내거나 (null), 
+    // 혹은 기존처럼 냅두도록 서버 API를 활용해야 함.
+    // 백엔드는 null일 경우 기존 이미지를 덮어쓰지 않는 구조임이 확인되었기에,
+    // 수정하지 않을 경우 imageName=null 을 보낸다.
+    document.getElementById('edit-image-name').value = '';
+    
     hideError('edit-error');
     closeModal('detail-modal');
     openModal('edit-modal');
@@ -332,7 +445,7 @@ document.getElementById('edit-submit-btn').addEventListener('click', async () =>
     hideError('edit-error');
     const groupId = document.getElementById('edit-group-id').value;
     const name = document.getElementById('edit-name').value.trim();
-    const imageUrl = document.getElementById('edit-image').value.trim();
+    const imageInput = document.getElementById('edit-image-input');
 
     if (!name) {
         showError('edit-error', '그룹 이름을 입력해주세요.');
@@ -344,7 +457,12 @@ document.getElementById('edit-submit-btn').addEventListener('click', async () =>
     btn.textContent = '저장 중...';
 
     try {
-        await updateGroup(groupId, name, imageUrl);
+        let imageName = null;
+        if (imageInput.files.length > 0) {
+            imageName = await uploadGroupImage(imageInput.files[0], 'edit-image-upload');
+        }
+
+        await updateGroup(groupId, name, imageName);
         closeModal('edit-modal');
         toast.success('그룹 정보가 수정되었습니다.');
         await loadGroups();
@@ -375,6 +493,11 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!checkAuth()) return;
+    
+    // 이미지 업로드 UI 초기화
+    setupImageUpload('create-image-input', 'create-image-preview', 'create-image-preview', 'create-image-name');
+    setupImageUpload('edit-image-input', 'edit-image-preview', 'edit-image-preview', 'edit-image-name');
+    
     loadGroups();
 });
 
