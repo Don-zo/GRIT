@@ -1,0 +1,16 @@
+import type { ReactNode } from "react";
+
+type ModalContentProps = {
+  children: ReactNode;
+  className?: string;
+};
+
+export function ModalContent({ children, className = "" }: ModalContentProps) {
+  return (
+    <div
+      className={`relative w-[600px] max-w-[90vw] rounded-3xl bg-[#2B2F36] shadow-2xl ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
