@@ -10,6 +10,7 @@ import grit.domain.group.entity.MemberGroup;
 import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.repository.MemberRepository;
+import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class GroupService {
         Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        if (groupRequest.getImageName() != null && !s3Service.isObjectExists("group-images", groupRequest.getImageName().toString())) {
+        if (groupRequest.getImageName() != null && !s3Service.isObjectExists(S3Directory.GROUP_IMAGES, groupRequest.getImageName().toString())) {
             throw new IllegalArgumentException("유효하지 않은 그룹 이미지입니다.");
         }
 
@@ -124,7 +125,7 @@ public class GroupService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("그룹을 찾을 수 없습니다."));
 
-        if (updateRequest.getImageName() != null && !s3Service.isObjectExists("group-images", updateRequest.getImageName().toString())) {
+        if (updateRequest.getImageName() != null && !s3Service.isObjectExists(S3Directory.GROUP_IMAGES, updateRequest.getImageName().toString())) {
             throw new IllegalArgumentException("유효하지 않은 그룹 이미지입니다.");
         }
 
@@ -157,7 +158,7 @@ public class GroupService {
 
     public grit.domain.group.dto.GroupProfileImageUploadUrlResponseDto generateGroupImageUploadUrl() {
         String fileName = java.util.UUID.randomUUID().toString();
-        String uploadUrl = s3Service.createSignedPutUrl("group-images", fileName, java.time.Duration.ofMinutes(10)).toString();
+        String uploadUrl = s3Service.createSignedPutUrl(S3Directory.GROUP_IMAGES, fileName, java.time.Duration.ofMinutes(10)).toString();
         return new grit.domain.group.dto.GroupProfileImageUploadUrlResponseDto(fileName, uploadUrl);
     }
 

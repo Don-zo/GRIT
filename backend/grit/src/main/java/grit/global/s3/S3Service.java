@@ -15,7 +15,17 @@ public class S3Service {
     @Value("${app.s3.bucket-name}")
     private String bucketName;
 
+    @Value("${app.s3.base-url}")
+    private String baseUrl;
+
     private final S3Template s3Template;
+
+    public String resolveUrl(String directory, Object objectName) {
+        if (objectName == null) {
+            return null;
+        }
+        return baseUrl + "/" + directory + "/" + objectName;
+    }
 
     public URL createSignedPutUrl(String dir, String filename, Duration duration) {
         ObjectMetadata metadata = ObjectMetadata.builder()

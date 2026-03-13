@@ -9,9 +9,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import grit.global.s3.S3Directory;
+import grit.global.s3.S3Service;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,9 +27,7 @@ import java.util.List;
 public class GroupController {
 
     private final GroupService groupService;
-
-    @Value("${app.s3.base-url}")
-    private String s3BaseUrl;
+    private final S3Service s3Service;
 
     @Operation(summary = "그룹 생성", description = "새로운 그룹을 생성합니다.")
     @ApiResponses(value = {
@@ -135,7 +134,7 @@ public class GroupController {
         if (dto.getImageUrl() == null) {
             return dto;
         }
-        String resolvedUrl = s3BaseUrl + "/group-images/" + dto.getImageUrl();
+        String resolvedUrl = s3Service.resolveUrl(S3Directory.GROUP_IMAGES, dto.getImageUrl());
         return new GroupInfoResponseDto(
                 dto.getId(),
                 dto.getName(),

@@ -6,6 +6,7 @@ import grit.domain.member.dto.MemberProfileImageUploadUrlResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
 import grit.global.exception.EntityNotFoundException;
+import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -49,7 +50,7 @@ public class MemberService {
 
     public MemberProfileImageUploadUrlResponseDto generateProfileImageUploadUrl() {
         String fileName = UUID.randomUUID().toString();
-        String uploadUrl = s3Service.createSignedPutUrl("profile-images", fileName, Duration.ofMinutes(5)).toString();
+        String uploadUrl = s3Service.createSignedPutUrl(S3Directory.PROFILE_IMAGES, fileName, Duration.ofMinutes(5)).toString();
         return new MemberProfileImageUploadUrlResponseDto(fileName, uploadUrl);
     }
 
@@ -77,7 +78,7 @@ public class MemberService {
             throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
 
-        if (image != null && !s3Service.isObjectExists("profile-images", image.toString())) {
+        if (image != null && !s3Service.isObjectExists(S3Directory.PROFILE_IMAGES, image.toString())) {
             throw new IllegalArgumentException("유효하지 않은 이미지입니다.");
         }
 
@@ -95,7 +96,7 @@ public class MemberService {
             throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
 
-        if (image != null && !s3Service.isObjectExists("profile-images", image.toString())) {
+        if (image != null && !s3Service.isObjectExists(S3Directory.PROFILE_IMAGES, image.toString())) {
             throw new IllegalArgumentException("유효하지 않은 이미지입니다.");
         }
 
