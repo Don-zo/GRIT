@@ -7,22 +7,19 @@ import LeftSidebar from "@/pages/Home/components/LeftSidebar";
 const HomePage = () => {
   return (
     <div className="flex flex-col w-full h-auto bg-gray-darkest">
-      {/* 상단바 */}
       <TopBar />
 
       <div className="flex">
-        {/* 좌측 사이드바 */}
         <LeftSidebar />
 
-      {/* 본 내용 */}
         <div className="flex-1">
-      <div className="flex items-center justify-center flex-1 mx-20 mt-10 gap-6">
-        <Achievement />
-        <ProfileCard />
-      </div>
+          <div className="flex items-center justify-center flex-1 mx-20 mt-10 gap-6">
+            <Achievement />
+            <ProfileCard />
+          </div>
 
-      <div className="m-20">
-        <GroupSection />
+          <div className="m-20">
+            <GroupSection />
           </div>
         </div>
       </div>

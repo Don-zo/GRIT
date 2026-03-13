@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Settings, MessageCircle } from "lucide-react";
 import Avatar from "@/pages/Room/components/Cam/Avatar";
-import SettingsModal from "@/pages/Home/components/Modals/SettingsModal";
+import SettingsModal from "@/pages/Home/components/Modals/ProfileSettingsModal";
 
 interface ProfileCardProps {
   userName?: string;
@@ -34,7 +34,10 @@ const ProfileCard = ({
 
   const currentSeconds = timeToSeconds(currentTime);
   const targetSeconds = timeToSeconds(targetTime);
-  const progress = targetSeconds > 0 ? Math.min((currentSeconds / targetSeconds) * 100, 100) : 0;
+  const progress =
+    targetSeconds > 0
+      ? Math.min((currentSeconds / targetSeconds) * 100, 100)
+      : 0;
   return (
     <div className="w-1/2 h-70 bg-green-dark rounded-2xl p-6">
       {/* 설정 아이콘 - 상단 우측 */}
@@ -44,7 +47,10 @@ const ProfileCard = ({
           onClick={() => setIsSettingsOpen(true)}
           aria-label="설정"
         >
-        <Settings className="w-4 h-4 text-white cursor-pointer" strokeWidth={2} />
+          <Settings
+            className="w-4 h-4 text-white cursor-pointer"
+            strokeWidth={2}
+          />
         </button>
       </div>
 
@@ -61,7 +67,9 @@ const ProfileCard = ({
               </div>
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-4 h-4 text-green-light" />
-                <span className="text-green-light text-caption">{motivation}</span>
+                <span className="text-green-light text-caption">
+                  {motivation}
+                </span>
               </div>
             </div>
           </div>
@@ -86,7 +94,9 @@ const ProfileCard = ({
           <span className="text-white text-bodyMd">이번 주 목표 공부시간</span>
           <div className="flex items-center gap-1">
             <span className="text-white text-bodyMd">{currentTime}</span>
-            <span className="text-white text-bodySm font-light">/ {targetTime}</span>
+            <span className="text-white text-bodySm font-light">
+              / {targetTime}
+            </span>
           </div>
         </div>
         <div className="w-full h-4 bg-gray-dark rounded-full overflow-hidden">
@@ -98,7 +108,10 @@ const ProfileCard = ({
       </div>
 
       {/* 설정 모달 */}
-      <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <SettingsModal
+        open={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 };
