@@ -74,7 +74,7 @@ export default function CustomBtn({
 
   return (
     <div className="flex items-center gap-1">
-      <div className="flex gap-3 item-center text-bodyLg text-green-normal">
+      <div className="flex gap-3 item-center text-bodyLg text-green-normal select-none">
         <div className="font-bold">{label}</div>
         <div>재생 중···</div>
       </div>

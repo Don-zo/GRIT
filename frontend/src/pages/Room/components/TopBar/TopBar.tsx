@@ -9,7 +9,12 @@ function formatTime(seconds: number) {
   return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export default function TopBar() {
+type TopBarProps = {
+  isTodoOpen?: boolean;
+  onToggleTodo?: () => void;
+};
+
+export default function TopBar({ isTodoOpen = false, onToggleTodo }: TopBarProps) {
   const [dDay] = useState(23);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -61,9 +66,11 @@ export default function TopBar() {
 
         <CustomBtn
           isToggle
+          isActive={isTodoOpen}
           variant="ghost"
           icon={<ListChecks />}
           iconColor="text-green-normal"
+          onClick={onToggleTodo}
         />
 
         <CustomBtn

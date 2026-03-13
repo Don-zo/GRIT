@@ -5,7 +5,11 @@ import TodoList from "./TodoList";
 import type { TodoGroup } from "@/types/todo";
 import { categoryDataByUser, dayDataByUser } from "@/mockdata/todoData";
 
-export default function TodoCamCard() {
+type TodoCamCardProps = {
+  variant?: "default" | "panel";
+};
+
+export default function TodoCamCard({ variant = "default" }: TodoCamCardProps) {
   const tabs = ["이유민", "김윤영", "양준영", "이차현"];
   const [currentTab, setCurrentTab] = useState("이유민");
   const [checked, setChecked] = useState(false);
@@ -14,11 +18,15 @@ export default function TodoCamCard() {
     ? dayDataByUser[currentTab]
     : categoryDataByUser[currentTab];
 
+  const isPanel = variant === "panel";
+
   return (
     <div className="flex flex-col items-end w-full h-full">
-      <div className="flex flex-col items-start mr-20 mt-30">
+      <div
+        className={`flex flex-col items-start ${isPanel ? "mr-0 mt-0" : "mr-20 mt-30"}`}
+      >
         {/* 탭 줄 */}
-        <div className="relative flex self-start">
+        <div className="relative flex self-start select-none">
           {tabs.map((name, idx) => {
             const isActive = currentTab === name;
             const z = tabs.length - idx;
@@ -55,7 +63,7 @@ export default function TodoCamCard() {
           "
         >
           {/* 토글 영역 */}
-          <div className="flex justify-end mb-3">
+          <div className="flex justify-end mb-3 select-none">
             <ToggleBtn
               checked={checked}
               onChange={setChecked}

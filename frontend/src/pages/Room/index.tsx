@@ -5,6 +5,7 @@ import BottomBar from "@/pages/Room/components/BottomBar/BottomBar";
 import TopBar from "@/pages/Room/components/TopBar/TopBar";
 import Pomodoro from "@/pages/Room/components/Cam/Pomodoro";
 import CamLayout from "@/pages/Room/components/Cam/CamLayout";
+import TodoCamCard from "@/pages/Room/components/todo/TodoCamCard";
 import VideoTile from "@/pages/Room/components/Cam/VideoTile";
 //livekit api 연동
 import { getLiveKitToken } from "@/apis/services/livekit";
@@ -105,6 +106,7 @@ const RoomPage = () => {
   ];
 
   const [muted, setMuted] = useState(false);
+  const [todoOpen, setTodoOpen] = useState(false);
   const [pomodoroConfig, setPomodoroConfig] = useState<PomodoroConfig>({
     studyMinutes: 45,
     breakMinutes: 15,
@@ -157,11 +159,31 @@ const RoomPage = () => {
       {/*여기까지 livekit 테스트용*/}
 
       {/* 상단바 */}
-      <TopBar />
+      <TopBar
+        isTodoOpen={todoOpen}
+        onToggleTodo={() => setTodoOpen((prev) => !prev)}
+      />
 
       {/* 본 내용 */}
-      <div className="flex items-center justify-center flex-1 mx-20">
-        <CamLayout participants={allParticipants} pomodoro={pomodoroNode} />
+      <div className="flex flex-1 overflow-hidden">
+        <div
+          className={`flex items-center justify-center flex-1 min-w-0 transition-all duration-300 ease-out ${
+            todoOpen ? "ml-20 mr-4" : "mx-20"
+          }`}
+        >
+          <CamLayout participants={allParticipants} pomodoro={pomodoroNode} />
+        </div>
+
+        {/* 투두 패널 */}
+        <div
+          className={`shrink-0 overflow-hidden transition-[width] duration-300 ease-out ${
+            todoOpen ? "w-[480px]" : "w-0"
+          }`}
+        >
+          <div className="w-[480px] h-full py-6 pl-4 pr-20">
+            <TodoCamCard variant="panel" />
+          </div>
+        </div>
       </div>
 
       {/* 하단바 */}
