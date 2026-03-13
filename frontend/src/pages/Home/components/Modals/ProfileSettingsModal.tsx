@@ -36,9 +36,7 @@ export default function ProfileSettingsModal({
         <Modal.CloseButton />
 
         <Modal.Header className="px-8 pt-8">
-          <h1 className="text-3xl font-extrabold tracking-wide text-[#82C397]">
-            GRIT
-          </h1>
+          <Modal.Title />
         </Modal.Header>
 
         <Modal.Body className="px-8 w-full">

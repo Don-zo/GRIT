@@ -12,9 +12,7 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
       <Modal.Content>
         <Modal.CloseButton />
         <Modal.Header className="px-8 pt-8 flex flex-col items-center text-center">
-          <h1 className="mt-6 text-5xl font-extrabold tracking-wide text-[#82C397]">
-            GRIT
-          </h1>
+          <Modal.Title size="lg" />
           <p className="mt-6 text-md font-medium text-gray-200">
             초대 코드를 입력해주세요
           </p>

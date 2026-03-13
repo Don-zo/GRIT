@@ -73,9 +73,7 @@ export default function GroupSettingsModal({
         <Modal.CloseButton />
 
         <Modal.Header className="px-8 pt-8 flex flex-col items-center">
-          <h1 className="text-3xl font-extrabold tracking-wide text-[#82C397]">
-            GRIT
-          </h1>
+          <Modal.Title />
         </Modal.Header>
 
         <Modal.Body className="px-8 flex flex-col items-center pb-8">
