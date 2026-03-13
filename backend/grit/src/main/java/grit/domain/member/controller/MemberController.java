@@ -59,7 +59,7 @@ public class MemberController {
 
         Member member = getAuthenticatedMember(memberPrincipal);
         memberService.updateProfile(member, requestDto.nickname(), requestDto.introduction(),
-                requestDto.image(), requestDto.dDayDate(), requestDto.dDayTitle(),
+                requestDto.imageName(), requestDto.dDayDate(), requestDto.dDayTitle(),
                 requestDto.weeklyStudyTimeGoal());
         return ResponseEntity.ok(toResponse(member));
     }
@@ -71,7 +71,7 @@ public class MemberController {
 
         Member member = getAuthenticatedMember(memberPrincipal);
         memberService.initializeProfile(member, requestDto.nickname(), requestDto.introduction(),
-                requestDto.image(), requestDto.dDayDate(), requestDto.dDayTitle(),
+                requestDto.imageName(), requestDto.dDayDate(), requestDto.dDayTitle(),
                 requestDto.weeklyStudyTimeGoal());
         return ResponseEntity.ok(toResponse(member));
     }
@@ -113,13 +113,13 @@ public class MemberController {
     }
 
     private MemberResponseDto toResponse(Member member) {
-        return MemberResponseDto.from(member, resolveImageUrl(member.getImage()));
+        return MemberResponseDto.fromWithResolvedUrl(member, resolveImageUrl(member.getImageName()));
     }
 
-    private String resolveImageUrl(UUID image) {
-        if (image == null) {
+    private String resolveImageUrl(UUID imageName) {
+        if (imageName == null) {
             return null;
         }
-        return s3BaseUrl + "/profile-images/" + image;
+        return s3BaseUrl + "/profile-images/" + imageName;
     }
 }

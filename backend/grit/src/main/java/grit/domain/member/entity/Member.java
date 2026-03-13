@@ -45,7 +45,7 @@ public class Member {
     private String introduction;
 
     @Column
-    private UUID image;
+    private UUID imageName;
 
     @Column
     private LocalDate dDayDate;
@@ -86,13 +86,13 @@ public class Member {
         member.getFriends().remove(this);
     }
 
-    public void initializeProfile(String nickname, String introduction, UUID image,
+    public void initializeProfile(String nickname, String introduction, UUID imageName,
             LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
         validateRoleForInitialization();
 
         this.nickname = validateAndGet(nickname, "닉네임");
         this.introduction = requireNotNull(introduction, "자기소개");
-        this.image = image;
+        this.imageName = imageName;
         validateDDayConsistency(dDayDate, dDayTitle);
         this.dDayDate = dDayDate;
         this.dDayTitle = dDayTitle;
@@ -100,13 +100,13 @@ public class Member {
         this.role = Role.USER;
     }
 
-    public void updateProfile(String nickname, String introduction, UUID image,
+    public void updateProfile(String nickname, String introduction, UUID imageName,
             LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
         validateRoleForUpdate();
 
         updateIfPresent(nickname, val -> this.nickname = val, "닉네임");
         updateIfPresentAllowBlank(introduction, val -> this.introduction = val);
-        updateIfPresent(image, val -> this.image = val);
+        updateIfPresent(imageName, val -> this.imageName = val);
         updateIfPresent(dDayDate, val -> this.dDayDate = val);
         updateIfPresent(dDayTitle, val -> this.dDayTitle = val);
         updateIfPresent(weeklyStudyTimeGoal, val -> this.weeklyStudyTimeGoal = val);

@@ -14,7 +14,7 @@ public record MemberProfilePatchRequestDto(
         @Schema(description = "한 줄 소개", example = "오늘 하루도 파이팅", nullable = true)
         String introduction,
 
-        UUID image,
+        UUID imageName,
 
         LocalDate dDayDate,
 
