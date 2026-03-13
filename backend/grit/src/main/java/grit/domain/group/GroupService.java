@@ -10,6 +10,7 @@ import grit.domain.group.entity.MemberGroup;
 import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.repository.MemberRepository;
+import grit.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final MemberGroupRepository memberGroupRepository;
     private final MemberRepository memberRepository;
+    private final S3Service s3Service;
 
     // 그룹 생성
     @Transactional
@@ -30,11 +32,15 @@ public class GroupService {
         Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
+        if (groupRequest.getImageName() != null && !s3Service.isObjectExists("group-images", groupRequest.getImageName().toString())) {
+            throw new IllegalArgumentException("유효하지 않은 그룹 이미지입니다.");
+        }
+
         String inviteCode = generateInviteCode();
 
         Group group = Group.builder()
                 .name(groupRequest.getName())
-                .imageUrl(groupRequest.getImageUrl())
+                .imageName(groupRequest.getImageName())
                 .inviteCode(inviteCode)
                 .build();
 
@@ -47,7 +53,7 @@ public class GroupService {
                 .build();
         memberGroupRepository.save(memberGroup);
 
-        return new GroupInfoResponseDto(savedGroup);
+        return new GroupInfoResponseDto(savedGroup, getRawImageUrl(savedGroup));
     }
 
     private String generateInviteCode() {
@@ -86,7 +92,7 @@ public class GroupService {
         memberGroupRepository.save(memberGroup);
         group.increaseMemberCount();
 
-        return new GroupInfoResponseDto(group);
+        return new GroupInfoResponseDto(group, getRawImageUrl(group));
     }
 
     // 그룹 나가기(삭제)
@@ -118,7 +124,11 @@ public class GroupService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("그룹을 찾을 수 없습니다."));
 
-        group.updateInfo(updateRequest.getName(), updateRequest.getImageUrl());
+        if (updateRequest.getImageName() != null && !s3Service.isObjectExists("group-images", updateRequest.getImageName().toString())) {
+            throw new IllegalArgumentException("유효하지 않은 그룹 이미지입니다.");
+        }
+
+        group.updateInfo(updateRequest.getName(), updateRequest.getImageName());
     }
 
     // 그룹 상세 조회
@@ -127,7 +137,7 @@ public class GroupService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("그룹을 찾을 수 없습니다."));
 
-        return new GroupInfoResponseDto(group);
+        return new GroupInfoResponseDto(group, getRawImageUrl(group));
     }
 
     // 사용자가 속한 모든 그룹 조회
@@ -136,12 +146,22 @@ public class GroupService {
         List<MemberGroup> myMemberGroups = memberGroupRepository.findAllByMemberId(userId);
 
         return myMemberGroups.stream()
-                .map(memberGroup -> new GroupInfoResponseDto(memberGroup.getGroup()))
+                .map(memberGroup -> new GroupInfoResponseDto(memberGroup.getGroup(), getRawImageUrl(memberGroup.getGroup())))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public boolean isMemberInGroup(Member member, Long groupId) {
         return memberGroupRepository.existsByMemberIdAndGroupId(member.getId(), groupId);
+    }
+
+    public grit.domain.group.dto.GroupProfileImageUploadUrlResponseDto generateGroupImageUploadUrl() {
+        String fileName = java.util.UUID.randomUUID().toString();
+        String uploadUrl = s3Service.createSignedPutUrl("group-images", fileName, java.time.Duration.ofMinutes(10)).toString();
+        return new grit.domain.group.dto.GroupProfileImageUploadUrlResponseDto(fileName, uploadUrl);
+    }
+
+    private String getRawImageUrl(Group group) {
+        return group.getImageName() != null ? group.getImageName().toString() : null;
     }
 }
