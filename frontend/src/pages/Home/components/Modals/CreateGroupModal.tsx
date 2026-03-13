@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Copy } from "lucide-react";
 import Modal from "@/components/Modal";
 import { createGroup } from "@/apis/services/group";
+import { ImageUploader } from "@/components/ImageUploader";
 
 type CreateGroupModalProps = {
   open: boolean;
@@ -14,8 +15,6 @@ export default function CreateGroupModal({
 }: CreateGroupModalProps) {
   //group input 값
   const [groupName, setGroupName] = useState("");
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [showInviteCode, setShowInviteCode] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
@@ -23,24 +22,9 @@ export default function CreateGroupModal({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleShowCode = () => {
     setShowInviteCode(true);
     setCopied(false);
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const handleCreateGroup = async () => {
@@ -83,7 +67,6 @@ export default function CreateGroupModal({
   //모달 닫을 때 전체 초기화
   const handleClose = () => {
     setGroupName("");
-    setPreviewImage(null);
     setShowInviteCode(false);
     setInviteCode("");
     onClose();
@@ -100,34 +83,7 @@ export default function CreateGroupModal({
         </Modal.Header>
 
         <Modal.Body className="px-8 flex flex-col items-center pb-8">
-          <div className="flex justify-center">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={handleImageClick}
-              className="relative h-40 w-40 overflow-hidden rounded-2xl bg-white shadow-md transition hover:opacity-80"
-              aria-label="그룹 이미지 업로드"
-            >
-              {previewImage ? (
-                <img
-                  src={previewImage}
-                  alt="그룹 이미지 미리보기"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="absolute inset-0 grid place-items-center text-6xl font-light text-gray-300">
-                  +
-                </span>
-              )}
-            </button>
-          </div>
-
+          <ImageUploader size={160} />
           <div className="mx-auto mt-10 w-full max-w-[360px]">
             <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
               그룹 이름

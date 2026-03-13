@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Divider } from "@/components/Divider";
 import { FormInput } from "@/components/FormInput";
+import { ImageUploader } from "@/components/ImageUploader";
 
 type ProfileSettingsModalProps = {
   open: boolean;
@@ -12,24 +12,6 @@ export default function ProfileSettingsModal({
   open,
   onClose,
 }: ProfileSettingsModalProps) {
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   return (
     <Modal isOpen={open} onClose={onClose}>
       <Modal.Overlay />
@@ -47,34 +29,10 @@ export default function ProfileSettingsModal({
             </h2>
 
             <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">
-              <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={handleImageClick}
-                  className="relative h-[180px] w-[180px] overflow-hidden rounded-2xl bg-white shadow-[0_14px_40px_rgba(0,0,0,0.35)] transition hover:opacity-80"
-                  aria-label="프로필 이미지 업로드"
-                >
-                  {previewImage ? (
-                    <img
-                      src={previewImage}
-                      alt="프로필 이미지 미리보기"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="absolute inset-0 grid place-items-center text-6xl font-light text-gray-300">
-                      +
-                    </span>
-                  )}
-                </button>
-              </div>
-
+              <ImageUploader
+                size={180}
+                className="shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
+              />
               <div className="flex flex-col gap-5">
                 <FormInput label="닉네임" type="text" />
                 <FormInput label="한 줄 소개" type="text" />
