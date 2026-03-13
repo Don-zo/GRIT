@@ -194,7 +194,7 @@ async function updateProfile(nickname, introduction, imageFileName, dDayDate, dD
 
         // 이미지 파일명이 있으면 포함 (UUID)
         if (imageFileName) {
-            body.image = imageFileName;
+            body.imageName = imageFileName;
         }
 
         // D-Day
@@ -222,7 +222,7 @@ async function updateProfile(nickname, introduction, imageFileName, dDayDate, dD
         else localStorage.removeItem('member_nickname');
         if (updated.introduction) localStorage.setItem('member_introduction', updated.introduction);
         else localStorage.removeItem('member_introduction');
-        if (updated.image) localStorage.setItem('member_image', updated.image);
+        if (updated.imageUrl) localStorage.setItem('member_image', updated.imageUrl);
         else localStorage.removeItem('member_image');
         if (updated.dDayDate) localStorage.setItem('member_dDayDate', updated.dDayDate);
         else localStorage.removeItem('member_dDayDate');

@@ -80,7 +80,8 @@ async function logout() {
         });
     } catch (e) { /* ignore */ }
     ['access_token', 'member_id', 'member_email', 'member_nickname',
-        'member_introduction', 'is_first_time_user']
+        'member_introduction', 'member_image', 'member_dDayDate',
+        'member_dDayTitle', 'member_weeklyStudyTimeGoal', 'is_first_time_user']
         .forEach(k => localStorage.removeItem(k));
     window.location.href = '/index.html';
 }
