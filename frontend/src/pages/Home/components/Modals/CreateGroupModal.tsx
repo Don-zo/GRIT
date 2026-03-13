@@ -20,6 +20,8 @@ export default function CreateGroupModal({
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
 
   const handleShowCode = () => {
@@ -36,15 +38,16 @@ export default function CreateGroupModal({
     setIsLoading(true);
 
     try {
-      const result = await createGroup(2, {
+      const response = await createGroup(2, {
         name: groupName,
-        imageUrl:
-          "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
+        imageUrl: imageFile
+          ? "업로드된_URL" // 실제로는 먼저 이미지 업로드 후 URL 받아야 함
+          : "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
       });
 
-      console.log("그룹 생성 성공:", result);
+      console.log("그룹 생성 성공:", response);
 
-      setInviteCode(result.inviteCode);
+      setInviteCode(response.inviteCode);
       setShowInviteCode(true);
     } catch (err) {
       console.error("그룹 생성 실패:", err);
@@ -67,6 +70,7 @@ export default function CreateGroupModal({
   //모달 닫을 때 전체 초기화
   const handleClose = () => {
     setGroupName("");
+    setImageFile(null);
     setShowInviteCode(false);
     setInviteCode("");
     onClose();
@@ -83,7 +87,10 @@ export default function CreateGroupModal({
         </Modal.Header>
 
         <Modal.Body className="px-8 flex flex-col items-center pb-8">
-          <ImageUploader size={160} />
+          <ImageUploader
+            size={160}
+            onImageChange={(file) => setImageFile(file)}
+          />
           <div className="mx-auto mt-10 w-full max-w-[360px]">
             <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
               그룹 이름

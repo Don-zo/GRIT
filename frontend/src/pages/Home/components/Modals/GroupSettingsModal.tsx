@@ -19,6 +19,7 @@ export default function GroupSettingsModal({
   initialImage = "",
 }: GroupSettingsModalProps) {
   const [groupName, setGroupName] = useState(initialName);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   //저장 버튼 핸들러
@@ -32,8 +33,10 @@ export default function GroupSettingsModal({
     try {
       const response = await updateGroup(groupId, 1, {
         name: groupName,
-        imageUrl:
-          "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
+        imageUrl: imageFile
+          ? "업로드된_URL"
+          : initialImage ||
+            "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
       });
 
       console.log("그룹 정보 수정 성공", response);
@@ -58,7 +61,11 @@ export default function GroupSettingsModal({
         </Modal.Header>
 
         <Modal.Body className="px-8 flex flex-col items-center pb-8">
-          <ImageUploader size={160} initialImage={initialImage} />
+          <ImageUploader
+            size={160}
+            initialImage={initialImage}
+            onImageChange={(file) => setImageFile(file)}
+          />
 
           {/* 폼 */}
           <div className="mx-auto mt-10 w-full max-w-[360px]">
