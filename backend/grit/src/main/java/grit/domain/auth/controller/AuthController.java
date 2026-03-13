@@ -9,13 +9,13 @@ import grit.domain.auth.service.TokenService;
 import grit.domain.member.dto.MemberResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
+import grit.global.s3.S3Directory;
+import grit.global.s3.S3Service;
 import grit.global.util.CookieUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,10 +28,8 @@ public class AuthController {
     private final AuthService authService;
     private final TokenService tokenService;
     private final MemberService memberService;
+    private final S3Service s3Service;
     private final CookieUtils cookieUtils;
-
-    @Value("${app.s3.base-url}")
-    private String s3BaseUrl;
 
     @PostMapping("/google")
     public ResponseEntity<AuthResponseDto> googleLogin(
@@ -45,9 +43,10 @@ public class AuthController {
         ResponseCookie cookie = cookieUtils.createRefreshTokenCookie(tokenPair.refreshToken());
         response.addHeader("Set-Cookie", cookie.toString());
 
+        String imageUrl = s3Service.resolveUrl(S3Directory.PROFILE_IMAGES, member.getImageName());
         return ResponseEntity.status(isMemberPending ? HttpStatus.CREATED : HttpStatus.OK).body(
                 new AuthResponseDto(
-                        MemberResponseDto.fromWithResolvedUrl(member, resolveImageUrl(member.getImageName())), tokenPair.accessToken(), isMemberPending));
+                        MemberResponseDto.fromWithResolvedUrl(member, imageUrl), tokenPair.accessToken(), isMemberPending));
     }
 
     @PostMapping("/refresh")
@@ -72,12 +71,5 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
         tokenService.invalidateRefreshToken(refreshTokenString);
         return ResponseEntity.ok().build();
-    }
-
-    private String resolveImageUrl(UUID imageName) {
-        if (imageName == null) {
-            return null;
-        }
-        return s3BaseUrl + "/profile-images/" + imageName;
     }
 }

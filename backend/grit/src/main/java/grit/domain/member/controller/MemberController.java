@@ -6,6 +6,8 @@ import grit.domain.member.dto.MemberProfileImageUploadUrlResponseDto;
 import grit.domain.member.dto.MemberProfileInitializeRequestDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
+import grit.global.s3.S3Directory;
+import grit.global.s3.S3Service;
 import grit.domain.member.dto.MemberProfilePatchRequestDto;
 import grit.domain.member.dto.MemberResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,9 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
-import java.util.UUID;
 
 @Tag(name = "User", description = "사용자 관련 API")
 @RestController
@@ -29,9 +29,7 @@ import java.util.UUID;
 public class MemberController {
 
     private final MemberService memberService;
-
-    @Value("${app.s3.base-url}")
-    private String s3BaseUrl;
+    private final S3Service s3Service;
 
     @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자의 정보를 조회합니다.")
     @ApiResponses(value = {
@@ -113,13 +111,7 @@ public class MemberController {
     }
 
     private MemberResponseDto toResponse(Member member) {
-        return MemberResponseDto.fromWithResolvedUrl(member, resolveImageUrl(member.getImageName()));
-    }
-
-    private String resolveImageUrl(UUID imageName) {
-        if (imageName == null) {
-            return null;
-        }
-        return s3BaseUrl + "/profile-images/" + imageName;
+        String imageUrl = s3Service.resolveUrl(S3Directory.PROFILE_IMAGES, member.getImageName());
+        return MemberResponseDto.fromWithResolvedUrl(member, imageUrl);
     }
 }
