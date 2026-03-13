@@ -29,7 +29,7 @@ type ModalProps = {
 };
 
 function Modal({ isOpen, onClose, children }: ModalProps) {
-  if (!open) return null;
+  if (!isOpen) return null;
   return (
     <ModalContext.Provider value={{ isOpen, onClose }}>
       <div
