@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import grit.global.s3.S3Directory;
+import grit.global.s3.S3Service;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,7 @@ import java.util.List;
 public class GroupController {
 
     private final GroupService groupService;
+    private final S3Service s3Service;
 
     @Operation(summary = "그룹 생성", description = "새로운 그룹을 생성합니다.")
     @ApiResponses(value = {
@@ -38,7 +41,7 @@ public class GroupController {
             @RequestBody GroupCreateRequestDto request) {
 
         GroupInfoResponseDto response = groupService.createGroup(memberPrincipal.id(), request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resolveImageUrl(response));
     }
 
     @Operation(summary = "그룹 가입", description = "초대 코드를 입력하여 그룹에 참여합니다.")
@@ -54,7 +57,7 @@ public class GroupController {
             @RequestParam String inviteCode) {
 
         GroupInfoResponseDto response = groupService.joinGroup(memberPrincipal.id(), inviteCode);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(resolveImageUrl(response));
     }
 
     @Operation(summary = "그룹 상세 조회", description = "특정 그룹의 상세 정보를 조회합니다.")
@@ -68,7 +71,7 @@ public class GroupController {
             @PathVariable Long groupId) {
 
         GroupInfoResponseDto response = groupService.getGroup(groupId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(resolveImageUrl(response));
     }
 
     @Operation(summary = "내 그룹 목록 조회", description = "내가 속한 모든 그룹 목록을 조회합니다.")
@@ -77,7 +80,10 @@ public class GroupController {
     public ResponseEntity<List<GroupInfoResponseDto>> getMyGroups(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
 
-        List<GroupInfoResponseDto> response = groupService.getMyGroups(memberPrincipal.id());
+        List<GroupInfoResponseDto> response = groupService.getMyGroups(memberPrincipal.id())
+                .stream()
+                .map(this::resolveImageUrl)
+                .toList();
         return ResponseEntity.ok(response);
     }
 
@@ -97,7 +103,7 @@ public class GroupController {
         groupService.updateGroup(memberPrincipal.id(), groupId, updateRequest);
 
         GroupInfoResponseDto response = groupService.getGroup(groupId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(resolveImageUrl(response));
     }
 
     @Operation(summary = "그룹 나가기 (삭제)", description = "그룹을 탈퇴합니다. 해당 그룹 멤버의 인원이 0명이 되면 그룹이 자동 삭제됩니다.")
@@ -112,5 +118,29 @@ public class GroupController {
 
         groupService.deleteGroup(memberPrincipal.id(), groupId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "그룹 프로필 이미지 업로드 URL 발급", description = "AWS S3에 그룹 프로필 이미지를 업로드하기 위한 Presigned URL을 발급받습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "URL 생성 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content)
+    })
+    @GetMapping("/image-upload-url")
+    public ResponseEntity<grit.domain.group.dto.GroupProfileImageUploadUrlResponseDto> getGroupImageUploadUrl() {
+        return ResponseEntity.ok(groupService.generateGroupImageUploadUrl());
+    }
+
+    private GroupInfoResponseDto resolveImageUrl(GroupInfoResponseDto dto) {
+        if (dto.getImageUrl() == null) {
+            return dto;
+        }
+        String resolvedUrl = s3Service.resolveUrl(S3Directory.GROUP_IMAGES, dto.getImageUrl());
+        return new GroupInfoResponseDto(
+                dto.getId(),
+                dto.getName(),
+                dto.getInviteCode(),
+                dto.getMemberCount(),
+                resolvedUrl
+        );
     }
 }

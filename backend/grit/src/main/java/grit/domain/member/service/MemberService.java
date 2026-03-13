@@ -2,13 +2,18 @@ package grit.domain.member.service;
 
 import grit.domain.member.constant.Role;
 import grit.domain.member.constant.SocialProvider;
+import grit.domain.member.dto.MemberProfileImageUploadUrlResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
 import grit.global.exception.EntityNotFoundException;
+import grit.global.s3.S3Directory;
+import grit.global.s3.S3Service;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import grit.global.exception.NicknameConflictException;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +24,7 @@ import org.springframework.stereotype.Service;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final S3Service s3Service;
 
     // 회원 가입
     public Member createMember(String email, SocialProvider provider, String providerId) {
@@ -42,6 +48,12 @@ public class MemberService {
         return memberRepository.existsByNickname(nickname);
     }
 
+    public MemberProfileImageUploadUrlResponseDto generateProfileImageUploadUrl() {
+        String fileName = UUID.randomUUID().toString();
+        String uploadUrl = s3Service.createSignedPutUrl(S3Directory.PROFILE_IMAGES, fileName, Duration.ofMinutes(5)).toString();
+        return new MemberProfileImageUploadUrlResponseDto(fileName, uploadUrl);
+    }
+
     // 이메일 중복 체크
     private void validEmail(String email) {
         Optional<Member> member = memberRepository.findByEmail(email);
@@ -59,25 +71,37 @@ public class MemberService {
 
     @Transactional
     public void initializeProfile(
-            Member member, String nickname, String introduction, String image,
+            Member member, String nickname, String introduction, UUID image,
             LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
 
         if (isNicknameTaken(member, nickname)) {
             throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
-        member.initializeProfile(nickname, introduction, image, dDayDate, dDayTitle, weeklyStudyTimeGoal);
+
+        if (image != null && !s3Service.isObjectExists(S3Directory.PROFILE_IMAGES, image.toString())) {
+            throw new IllegalArgumentException("유효하지 않은 이미지입니다.");
+        }
+
+        member.initializeProfile(nickname, introduction, image, dDayDate, dDayTitle,
+                weeklyStudyTimeGoal);
     }
 
     // 정보 수정
     @Transactional
     public void updateProfile(
-            Member member, String nickname, String introduction, String image,
+            Member member, String nickname, String introduction, UUID image,
             LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
 
         if (nickname != null && isNicknameTaken(member, nickname)) {
             throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
-        member.updateProfile(nickname, introduction, image, dDayDate, dDayTitle, weeklyStudyTimeGoal);
+
+        if (image != null && !s3Service.isObjectExists(S3Directory.PROFILE_IMAGES, image.toString())) {
+            throw new IllegalArgumentException("유효하지 않은 이미지입니다.");
+        }
+
+        member.updateProfile(nickname, introduction, image, dDayDate, dDayTitle,
+                weeklyStudyTimeGoal);
     }
 
     // 회원 탈퇴

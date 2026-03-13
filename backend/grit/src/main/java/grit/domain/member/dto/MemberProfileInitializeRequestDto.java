@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.UUID;
 
 public record MemberProfileInitializeRequestDto(
         @Schema(description = "닉네임", example = "그릿유저")
@@ -17,8 +18,7 @@ public record MemberProfileInitializeRequestDto(
         @NotNull
         String introduction,
 
-        @NotBlank
-        String image,
+        UUID imageName,
 
         LocalDate dDayDate,
 

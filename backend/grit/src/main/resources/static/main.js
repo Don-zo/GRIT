@@ -3,6 +3,7 @@ const welcomeMessage = document.getElementById('welcome-message');
 const profileNickname = document.getElementById('profile-nickname');
 const profileEmail = document.getElementById('profile-email');
 const profileIntroduction = document.getElementById('profile-introduction');
+const profileAvatar = document.getElementById('profile-avatar');
 const deleteAccountBtn = document.getElementById('delete-account-btn');
 const editProfileBtn = document.getElementById('edit-profile-btn');
 const errorMessage = document.getElementById('error-message');
@@ -17,10 +18,13 @@ function showError(message) {
 function clearProfileSkeleton() {
     const nickname = document.getElementById('profile-nickname');
     const email = document.getElementById('profile-email');
+    const avatar = document.getElementById('profile-avatar');
     nickname.classList.remove('skeleton');
     nickname.style.cssText = '';
     email.classList.remove('skeleton');
     email.style.cssText = '';
+    avatar.classList.remove('skeleton');
+    avatar.style.cssText = '';
     document.getElementById('edit-profile-btn').style.display = '';
 }
 
@@ -43,6 +47,14 @@ async function fetchUserInfo() {
         else localStorage.removeItem('member_nickname');
         if (memberInfo.introduction) localStorage.setItem('member_introduction', memberInfo.introduction);
         else localStorage.removeItem('member_introduction');
+        if (memberInfo.imageUrl) localStorage.setItem('member_image', memberInfo.imageUrl);
+        else localStorage.removeItem('member_image');
+        if (memberInfo.dDayDate) localStorage.setItem('member_dDayDate', memberInfo.dDayDate);
+        else localStorage.removeItem('member_dDayDate');
+        if (memberInfo.dDayTitle) localStorage.setItem('member_dDayTitle', memberInfo.dDayTitle);
+        else localStorage.removeItem('member_dDayTitle');
+        if (memberInfo.weeklyStudyTimeGoal) localStorage.setItem('member_weeklyStudyTimeGoal', memberInfo.weeklyStudyTimeGoal);
+        else localStorage.removeItem('member_weeklyStudyTimeGoal');
 
         return memberInfo;
     } catch (error) {
@@ -61,6 +73,16 @@ function displayUserInfo(memberInfo) {
     profileNickname.textContent = memberInfo.nickname || '닉네임 없음';
     profileEmail.textContent = memberInfo.email || '';
 
+    // 프로필 아바타 표시
+    const initial = nickname.charAt(0).toUpperCase();
+    if (memberInfo.imageUrl) {
+        profileAvatar.className = '';
+        profileAvatar.innerHTML = `<img class="profile-card-avatar" src="${memberInfo.imageUrl}" alt="프로필" onerror="this.parentElement.className='profile-card-avatar-placeholder';this.parentElement.textContent='${initial}';"/>`;
+    } else {
+        profileAvatar.className = 'profile-card-avatar-placeholder';
+        profileAvatar.textContent = initial;
+    }
+
     if (memberInfo.introduction) {
         profileIntroduction.textContent = memberInfo.introduction;
         profileIntroduction.style.opacity = '1';
@@ -70,6 +92,37 @@ function displayUserInfo(memberInfo) {
         profileIntroduction.style.opacity = '0.7';
         profileIntroduction.style.fontStyle = 'italic';
     }
+
+    // D-Day & 주간 목표 표시
+    const profileMeta = document.getElementById('profile-meta');
+    let showMeta = false;
+
+    if (memberInfo.dDayDate && memberInfo.dDayTitle) {
+        const ddaySection = document.getElementById('dday-section');
+        const profileDday = document.getElementById('profile-dday');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const target = new Date(memberInfo.dDayDate + 'T00:00:00');
+        const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+        let ddayText;
+        if (diff > 0) ddayText = `D-${diff}`;
+        else if (diff === 0) ddayText = 'D-Day';
+        else ddayText = `D+${Math.abs(diff)}`;
+        profileDday.textContent = `${memberInfo.dDayTitle} (${ddayText})`;
+        ddaySection.style.display = '';
+        showMeta = true;
+    }
+
+    if (memberInfo.weeklyStudyTimeGoal) {
+        const goalSection = document.getElementById('weekly-goal-section');
+        const profileGoal = document.getElementById('profile-weekly-goal');
+        const [h, m] = memberInfo.weeklyStudyTimeGoal.split(':');
+        profileGoal.textContent = `${parseInt(h)}시간 ${parseInt(m)}분`;
+        goalSection.style.display = '';
+        showMeta = true;
+    }
+
+    if (showMeta) profileMeta.style.display = '';
 }
 
 // 로그인 확인 및 사용자 정보 로드

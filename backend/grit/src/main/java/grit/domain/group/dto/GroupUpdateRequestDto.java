@@ -1,6 +1,7 @@
 package grit.domain.group.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -11,5 +12,5 @@ public class GroupUpdateRequestDto {
     private String name;
 
     @Schema(description = "이미지 URL", example = "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png", nullable = true)
-    private String imageUrl;
+    private UUID imageName;
 }
