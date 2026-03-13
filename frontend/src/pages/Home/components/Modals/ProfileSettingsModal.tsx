@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Divider } from "@/components/Divider";
+import { FormInput } from "@/components/FormInput";
 
 type ProfileSettingsModalProps = {
   open: boolean;
@@ -75,25 +76,8 @@ export default function ProfileSettingsModal({
               </div>
 
               <div className="flex flex-col gap-5">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
-                    닉네임
-                  </label>
-                  <input
-                    type="text"
-                    className="h-12 w-full rounded-lg bg-white px-4 text-gray-900 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
-                    한 줄 소개
-                  </label>
-                  <input
-                    type="text"
-                    className="h-12 w-full rounded-lg bg-white px-4 text-gray-900 outline-none"
-                  />
-                </div>
+                <FormInput label="닉네임" type="text" />
+                <FormInput label="한 줄 소개" type="text" />
               </div>
             </div>
           </section>
@@ -104,26 +88,8 @@ export default function ProfileSettingsModal({
             <h3 className="text-lg font-semibold text-[#D6FDE5]">D-day 설정</h3>
 
             <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
-                  D-day 날짜
-                </label>
-
-                <input
-                  type="date"
-                  className="h-12 w-full rounded-lg bg-white px-4 text-gray-900 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
-                  D-day 이름
-                </label>
-                <input
-                  type="text"
-                  className="h-12 w-full rounded-lg bg-white px-4 text-gray-900 outline-none"
-                />
-              </div>
+              <FormInput label="D-day 날짜" type="date" />
+              <FormInput label="D-day 이름" type="text" />
             </div>
           </section>
 
