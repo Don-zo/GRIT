@@ -12,8 +12,10 @@ import grit.domain.member.service.MemberService;
 import grit.global.util.CookieUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +30,9 @@ public class AuthController {
     private final MemberService memberService;
     private final CookieUtils cookieUtils;
 
+    @Value("${app.s3.base-url}")
+    private String s3BaseUrl;
+
     @PostMapping("/google")
     public ResponseEntity<AuthResponseDto> googleLogin(
             @Valid @RequestBody GoogleAuthRequestDto request,
@@ -41,8 +46,8 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
 
         return ResponseEntity.status(isMemberPending ? HttpStatus.CREATED : HttpStatus.OK).body(
-                new AuthResponseDto(MemberResponseDto.from(member), tokenPair.accessToken(),
-                        isMemberPending));
+                new AuthResponseDto(
+                        MemberResponseDto.fromWithResolvedUrl(member, resolveImageUrl(member.getImageName())), tokenPair.accessToken(), isMemberPending));
     }
 
     @PostMapping("/refresh")
@@ -67,5 +72,12 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
         tokenService.invalidateRefreshToken(refreshTokenString);
         return ResponseEntity.ok().build();
+    }
+
+    private String resolveImageUrl(UUID imageName) {
+        if (imageName == null) {
+            return null;
+        }
+        return s3BaseUrl + "/profile-images/" + imageName;
     }
 }

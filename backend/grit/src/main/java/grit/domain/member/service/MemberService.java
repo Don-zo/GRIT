@@ -76,6 +76,11 @@ public class MemberService {
         if (isNicknameTaken(member, nickname)) {
             throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
+
+        if (image != null && !s3Service.isObjectExists("profile-images", image.toString())) {
+            throw new IllegalArgumentException("유효하지 않은 이미지입니다.");
+        }
+
         member.initializeProfile(nickname, introduction, image, dDayDate, dDayTitle,
                 weeklyStudyTimeGoal);
     }

@@ -18,7 +18,7 @@ public record MemberProfileInitializeRequestDto(
         @NotNull
         String introduction,
 
-        UUID image,
+        UUID imageName,
 
         LocalDate dDayDate,
 
