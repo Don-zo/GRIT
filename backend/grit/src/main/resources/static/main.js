@@ -47,7 +47,7 @@ async function fetchUserInfo() {
         else localStorage.removeItem('member_nickname');
         if (memberInfo.introduction) localStorage.setItem('member_introduction', memberInfo.introduction);
         else localStorage.removeItem('member_introduction');
-        if (memberInfo.image) localStorage.setItem('member_image', memberInfo.image);
+        if (memberInfo.imageUrl) localStorage.setItem('member_image', memberInfo.imageUrl);
         else localStorage.removeItem('member_image');
         if (memberInfo.dDayDate) localStorage.setItem('member_dDayDate', memberInfo.dDayDate);
         else localStorage.removeItem('member_dDayDate');
@@ -75,9 +75,9 @@ function displayUserInfo(memberInfo) {
 
     // 프로필 아바타 표시
     const initial = nickname.charAt(0).toUpperCase();
-    if (memberInfo.image) {
+    if (memberInfo.imageUrl) {
         profileAvatar.className = '';
-        profileAvatar.innerHTML = `<img class="profile-card-avatar" src="${memberInfo.image}" alt="프로필" onerror="this.parentElement.className='profile-card-avatar-placeholder';this.parentElement.textContent='${initial}';"/>`;
+        profileAvatar.innerHTML = `<img class="profile-card-avatar" src="${memberInfo.imageUrl}" alt="프로필" onerror="this.parentElement.className='profile-card-avatar-placeholder';this.parentElement.textContent='${initial}';"/>`;
     } else {
         profileAvatar.className = 'profile-card-avatar-placeholder';
         profileAvatar.textContent = initial;
