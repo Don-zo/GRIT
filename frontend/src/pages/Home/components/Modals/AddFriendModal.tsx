@@ -30,9 +30,7 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
       <Modal.Content>
         <Modal.CloseButton />
         <Modal.Header className="flex flex-col items-center text-center">
-          <h1 className="mt-6 text-5xl font-extrabold tracking-wide text-[#82C397]">
-            GRIT
-          </h1>
+          <Modal.Title size="lg" />
           <p className="mt-4 text-sm font-medium text-[#D6FDE5]">
             아이디를 입력해 주세요
           </p>
