@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Modal from "@/components/Modal";
 import { Divider } from "@/components/Divider";
 import { FormInput } from "@/components/FormInput";
@@ -12,6 +13,7 @@ export default function ProfileSettingsModal({
   open,
   onClose,
 }: ProfileSettingsModalProps) {
+  const [imageFile, setImageFile] = useState<File | null>(null);
   return (
     <Modal isOpen={open} onClose={onClose}>
       <Modal.Overlay />
@@ -32,6 +34,7 @@ export default function ProfileSettingsModal({
               <ImageUploader
                 size={180}
                 className="shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
+                onImageChange={(file) => setImageFile(file)}
               />
               <div className="flex flex-col gap-5">
                 <FormInput label="닉네임" type="text" />
@@ -78,6 +81,10 @@ export default function ProfileSettingsModal({
         <Modal.Footer className="px-8 pb-8 flex justify-center">
           <button
             type="button"
+            onClick={() => {
+              console.log("저장된 이미지", imageFile);
+              // 추후 서버 업로드 로직 추가
+            }}
             className="h-14 w-full max-w-[360px] rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition"
           >
             저장하기
