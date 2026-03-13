@@ -800,7 +800,8 @@ textarea.form-input {
    ═══════════════════════════════════════════ */
 .group-detail-header {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 16px;
     margin-bottom: 24px;
     padding-bottom: 20px;
@@ -808,18 +809,23 @@ textarea.form-input {
 }
 
 .group-detail-image {
-    width: 60px;
-    height: 60px;
-    border-radius: var(--radius-md);
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
     background: var(--gradient);
     object-fit: cover;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 24px;
+    font-size: 48px;
     font-weight: 700;
     flex-shrink: 0;
+}
+
+.group-detail-info {
+    width: 100%;
+    text-align: left;
 }
 
 .group-detail-info h2 {
@@ -1197,6 +1203,94 @@ textarea.form-input {
     color: white;
 }
 
+/* ═══════════════════════════════════════════
+   Banner Image Upload (For Groups)
+   ═══════════════════════════════════════════ */
+.banner-image-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.banner-image-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition);
+    overflow: hidden;
+}
+
+.banner-image-preview:hover {
+    transform: scale(1.02);
+}
+
+.banner-image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--border);
+    transition: border-color var(--transition);
+}
+
+.banner-image-preview:hover img {
+    border-color: var(--accent);
+}
+
+.banner-image-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-lg);
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 48px;
+    font-weight: 700;
+    border: 2px solid var(--border);
+    transition: border-color var(--transition);
+}
+
+.banner-image-preview:hover .banner-image-placeholder {
+    border-color: var(--accent);
+}
+
+.banner-image-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-lg);
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.banner-image-preview:hover .banner-image-overlay {
+    opacity: 1;
+}
+
+.banner-image-overlay svg {
+    color: white;
+}
+
+.banner-image-upload .upload-hint {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.banner-image-upload.uploading .banner-image-overlay {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.6);
+}
+
 .profile-image-upload .upload-hint {
     margin-top: 10px;
     font-size: 12px;
@@ -1460,6 +1554,107 @@ textarea.form-input {
     gap: 12px;
     margin-bottom: 16px;
     flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════
+   Group Grid & Cards
+   ═══════════════════════════════════════════ */
+.group-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.group-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all var(--transition);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.group-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-4px);
+}
+
+.group-card-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.group-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.group-card:hover .group-card-image img {
+    transform: scale(1.06);
+}
+
+.group-card-placeholder {
+    font-size: 40px;
+    font-weight: 700;
+    color: white;
+}
+
+.group-card-content {
+    padding: 18px;
+}
+
+.group-card-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.group-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.group-card-meta-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.skeleton-group-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.skeleton-group-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--bg-card-hover);
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-group-content {
+    padding: 18px;
 }
 
 .filter-tabs {
