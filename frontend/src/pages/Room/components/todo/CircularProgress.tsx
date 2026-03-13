@@ -17,11 +17,10 @@ export default function CircularProgress({
   const [displayAngle, setDisplayAngle] = useState(0);
   const rafRef = useRef<number | null>(null);
 
-  // ✨ 느리고 자연스러운 ease-out
   const easeOutQuad = (t: number) => 1 - (1 - t) * (1 - t);
 
   useEffect(() => {
-    const duration = 700; // 🔥 더 느리게
+    const duration = 700;
     const startTime = performance.now();
     const startAngle = displayAngle;
     const diff = targetAngle - startAngle;
@@ -44,7 +43,6 @@ export default function CircularProgress({
     };
   }, [targetAngle]);
 
-  // geometry
   const ringRadius = size / 2 - thickness / 2;
   const dotSize = thickness + 5;
   const innerCircleSize = size - thickness * 2;
@@ -112,7 +110,7 @@ export default function CircularProgress({
         }}
       >
         <div
-          className="flex items-center justify-center font-semibold text-white rounded-full bg-green-semidark"
+          className="flex items-center justify-center font-semibold text-white rounded-full bg-green-semidark select-none"
           style={{
             width: centerCircleSize,
             height: centerCircleSize,

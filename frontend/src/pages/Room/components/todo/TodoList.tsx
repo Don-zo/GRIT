@@ -13,7 +13,6 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<TodoItem[]>(() => initialItems);
 
-  // 🔥 애니메이션용 영역 높이
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [maxHeight, setMaxHeight] = useState(0);
 
@@ -31,7 +30,6 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
   };
 
   const handleToggle = () => {
-    // 열리는 순간에만 실제 높이를 한 번 측정해서 저장
     if (!open && contentRef.current) {
       setMaxHeight(contentRef.current.scrollHeight);
     }
@@ -45,8 +43,8 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
         <div className="flex items-center gap-4">
           <CircularProgress value={progress} />
           <div>
-            <div className="font-bold text-h5 text-green-darkest">{title}</div>
-            <div className="text-caption text-gray-semidark">
+            <div className="font-bold text-h5 text-green-darkest select-none">{title}</div>
+            <div className="text-caption text-gray-semidark select-none">
               {total}개 중 {left}개가 남았어요!
             </div>
           </div>
