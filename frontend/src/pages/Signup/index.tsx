@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import SocialLoginButton from "@/components/auth/SocialLoginButton";
 import { redirectToGoogleAuth } from "@/utils/oauth";
 
@@ -10,9 +11,28 @@ const SignupPage = () => {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(34,34,34,0)_0%,rgba(62,115,88,0.12)_100%)]" />
 
       <div className="pointer-events-none absolute inset-y-0 right-0 w-[52%]">
-        <div className="absolute -right-35 -top-48 h-[600px] w-[900px] rotate-[18deg] rounded-[24px] bg-[var(--color-green-dark)] opacity-90" />
-        <div className="absolute -right-28 top-42 h-[600px] w-[900px] rotate-[-18deg] rounded-[24px] bg-[var(--color-green-normal)] opacity-70" />
-        <div className="absolute -right-38 top-120 h-[600px] w-[900px] rotate-[320deg] rounded-[24px] bg-[var(--color-green-semidark)] opacity-85" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-[52%]">
+          <motion.div
+            initial={{ y: "100vh", rotate: 120 }}
+            animate={{ y: 0, rotate: 18 }}
+            transition={{ duration: 1.0, ease: "easeOut", delay: 0 }}
+            className="absolute -right-35 -top-48 h-[600px] w-[900px] rounded-[24px] bg-[var(--color-green-dark)] opacity-90"
+          />
+
+          <motion.div
+            initial={{ y: "100vh", rotate: -120 }}
+            animate={{ y: 0, rotate: -18 }}
+            transition={{ duration: 1.0, ease: "easeOut", delay: 0.2 }}
+            className="absolute -right-28 top-42 h-[600px] w-[900px] rounded-[24px] bg-[var(--color-green-normal)] opacity-70"
+          />
+
+          <motion.div
+            initial={{ y: "100vh", rotate: 250 }}
+            animate={{ y: 0, rotate: 320 }}
+            transition={{ duration: 1.3, ease: "easeOut", delay: 0.5 }}
+            className="absolute -right-38 top-120 h-[600px] w-[900px] rounded-[24px] bg-[var(--color-green-semidark)] opacity-85"
+          />
+        </div>
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col">
