@@ -46,10 +46,10 @@ const SignupPage = () => {
           <div className="w-full flex">
             <div className="max-w-[480px]">
               <h2 className="text-[32px] font-extrabold text-[#4a4a4a]">
-                회원가입
+                로그인
               </h2>
               <p className="mt-2 text-sm text-[#8a8a8a]">
-                소셜 계정으로 쉽게 가입해 보세요
+                소셜 계정으로 쉽게 시작해 보세요
               </p>
 
               <div className="mt-8 flex w-[320px] max-w-[92vw] flex-col items-center space-y-5">
@@ -61,7 +61,7 @@ const SignupPage = () => {
                 <SocialLoginButton provider="kakao" />
               </div>
 
-              <p className="mt-6 w-[320px] max-w-[92vw] text-center text-[11px] text-[#6b8a7a]">
+              {/* <p className="mt-6 w-[320px] max-w-[92vw] text-center text-[11px] text-[#6b8a7a]">
                 이미 계정이 있으신가요?{" "}
                 <a
                   href="#"
@@ -69,7 +69,7 @@ const SignupPage = () => {
                 >
                   로그인
                 </a>
-              </p>
+              </p> */}
             </div>
           </div>
         </main>

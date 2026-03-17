@@ -12,7 +12,7 @@ type SocialLoginButtonProps = {
 const providerConfig = {
   google: {
     icon: GoogleIcon,
-    text: "Google로 로그인",
+    text: "Google로 시작하기",
     bgColor: "bg-[#ffffff]",
     textColor: "text-gray-700",
     hoverEffect: "hover:bg-gray-50",
@@ -20,7 +20,7 @@ const providerConfig = {
   },
   naver: {
     icon: NaverIcon,
-    text: "네이버로 로그인",
+    text: "네이버로 시작하기",
     bgColor: "bg-[#03A94D]",
     textColor: "text-white",
     hoverEffect: "hover:brightness-95",
@@ -28,7 +28,7 @@ const providerConfig = {
   },
   kakao: {
     icon: KakaoIcon,
-    text: "카카오로 로그인",
+    text: "카카오로 시작하기",
     bgColor: "bg-[#FEE500]",
     textColor: "text-[#191600]",
     hoverEffect: "hover:brightness-95",
