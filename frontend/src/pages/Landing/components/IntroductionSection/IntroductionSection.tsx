@@ -1,55 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import IntroductionCard from "@/pages/Landing/components/IntroductionSection/IntroductionCard";
 
-export default function IntroductionSection() {
-  const sectionsRef = useRef<(HTMLElement | null)[]>([]);
-  const [currentSection, setCurrentSection] = useState(0);
-  const isScrollingRef = useRef(false);
+type IntroductionSectionProps = {
+  sectionsRef: RefObject<(HTMLElement | null)[]>;
+  startIndex?: number;
+};
 
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (isScrollingRef.current) {
-        e.preventDefault();
-        return;
-      }
-
-      const delta = e.deltaY;
-      let nextSection = currentSection;
-
-      if (delta > 0 && currentSection < sectionsRef.current.length - 1) {
-        nextSection = currentSection + 1;
-      } else if (delta < 0 && currentSection > 0) {
-        nextSection = currentSection - 1;
-      }
-
-      if (nextSection !== currentSection) {
-        e.preventDefault();
-        isScrollingRef.current = true;
-        setCurrentSection(nextSection);
-
-        sectionsRef.current[nextSection]?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-
-        setTimeout(() => {
-          isScrollingRef.current = false;
-        }, 1500);
-      }
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: false });
-
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-    };
-  }, [currentSection]);
-
+export default function IntroductionSection({
+  sectionsRef,
+  startIndex = 1,
+}: IntroductionSectionProps) {
   return (
     <>
       <section
         ref={(sec) => {
-          sectionsRef.current[0] = sec;
+          sectionsRef.current[startIndex] = sec;
         }}
         className="h-screen"
       >
@@ -61,7 +26,7 @@ export default function IntroductionSection() {
 
       <section
         ref={(sec) => {
-          sectionsRef.current[1] = sec;
+          sectionsRef.current[startIndex + 1] = sec;
         }}
         className="h-screen"
       >
@@ -73,7 +38,7 @@ export default function IntroductionSection() {
 
       <section
         ref={(sec) => {
-          sectionsRef.current[2] = sec;
+          sectionsRef.current[startIndex + 2] = sec;
         }}
         className="h-screen"
       >
