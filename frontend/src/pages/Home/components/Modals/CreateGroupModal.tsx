@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Copy } from "lucide-react";
 import Modal from "@/components/Modal";
-import { createGroup } from "@/apis/services/group";
+import { groupApi } from "@/apis/services/group";
 import { ImageUploader } from "@/components/ImageUploader";
 
 type CreateGroupModalProps = {
@@ -15,19 +15,10 @@ export default function CreateGroupModal({
 }: CreateGroupModalProps) {
   //group input 값
   const [groupName, setGroupName] = useState("");
-
-  const [showInviteCode, setShowInviteCode] = useState(false);
-  const [inviteCode, setInviteCode] = useState("");
-  const [copied, setCopied] = useState(false);
-
   const [imageFile, setImageFile] = useState<File | null>(null);
-
+  const [inviteCode, setInviteCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleShowCode = () => {
-    setShowInviteCode(true);
-    setCopied(false);
-  };
+  const [copied, setCopied] = useState(false);
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
@@ -38,19 +29,16 @@ export default function CreateGroupModal({
     setIsLoading(true);
 
     try {
-      const response = await createGroup(2, {
+      const defaultImageUrl =
+        "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png";
+      const response = await groupApi.create({
         name: groupName,
-        imageUrl: imageFile
-          ? "업로드된_URL" // 실제로는 먼저 이미지 업로드 후 URL 받아야 함
-          : "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
+        imageUrl: defaultImageUrl,
       });
-
-      console.log("그룹 생성 성공:", response);
-
       setInviteCode(response.inviteCode);
-      setShowInviteCode(true);
-    } catch (err) {
-      console.error("그룹 생성 실패:", err);
+      setCopied(false);
+    } catch (e) {
+      console.error("그룹 생성 실패:", e);
       alert("그룹 생성에 실패했습니다");
     } finally {
       setIsLoading(false);
@@ -67,12 +55,11 @@ export default function CreateGroupModal({
     }
   };
 
-  //모달 닫을 때 전체 초기화
   const handleClose = () => {
     setGroupName("");
     setImageFile(null);
-    setShowInviteCode(false);
     setInviteCode("");
+    setCopied(false);
     onClose();
   };
 
@@ -87,10 +74,7 @@ export default function CreateGroupModal({
         </Modal.Header>
 
         <Modal.Body className="px-8 flex flex-col items-center pb-8">
-          <ImageUploader
-            size={160}
-            onImageChange={(file) => setImageFile(file)}
-          />
+          <ImageUploader size={160} onImageChange={setImageFile} />
           <div className="mx-auto mt-10 w-full max-w-[360px]">
             <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
               그룹 이름
@@ -118,7 +102,7 @@ export default function CreateGroupModal({
             </p>
           </div>
 
-          {showInviteCode && (
+          {inviteCode && (
             <div className="mt-6 flex items-center gap-1 rounded-xl bg-white px-4 py-2">
               <span className="text-sm font-bold text-[#3E7358]">
                 {inviteCode}

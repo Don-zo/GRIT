@@ -1,28 +1,22 @@
-// 그룹 생성 요청
-export interface CreateGroupRequest {
+export interface GroupCoreInfo {
+  id: number;
   name: string;
+  memberCount: number;
   imageUrl: string;
 }
 
-// 그룹 생성 응답
-export interface CreateGroupResponse {
-  id: number;
-  name: string;
+export interface Group extends GroupCoreInfo {
   inviteCode: string;
-  memberCount: number;
-  imageUrl: string;
 }
 
-//그룹 정보 수정 요청
-export interface UpdateGroupRequest {
+export interface GroupInput {
   name: string;
   imageUrl: string;
 }
 
-//그룹 정보 수정 응답
-export interface UpdateGroupResponse {
-  id: number;
-  name: string;
-  memberCount: number;
-  imageUrl: string;
+export interface GroupList {
+  groups: Group[];
 }
+
+export type CreateGroupRequest = GroupInput;
+export type UpdateGroupRequest = Partial<GroupInput>;

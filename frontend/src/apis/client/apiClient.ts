@@ -1,7 +1,7 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/apis/constants/endpoints";
 import { PATHS } from "@/routes/path";
-import { AUTH_REFRESH_ENDPOINT } from "@/apis/constants/endpoints";
+import { API_ENDPOINTS } from "@/apis/constants/endpoints";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -54,7 +54,7 @@ apiClient.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      originalRequest.url !== AUTH_REFRESH_ENDPOINT
+      originalRequest.url !== API_ENDPOINTS.AUTH.REFRESH
     ) {
       if (isRefreshingToken) {
         return new Promise((resolve) => {
@@ -70,7 +70,7 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshResponse = await axios.post(
-          `${API_BASE_URL}${AUTH_REFRESH_ENDPOINT}`,
+          `${API_BASE_URL}${API_ENDPOINTS.AUTH.REFRESH}`,
           {},
           { withCredentials: true },
         );
