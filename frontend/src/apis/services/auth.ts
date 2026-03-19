@@ -6,9 +6,7 @@ import type {
   Member,
 } from "@/apis/types/auth";
 import { OAUTH_CONFIG } from "@/apis/constants/oauth";
-import { AUTH_GOOGLE_ENDPOINT } from "@/apis/constants/endpoints";
-import { AUTH_REFRESH_ENDPOINT } from "@/apis/constants/endpoints";
-import { AUTH_LOGOUT_ENDPOINT } from "@/apis/constants/endpoints";
+import { API_ENDPOINTS } from "@/apis/constants/endpoints";
 import type { RefreshTokenResponse } from "@/apis/types/auth";
 
 //구글에서 받은 code를 백엔드로 전송
@@ -23,7 +21,7 @@ export const loginGoogle = async (
   };
 
   const response = await apiClient.post<GoogleLoginResponse>(
-    AUTH_GOOGLE_ENDPOINT,
+    API_ENDPOINTS.AUTH.GOOGLE,
     requestBody,
     { withCredentials: true },
   );
@@ -50,7 +48,7 @@ export const loginGoogle = async (
 //리프레시 토큰
 export const refreshAccessToken = async (): Promise<string> => {
   const response = await apiClient.post<RefreshTokenResponse>(
-    AUTH_REFRESH_ENDPOINT,
+    API_ENDPOINTS.AUTH.REFRESH,
     {},
     { withCredentials: true },
   );
@@ -83,7 +81,7 @@ export const getCurrentUser = (): Member | null => {
 export const logout = async (): Promise<void> => {
   try {
     await apiClient.post(
-      AUTH_LOGOUT_ENDPOINT,
+      API_ENDPOINTS.AUTH.LOGOUT,
       {},
       {
         withCredentials: true,

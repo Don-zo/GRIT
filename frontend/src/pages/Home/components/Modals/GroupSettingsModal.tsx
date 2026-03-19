@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Modal from "@/components/Modal";
-import { updateGroup } from "@/apis/services/group";
+import { groupApi } from "@/apis/services/group";
 import { ImageUploader } from "@/components/ImageUploader";
 
 type GroupSettingsModalProps = {
@@ -22,34 +22,31 @@ export default function GroupSettingsModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  //저장 버튼 핸들러
-  const handleSave = async () => {
-    if (!groupName.trim()) {
-      alert("그룹 이름을 입력해주세요.");
-      return;
-    }
+  const handleClose = () => {
+    setGroupName(initialName);
+    setImageFile(null);
+    setIsLoading(false);
+    onClose();
+  };
 
+  const handleSave = async () => {
+    if (!groupName.trim()) return;
     setIsLoading(true);
     try {
-      const response = await updateGroup(groupId, 1, {
-        name: groupName,
+      await groupApi.update(groupId, {
+        name: groupName.trim(),
         imageUrl: imageFile
           ? "업로드된_URL"
           : initialImage ||
             "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
       });
-
-      console.log("그룹 정보 수정 성공", response);
-      alert("그룹 정보 수정 성공"); //나중에 toast로 변경
-      onClose();
+      handleClose();
     } catch (error) {
       console.error("그룹 정보 수정 실패:", error);
-      alert("그룹 정보 수정 실패");
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <Modal isOpen={open} onClose={onClose}>
       <Modal.Overlay />
