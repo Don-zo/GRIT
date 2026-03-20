@@ -81,8 +81,7 @@ public class MemberController {
 
         Member member = getAuthenticatedMember(memberPrincipal);
         boolean isAvailable = !memberService.isNicknameTaken(member, nickname);
-        return ResponseEntity.status(isAvailable ? HttpStatus.OK : HttpStatus.CONFLICT)
-                .body(new MemberNickNameAvailabilityResponseDto(isAvailable));
+        return ResponseEntity.ok(new MemberNickNameAvailabilityResponseDto(isAvailable));
     }
 
     @Operation(summary = "회원 탈퇴", description = "사용자를 삭제(탈퇴)합니다.")
