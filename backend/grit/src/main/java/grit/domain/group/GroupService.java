@@ -64,7 +64,7 @@ public class GroupService {
             code = InviteCodeGenerator.generate();
             retryCount++;
             if (retryCount > 10) {
-                throw new IllegalStateException("초대 코드 생성을 10회 이상 시도하였으나 실패하였습니다.");
+                throw new IllegalStateException("초대 코드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
             }
         } while (groupRepository.existsByInviteCode(code));
         return code;
