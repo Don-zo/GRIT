@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.0.1'
+    id 'org.springframework.boot' version '4.0.3'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -19,11 +19,12 @@ repositories {
 }
 
 dependencies {
+    // Spring Web
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    // LiveKit 서버 SDK (Java/Kotlin)
-    implementation 'io.livekit:livekit-server:0.10.1'
+    // LiveKit Server SDK (Java/Kotlin)
+    implementation 'io.livekit:livekit-server:0.12.1'
     // SpringDoc
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
     // Spring Data JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     // Spring Security
@@ -33,24 +34,30 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
-    // Actuator & Micrometer
+    // Observability
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'com.github.loki4j:loki-logback-appender:2.0.3'
+    // Datasource Micrometer
+    implementation 'net.ttddyy.observation:datasource-micrometer-spring-boot:2.2.0'
+    implementation 'net.ttddyy.observation:datasource-micrometer-opentelemetry:2.2.0'
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor "org.projectlombok:lombok"
     // AWS SDK, S3
-
     implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:${springCloudAwsVersion}")
     implementation 'io.awspring.cloud:spring-cloud-aws-starter'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3'
-
+    // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // PostgreSQL
     runtimeOnly 'org.postgresql:postgresql'
+    // JUnit Platform
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    systemProperty 'spring.profiles.active', 'test'
 }
