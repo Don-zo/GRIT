@@ -4,6 +4,7 @@ import grit.domain.member.constant.Role;
 import grit.domain.member.constant.SocialProvider;
 import grit.domain.member.dto.MemberProfileImageUploadUrlResponseDto;
 import grit.domain.member.entity.Member;
+import grit.domain.auth.repository.RefreshTokenRepository;
 import grit.domain.member.repository.MemberRepository;
 import grit.global.exception.EntityNotFoundException;
 import grit.global.s3.S3Directory;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final S3Service s3Service;
 
     // 회원 가입
@@ -106,6 +108,7 @@ public class MemberService {
 
     // 회원 탈퇴
     public void delete(Member member) {
+        refreshTokenRepository.deleteAllByMember(member);
         memberRepository.delete(member);
     }
 
