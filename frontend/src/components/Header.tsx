@@ -2,7 +2,8 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "@/routes/path";
-import { getCurrentUser, logout, signout } from "@/apis/services/auth";
+import type { Member } from "@/apis/types";
+import { getUserInfo, logout, signout } from "@/apis/services/auth";
 
 type HeaderProps = {
   variant: "light" | "dark";
@@ -13,7 +14,24 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(alwaysVisible);
   const [isDropDownOpen, SetIsDropDownOpen] = useState(false);
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const [user, setUser] = useState<Member | null>(null);
+
+useEffect(() => {
+    let mounted = true;
+    const fetchUser = async () => {
+      try {
+        const data = await getUserInfo();
+        if (mounted) setUser(data);
+      } catch (error) {
+        if (mounted) setUser(null);
+        console.error("유저 정보 조회 실패", error);
+      }
+    };
+    fetchUser();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (alwaysVisible) return;

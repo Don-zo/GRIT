@@ -4,9 +4,10 @@ export interface Member {
   nickname: string;
   email: string;
   introduction: string;
-  dDayDate: string;
-  dDayTitle: string;
-  weeklyStudyTimeGoal: string;
+  imageUrl?: string;
+  dDayDate?: string;
+  dDayTitle?: string;
+  weeklyStudyTimeGoal?: string;
 }
 export interface GoogleLoginRequest {
   code: string;
