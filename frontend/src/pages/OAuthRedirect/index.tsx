@@ -51,7 +51,7 @@ const GoogleOAuthRedirectPage = () => {
         }
       } catch (error) {
         await minLoadingTime;
-        console.error("9로그인 도중 오류", error);
+        console.error("로그인 도중 오류", error);
         alert("오류");
         navigate(PATHS.SIGNUP);
       }

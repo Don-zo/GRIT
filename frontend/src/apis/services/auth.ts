@@ -19,15 +19,12 @@ export const loginGoogle = async (
     code,
     redirectUri: OAUTH_CONFIG.GOOGLE.REDIRECT_URI,
   };
-
   const response = await apiClient.post<GoogleLoginResponse>(
     API_ENDPOINTS.AUTH.GOOGLE,
     requestBody,
     { withCredentials: true },
   );
-
   const { member, accessToken, firstTimeUser } = response.data;
-
   const authStorage = {
     state: {
       accessToken,
@@ -35,7 +32,6 @@ export const loginGoogle = async (
     },
   };
   localStorage.setItem("auth-storage", JSON.stringify(authStorage));
-
   console.log({
     memberId: member.id,
     nickname: member.nickname,
