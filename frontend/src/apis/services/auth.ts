@@ -92,3 +92,16 @@ export const logout = async (): Promise<void> => {
     console.log("로컬 데이터 삭제");
   }
 };
+
+export const signout = async (): Promise<void> => {
+  try {
+    await apiClient.delete(API_ENDPOINTS.AUTH.SIGNOUT, {});
+    console.log("탈퇴 성공");
+  } catch (error) {
+    console.error(error);
+    console.log("탈퇴 실패");
+  } finally {
+    localStorage.removeItem("auth-storage");
+    console.log("로컬 데이터 삭제");
+  }
+};
