@@ -65,13 +65,13 @@ async function createGroup(name, imageName) {
     return response.json();
 }
 
-async function joinGroup(inviteCode) {
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/groups/join/code?inviteCode=${encodeURIComponent(inviteCode)}`, {
+async function joinGroup(groupCode) {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/groups/${encodeURIComponent(groupCode)}/join`, {
         method: 'POST',
         headers: authHeaders()
     });
     if (response.status === 409) throw new Error('이미 가입된 그룹입니다.');
-    if (response.status === 404) throw new Error('존재하지 않는 초대 코드입니다.');
+    if (response.status === 404) throw new Error('존재하지 않는 그룹 코드입니다.');
     if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         throw new Error(err.message || '그룹 가입에 실패했습니다.');
@@ -79,8 +79,8 @@ async function joinGroup(inviteCode) {
     return response.json();
 }
 
-async function updateGroup(groupId, name, imageName) {
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/groups/${groupId}`, {
+async function updateGroup(groupCode, name, imageName) {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/groups/${encodeURIComponent(groupCode)}`, {
         method: 'PUT',
         headers: authHeaders(),
         body: JSON.stringify({ name, imageName: imageName || null })
@@ -93,8 +93,8 @@ async function updateGroup(groupId, name, imageName) {
     return response.json();
 }
 
-async function leaveGroup(groupId) {
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/groups/${groupId}`, {
+async function leaveGroup(groupCode) {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/groups/${encodeURIComponent(groupCode)}`, {
         method: 'DELETE',
         headers: authHeaders()
     });
@@ -204,7 +204,7 @@ function renderGroupList(groups) {
     }
 
     container.innerHTML = groups.map(group => `
-        <div class="group-card" onclick="openDetailModal(${group.id}, '${escapeAttr(group.name)}', '${escapeAttr(group.inviteCode)}', ${group.memberCount}, '${escapeAttr(group.imageUrl || '')}')">
+        <div class="group-card" onclick="openDetailModal('${escapeAttr(group.groupCode)}', '${escapeAttr(group.name)}', ${group.memberCount}, '${escapeAttr(group.imageUrl || '')}')">
             <div class="group-card-image">
                 ${group.imageUrl
                     ? `<img src="${escapeAttr(group.imageUrl)}" alt="${escapeAttr(group.name)}" onerror="this.outerHTML='<div class=\\'group-card-placeholder\\'>${escapeHtml(group.name.charAt(0))}</div>'" />`
@@ -223,7 +223,7 @@ function renderGroupList(groups) {
                         </svg>
                         <span>${group.memberCount}명</span>
                     </div>
-                    <span class="invite-code">${escapeHtml(group.inviteCode)}</span>
+                    <span class="invite-code">${escapeHtml(group.groupCode)}</span>
                 </div>
             </div>
         </div>
@@ -352,15 +352,15 @@ document.getElementById('invite-code').addEventListener('keydown', (e) => {
 // 그룹 상세 모달
 // ────────────────────────────────────────
 
-let currentGroupId = null;
+let currentGroupCode = null;
 
-function openDetailModal(id, name, inviteCode, memberCount, imageUrl) {
-    currentGroupId = id;
+function openDetailModal(groupCode, name, memberCount, imageUrl) {
+    currentGroupCode = groupCode;
     hideError('detail-error');
 
     document.getElementById('detail-name').textContent = name;
     document.getElementById('detail-member-count').textContent = `멤버 ${memberCount}명`;
-    document.getElementById('detail-invite-code').textContent = inviteCode;
+    document.getElementById('detail-invite-code').textContent = groupCode;
 
     const imageEl = document.getElementById('detail-image');
     // Save raw image URL for Edit modal
@@ -386,7 +386,7 @@ document.getElementById('detail-leave-btn').addEventListener('click', async () =
     btn.textContent = '처리 중...';
 
     try {
-        await leaveGroup(currentGroupId);
+        await leaveGroup(currentGroupCode);
         closeModal('detail-modal');
         toast.info('그룹에서 나갔습니다.');
         await loadGroups();
@@ -410,14 +410,14 @@ document.getElementById('copy-code-btn').addEventListener('click', () => {
 
 document.getElementById('detail-video-btn').addEventListener('click', () => {
     const groupName = document.getElementById('detail-name').textContent;
-    window.location.href = `/livekit.html?groupId=${currentGroupId}&groupName=${encodeURIComponent(groupName)}`;
+    window.location.href = `/livekit.html?groupCode=${encodeURIComponent(currentGroupCode)}&groupName=${encodeURIComponent(groupName)}`;
 });
 
 document.getElementById('detail-edit-btn').addEventListener('click', () => {
     const name = document.getElementById('detail-name').textContent;
     const imageUrl = document.getElementById('detail-image').dataset.rawUrl;
     
-    document.getElementById('edit-group-id').value = currentGroupId;
+    document.getElementById('edit-group-code').value = currentGroupCode;
     document.getElementById('edit-name').value = name;
     document.getElementById('edit-image-input').value = '';
     
@@ -443,7 +443,7 @@ document.getElementById('edit-cancel-btn').addEventListener('click', () => close
 
 document.getElementById('edit-submit-btn').addEventListener('click', async () => {
     hideError('edit-error');
-    const groupId = document.getElementById('edit-group-id').value;
+    const groupCode = document.getElementById('edit-group-code').value;
     const name = document.getElementById('edit-name').value.trim();
     const imageInput = document.getElementById('edit-image-input');
 
@@ -462,7 +462,7 @@ document.getElementById('edit-submit-btn').addEventListener('click', async () =>
             imageName = await uploadGroupImage(imageInput.files[0], 'edit-image-upload');
         }
 
-        await updateGroup(groupId, name, imageName);
+        await updateGroup(groupCode, name, imageName);
         closeModal('edit-modal');
         toast.success('그룹 정보가 수정되었습니다.');
         await loadGroups();

@@ -19,7 +19,7 @@ public class CreateTodoRequestDTO {
     @Schema(description = "마감일", example = "2025-01-25")
     private LocalDate dueDate;
 
-    @Schema(description = "그룹 ID (선택사항)", example = "1")
-    private Long groupId;
+    @Schema(description = "그룹 코드 (선택사항)", example = "ABCD12")
+    private String groupCode;
 }
 
