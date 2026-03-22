@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "LiveKit", description = "LiveKit 토큰 발급 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/group/{groupId}/livekit")
+@RequestMapping("/api/group/{groupCode}/livekit")
 public class LiveKitController2 {
 
     private final MemberService memberService;
@@ -47,10 +47,10 @@ public class LiveKitController2 {
     @GetMapping("/token")
     public ResponseEntity<Map<String, Object>> getToken(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
-            @PathVariable Long groupId) {
+            @PathVariable String groupCode) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
-        AccessToken token = liveKitService.generateToken(member, groupId);
+        AccessToken token = liveKitService.generateToken(member, groupCode);
         return ResponseEntity.ok(Map.of("token", token.toJwt()));
     }
 
@@ -63,11 +63,11 @@ public class LiveKitController2 {
     @PostMapping("/reaction")
     public ResponseEntity<Void> sendReaction(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
-            @PathVariable Long groupId,
+            @PathVariable String groupCode,
             @Valid @RequestBody LiveKitReactionRequestDto requestDto) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
-        liveKitService.sendReaction(member, groupId, requestDto.emoji());
+        liveKitService.sendReaction(member, groupCode, requestDto.emoji());
         return ResponseEntity.noContent().build();
     }
 }

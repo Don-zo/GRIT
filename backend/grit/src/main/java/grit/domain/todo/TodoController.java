@@ -43,17 +43,17 @@ public class TodoController {
         return ResponseEntity.ok(responses);
     }
 
-    @Operation(summary = "그룹별 투두 목록 조회", description = "특정 그룹의 투두 목록을 조회합니다.")
+    @Operation(summary = "그룹별 투두 목록 조회", description = "그룹 코드를 이용하여 특정 그룹의 투두 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "403", description = "해당 그룹의 멤버가 아님", content = @Content)
     })
-    @GetMapping("/api/groups/{groupId}/todos")
+    @GetMapping("/api/groups/{groupCode}/todos")
     public ResponseEntity<List<TodoResponseDTO>> findAll(
-            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
-            @Parameter(description = "그룹 ID (PK)", example = "1") @PathVariable Long groupId,
+            @Parameter(description = "그룹 코드", example = "ABCD12") @PathVariable String groupCode,
+            @Parameter(description = "사용자 ID (PK)", example = "1") @RequestParam Long userId,
             @Parameter(description = "작성자 ID (PK, 선택사항)", example = "1") @RequestParam(required = false) Long ownerId) {
-        List<Todo> todos = todoService.findAll(groupId, memberPrincipal.id(), ownerId);
+        List<Todo> todos = todoService.findAll(groupCode, userId, ownerId);
         List<TodoResponseDTO> responses = todos.stream()
                 .map(TodoResponseDTO::from)
                 .toList();

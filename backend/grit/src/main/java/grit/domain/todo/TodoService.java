@@ -30,18 +30,21 @@ public class TodoService {
     private final MemberRepository memberRepository;
     private final GroupRepository groupRepository;
 
-    public List<Todo> findAll(Long groupId, Long userId, Long ownerId) {
-        if (!groupRepository.existsById(groupId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "그룹을 찾을 수 없습니다.");
-        }
-        if (!memberGroupRepository.existsByMemberIdAndGroupId(userId, groupId)) {
+    public List<Todo> findAll(String groupCode, Long userId, Long ownerId) {
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        Group group = groupRepository.findByCode(groupCode)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유효하지 않은 그룹 코드입니다."));
+
+        if (!memberGroupRepository.existsByMemberAndGroup(member, group)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
         }
 
         if (ownerId != null) {
-            return todoRepository.findByGroupIdAndOwnerIdWithRelations(groupId, ownerId);
+            return todoRepository.findByGroupIdAndOwnerIdWithRelations(group.getId(), ownerId);
         } else {
-            return todoRepository.findByGroupIdWithRelations(groupId);
+            return todoRepository.findByGroupIdWithRelations(group.getId());
         }
     }
 
@@ -61,11 +64,10 @@ public class TodoService {
         todo.setDueDate(request.getDueDate());
         todo.setIsDone(false);
 
-        if (request.getGroupId() != null) {
-            Long groupId = request.getGroupId();
-            Group group = groupRepository.findById(groupId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "그룹을 찾을 수 없습니다."));
-            if (!memberGroupRepository.existsByMemberIdAndGroupId(userId, groupId)) {
+        if (request.getGroupCode() != null) {
+            Group group = groupRepository.findByCode(request.getGroupCode())
+                    .orElseThrow(() -> new NoSuchElementException("유효하지 않은 그룹 코드입니다."));
+            if (!memberGroupRepository.existsByMemberAndGroup(owner, group)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
             }
             todo.setGroup(group);

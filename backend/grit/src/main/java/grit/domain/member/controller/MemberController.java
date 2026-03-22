@@ -2,9 +2,12 @@ package grit.domain.member.controller;
 
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.member.dto.MemberNickNameAvailabilityResponseDto;
+import grit.domain.member.dto.MemberProfileImageUploadUrlResponseDto;
 import grit.domain.member.dto.MemberProfileInitializeRequestDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
+import grit.global.s3.S3Directory;
+import grit.global.s3.S3Service;
 import grit.domain.member.dto.MemberProfilePatchRequestDto;
 import grit.domain.member.dto.MemberResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+    private final S3Service s3Service;
 
     @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자의 정보를 조회합니다.")
     @ApiResponses(value = {
@@ -36,7 +40,7 @@ public class MemberController {
     public ResponseEntity<MemberResponseDto> findOne(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
         Member member = getAuthenticatedMember(memberPrincipal);
-        return ResponseEntity.ok(MemberResponseDto.from(member));
+        return ResponseEntity.ok(toResponse(member));
     }
 
     @Operation(summary = "정보 수정", description = "사용자의 정보(닉네임, 비밀번호, 한 줄 소개)를 수정합니다. 3개 중 하나만 응답 바디에 적어도 정상적으로 수정됩니다.")
@@ -53,9 +57,9 @@ public class MemberController {
 
         Member member = getAuthenticatedMember(memberPrincipal);
         memberService.updateProfile(member, requestDto.nickname(), requestDto.introduction(),
-                requestDto.image(), requestDto.dDayDate(), requestDto.dDayTitle(),
+                requestDto.imageName(), requestDto.dDayDate(), requestDto.dDayTitle(),
                 requestDto.weeklyStudyTimeGoal());
-        return ResponseEntity.ok(MemberResponseDto.from(member));
+        return ResponseEntity.ok(toResponse(member));
     }
 
     @PostMapping("/me/profile")
@@ -65,9 +69,9 @@ public class MemberController {
 
         Member member = getAuthenticatedMember(memberPrincipal);
         memberService.initializeProfile(member, requestDto.nickname(), requestDto.introduction(),
-                requestDto.image(), requestDto.dDayDate(), requestDto.dDayTitle(),
+                requestDto.imageName(), requestDto.dDayDate(), requestDto.dDayTitle(),
                 requestDto.weeklyStudyTimeGoal());
-        return ResponseEntity.ok(MemberResponseDto.from(member));
+        return ResponseEntity.ok(toResponse(member));
     }
 
     @GetMapping("/nickname-availability")
@@ -77,8 +81,7 @@ public class MemberController {
 
         Member member = getAuthenticatedMember(memberPrincipal);
         boolean isAvailable = !memberService.isNicknameTaken(member, nickname);
-        return ResponseEntity.status(isAvailable ? HttpStatus.OK : HttpStatus.CONFLICT)
-                .body(new MemberNickNameAvailabilityResponseDto(isAvailable));
+        return ResponseEntity.ok(new MemberNickNameAvailabilityResponseDto(isAvailable));
     }
 
     @Operation(summary = "회원 탈퇴", description = "사용자를 삭제(탈퇴)합니다.")
@@ -95,7 +98,19 @@ public class MemberController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/me/profile-image/upload-url")
+    public ResponseEntity<MemberProfileImageUploadUrlResponseDto> getProfileImageUploadUrl() {
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(memberService.generateProfileImageUploadUrl());
+    }
+
     private Member getAuthenticatedMember(MemberPrincipal principal) {
         return memberService.findMemberById(principal.id());
+    }
+
+    private MemberResponseDto toResponse(Member member) {
+        String imageUrl = s3Service.resolveUrl(S3Directory.PROFILE_IMAGES, member.getImageName());
+        return MemberResponseDto.fromWithResolvedUrl(member, imageUrl);
     }
 }

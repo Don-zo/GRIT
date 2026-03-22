@@ -9,6 +9,8 @@ import grit.domain.auth.service.TokenService;
 import grit.domain.member.dto.MemberResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
+import grit.global.s3.S3Directory;
+import grit.global.s3.S3Service;
 import grit.global.util.CookieUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,6 +28,7 @@ public class AuthController {
     private final AuthService authService;
     private final TokenService tokenService;
     private final MemberService memberService;
+    private final S3Service s3Service;
     private final CookieUtils cookieUtils;
 
     @PostMapping("/google")
@@ -40,9 +43,10 @@ public class AuthController {
         ResponseCookie cookie = cookieUtils.createRefreshTokenCookie(tokenPair.refreshToken());
         response.addHeader("Set-Cookie", cookie.toString());
 
+        String imageUrl = s3Service.resolveUrl(S3Directory.PROFILE_IMAGES, member.getImageName());
         return ResponseEntity.status(isMemberPending ? HttpStatus.CREATED : HttpStatus.OK).body(
-                new AuthResponseDto(MemberResponseDto.from(member), tokenPair.accessToken(),
-                        isMemberPending));
+                new AuthResponseDto(
+                        MemberResponseDto.fromWithResolvedUrl(member, imageUrl), tokenPair.accessToken(), isMemberPending));
     }
 
     @PostMapping("/refresh")

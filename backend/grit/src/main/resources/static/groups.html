@@ -78,25 +78,26 @@
             </div>
 
             <!-- 그룹 목록 -->
-            <div id="group-list" class="card-list">
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-avatar"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton skeleton-title"></div>
+            <div id="group-list" class="group-grid">
+                <!-- Skeletons will be cleared by JS, these are placeholders while loading -->
+                <div class="skeleton-group-card">
+                    <div class="skeleton-group-image"></div>
+                    <div class="skeleton-group-content">
+                        <div class="skeleton skeleton-title" style="width: 70%; margin-bottom: 15px;"></div>
                         <div class="skeleton skeleton-meta"></div>
                     </div>
                 </div>
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-avatar"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton skeleton-title"></div>
+                <div class="skeleton-group-card">
+                    <div class="skeleton-group-image"></div>
+                    <div class="skeleton-group-content">
+                        <div class="skeleton skeleton-title" style="width: 60%; margin-bottom: 15px;"></div>
                         <div class="skeleton skeleton-meta"></div>
                     </div>
                 </div>
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-avatar"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton skeleton-title"></div>
+                <div class="skeleton-group-card">
+                    <div class="skeleton-group-image"></div>
+                    <div class="skeleton-group-content">
+                        <div class="skeleton skeleton-title" style="width: 80%; margin-bottom: 15px;"></div>
                         <div class="skeleton skeleton-meta"></div>
                     </div>
                 </div>
@@ -114,9 +115,22 @@
                 <label for="create-name">그룹 이름 *</label>
                 <input type="text" id="create-name" class="form-input" placeholder="그룹 이름을 입력하세요" maxlength="30" />
             </div>
-            <div class="form-group">
-                <label for="create-image">이미지 URL (선택)</label>
-                <input type="text" id="create-image" class="form-input" placeholder="https://..." />
+            <div class="form-group banner-image-upload" id="create-image-upload">
+                <input type="file" id="create-image-input" accept="image/jpeg, image/png" style="display: none;" />
+                <div class="banner-image-preview" id="create-image-preview">
+                    <!-- 이미지가 있을 경우 img 태그 렌더링, 없으면 placeholder -->
+                    <div class="banner-image-placeholder" id="create-image-placeholder">G</div>
+                    <div class="banner-image-overlay">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="upload-hint">그룹 대표 이미지 변경 (최대 5MB, 선택)</p>
+                <input type="hidden" id="create-image-name" value="" />
             </div>
             <div id="create-error" class="error-message"></div>
             <div class="modal-actions">
@@ -189,14 +203,26 @@
     <div class="modal-overlay" id="edit-modal">
         <div class="modal">
             <h2>그룹 수정</h2>
-            <input type="hidden" id="edit-group-id" />
+            <input type="hidden" id="edit-group-code" />
             <div class="form-group">
                 <label for="edit-name">그룹 이름 *</label>
                 <input type="text" id="edit-name" class="form-input" placeholder="그룹 이름을 입력하세요" maxlength="30" />
             </div>
-            <div class="form-group">
-                <label for="edit-image">이미지 URL (선택)</label>
-                <input type="text" id="edit-image" class="form-input" placeholder="https://..." />
+            <div class="form-group banner-image-upload" id="edit-image-upload">
+                <input type="file" id="edit-image-input" accept="image/jpeg, image/png" style="display: none;" />
+                <div class="banner-image-preview" id="edit-image-preview">
+                    <div class="banner-image-placeholder" id="edit-image-placeholder">G</div>
+                    <div class="banner-image-overlay">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="upload-hint">그룹 대표 이미지 변경 (최대 5MB, 선택)</p>
+                <input type="hidden" id="edit-image-name" value="" />
             </div>
             <div id="edit-error" class="error-message"></div>
             <div class="modal-actions">

@@ -1,6 +1,7 @@
 package grit.domain.group.entity;
 
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "groups", indexes = {
-        @Index(name = "idx_invite_code", columnList = "invite_code")
+        @Index(name = "idx_group_code", columnList = "code")
 })
 public class Group {
     @Id
@@ -24,13 +25,13 @@ public class Group {
     private String name;
 
     @Column(nullable = false, unique = true, length = 6)
-    private String inviteCode;
+    private String code;
 
     @Builder.Default
     @Column(nullable = false)
     private int memberCount = 0;
 
-    private String imageUrl;
+    private UUID imageName;
 
     @Builder.Default
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
@@ -44,8 +45,8 @@ public class Group {
         this.memberCount--;
     }
 
-    public void updateInfo(String name, String imageUrl) {
+    public void updateInfo(String name, UUID imageName) {
         if (name != null) this.name = name;
-        if (imageUrl != null) this.imageUrl = imageUrl;
+        if (imageName != null) this.imageName = imageName;
     }
 }
