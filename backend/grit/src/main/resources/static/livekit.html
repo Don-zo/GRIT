@@ -628,15 +628,15 @@
         const reactionTimers = new Map();
 
         const urlParams = new URLSearchParams(window.location.search);
-        const groupId = urlParams.get('groupId');
-        const groupName = urlParams.get('groupName') || `Group #${groupId}`;
+        const groupCode = urlParams.get('groupCode');
+        const groupName = urlParams.get('groupName') || groupCode;
 
         // ────────────────────────────────────────
         // 리액션 목록 API에서 가져오기
         // ────────────────────────────────────────
         async function fetchSupportedReactions() {
             try {
-                const res = await apiFetch(`/api/group/${groupId}/livekit/reactions`);
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/reactions`);
                 if (!res.ok) throw new Error('리액션 목록 로드 실패');
                 const data = await res.json();
                 // API 응답: [{ name, emoji }]
@@ -656,8 +656,8 @@
                 return;
             }
 
-            if (!groupId) {
-                showOverlayError('그룹 ID가 없습니다. 그룹 페이지에서 다시 접속해주세요.');
+            if (!groupCode) {
+                showOverlayError('그룹 코드가 없습니다. 그룹 페이지에서 다시 접속해주세요.');
                 document.getElementById('join-btn').disabled = true;
                 return;
             }
@@ -712,7 +712,7 @@
             if (!room) return;
 
             try {
-                const res = await apiFetch(`/api/group/${groupId}/livekit/reaction`, {
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/reaction`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ emoji: emojiName }),
@@ -801,7 +801,7 @@
             hideOverlayError();
 
             try {
-                const res = await apiFetch(`/api/group/${groupId}/livekit/token`);
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/token`);
 
                 if (res.status === 401) throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
                 if (!res.ok) throw new Error('토큰 발급에 실패했습니다.');

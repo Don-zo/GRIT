@@ -1,6 +1,8 @@
 package grit.domain.livekit.api;
 
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
+import grit.domain.group.GroupService;
+import grit.domain.group.entity.Group;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
 import io.livekit.server.AccessToken;
@@ -26,13 +28,17 @@ public class NewLiveKitController {
     private final String apiKey;
     private final String apiSecret;
     private final MemberService memberService;
+    private final GroupService groupService;
 
     public NewLiveKitController(
             @Value("${livekit.api.key}") String apiKey,
-            @Value("${livekit.api.secret}") String apiSecret, MemberService memberService) {
+            @Value("${livekit.api.secret}") String apiSecret,
+            MemberService memberService,
+            GroupService groupService) {
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.memberService = memberService;
+        this.groupService = groupService;
     }
 
     @Operation(summary = "LiveKit 토큰 발급", description = "화상 회의 참여를 위한 LiveKit 액세스 토큰을 발급합니다.")
@@ -42,14 +48,15 @@ public class NewLiveKitController {
     @GetMapping("token")
     public Map<String, Object> getToken(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
-            @RequestParam Long groupId) {
+            @RequestParam String groupCode) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
+        Group group = groupService.findGroupByCode(groupCode);
 
         AccessToken token = new AccessToken(apiKey, apiSecret);
         token.setName(member.getNickname());
         token.setIdentity(member.getNickname());
-        token.addGrants(new RoomJoin(true), new RoomName(groupId.toString()));
+        token.addGrants(new RoomJoin(true), new RoomName("group:" + group.getId()));
 
         return Map.of("token", token.toJwt());
     }

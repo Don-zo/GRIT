@@ -18,8 +18,8 @@ public class TodoResponseDTO {
     @Schema(description = "투두 고유 ID (PK)", example = "1")
     private Long id;
 
-    @Schema(description = "그룹 ID (선택사항)", example = "1")
-    private Long groupId;
+    @Schema(description = "그룹 코드 (선택사항)", example = "ABCD12")
+    private String groupCode;
 
     @Schema(description = "작성자 ID", example = "1")
     private Long ownerId;
@@ -48,7 +48,7 @@ public class TodoResponseDTO {
     public static TodoResponseDTO from(Todo todo) {
         return new TodoResponseDTO(
                 todo.getId(),
-                todo.getGroup() != null ? todo.getGroup().getId() : null,
+                todo.getGroup() != null ? todo.getGroup().getCode() : null,
                 todo.getOwner().getId(),
                 todo.getOwner().getNickname(),
                 todo.getContent(),
