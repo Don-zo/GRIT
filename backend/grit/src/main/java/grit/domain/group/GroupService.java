@@ -7,6 +7,7 @@ import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.entity.Member;
 import grit.global.exception.AccessDeniedException;
+import grit.global.exception.EntityNotFoundException;
 import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
 import grit.global.util.GroupCodeGenerator;
@@ -66,8 +67,7 @@ public class GroupService {
 
     @Transactional
     public Group joinGroup(Member member, String groupCode) {
-        Group group = groupRepository.findByCode(groupCode)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 그룹 코드입니다."));
+        Group group = findGroupByCode(groupCode);
 
         boolean isAlreadyMember = memberGroupRepository.existsByMemberAndGroup(member, group);
         if (isAlreadyMember) {
@@ -87,11 +87,10 @@ public class GroupService {
 
     @Transactional
     public void deleteGroupByCode(Member member, String groupCode) {
-        Group group = groupRepository.findByCode(groupCode)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 그룹 코드입니다."));
+        Group group = findGroupByCode(groupCode);
 
         MemberGroup memberGroup = memberGroupRepository.findByMemberAndGroup(member, group)
-                .orElseThrow(() -> new IllegalArgumentException("참여 중인 그룹이 아닙니다."));
+                .orElseThrow(() -> new AccessDeniedException("참여 중인 그룹이 아닙니다."));
 
         memberGroupRepository.delete(memberGroup);
 
@@ -104,8 +103,7 @@ public class GroupService {
 
     @Transactional
     public Group updateGroupByCode(Member member, String groupCode, String name, UUID imageName) {
-        Group group = groupRepository.findByCode(groupCode)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 그룹 코드입니다."));
+        Group group = findGroupByCode(groupCode);
 
         boolean isMember = memberGroupRepository.existsByMemberAndGroup(member, group);
         if (!isMember) {
@@ -124,7 +122,7 @@ public class GroupService {
     @Transactional(readOnly = true)
     public Group findGroupByCode(String groupCode) {
         return groupRepository.findByCode(groupCode)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 그룹 코드입니다."));
+                .orElseThrow(() -> new EntityNotFoundException("유효하지 않은 그룹 코드입니다."));
     }
 
     @Transactional(readOnly = true)
