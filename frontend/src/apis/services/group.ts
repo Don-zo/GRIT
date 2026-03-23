@@ -16,14 +16,14 @@ export const groupApi = {
     return response.data;
   },
 
-  getMyGroups: async (groupCode: string) => {
+  getMyGroup: async (groupCode: string) => {
     const response = await apiClient.get<Group>(
       API_ENDPOINTS.GROUP.DETAIL(groupCode),
     );
     return response.data;
   },
 
-  getMyGroup: async () => {
+  getMyGroupList: async () => {
     const response = await apiClient.get<GroupList>(API_ENDPOINTS.GROUP.MY);
     return response.data;
   },

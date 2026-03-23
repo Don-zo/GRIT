@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "./Button";
 import GroupCard from "./GroupCard";
 import { groups } from "@/mockdata/groupData";
@@ -9,6 +9,8 @@ import JoinGroupModal from "@/pages/Home/components/Modals/JoinGroupModal";
 export default function GroupSection() {
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isJoinGroupModalOpen, setIsJoinGroupModalOpen] = useState(false);
+
+  useEffect(() => {}, []);
 
   return (
     <section className="w-auto h-auto bg-[#2E3039] rounded-3xl px-16 py-16">

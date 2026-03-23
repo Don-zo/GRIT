@@ -51,7 +51,7 @@ export default function GroupCard({
       <GroupSettingsModal
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        groupId={id}
+        groupCode={groupCode}
         initialName={groupName}
         initialImage={image}
       />
