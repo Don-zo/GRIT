@@ -2,26 +2,31 @@ import { useState } from "react";
 import { Settings } from "lucide-react";
 import LiveBadge from "./LiveBadge";
 import GroupSettingsModal from "@/pages/Home/components/Modals/GroupSettingsModal";
-import type { Group } from "@/types/group";
+import type { Group } from "@/apis/types/group";
+
+type GroupCardProps = Group & {
+  isLive?: boolean;
+  liveMembers?: number;
+};
 
 export default function GroupCard({
-  id,
-  groupName,
-  image,
-  isLive,
-  totalMembers,
-  liveMembers,
-}: Group) {
+  groupCode,
+  name,
+  imageUrl,
+  memberCount,
+  isLive = true,
+  liveMembers = 6,
+}: GroupCardProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
     <div className="w-full h-fit bg-gray-dark rounded-3xl shadow-xl/20">
       {/* 그룹 사진 (없으면 회색 배경) */}
       <div className="flex flex-col overflow-hidden relative aspect-square rounded-3xl w-full bg-gray-semidark">
-        {image && (
+        {imageUrl && (
           <img
-            src={image}
-            alt={groupName}
+            src={imageUrl}
+            alt={name}
             className="absolute inset-0 w-full object-cover"
           />
         )}
@@ -40,9 +45,9 @@ export default function GroupCard({
 
           {/* 이름 & 인원 */}
           <div className="mt-auto flex items-center justify-between px-7 py-5 text-white bg-green-semidark">
-            <h3 className="truncate text-[17px] tracking-tight">{groupName}</h3>
+            <h3 className="truncate text-[17px] tracking-tight">{name}</h3>
             <span className="flex shrink-0 text-[17px] font-thin opacity-90">
-              {liveMembers}/{totalMembers}
+              {liveMembers}/{memberCount}
             </span>
           </div>
         </div>
@@ -52,8 +57,8 @@ export default function GroupCard({
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         groupCode={groupCode}
-        initialName={groupName}
-        initialImage={image}
+        initialName={name}
+        initialImage={imageUrl}
       />
     </div>
   );

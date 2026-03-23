@@ -4,7 +4,6 @@ import type {
   CreateGroupRequest,
   UpdateGroupRequest,
   Group,
-  GroupList,
 } from "@/apis/types";
 
 export const groupApi = {
@@ -24,7 +23,7 @@ export const groupApi = {
   },
 
   getMyGroupList: async () => {
-    const response = await apiClient.get<GroupList>(API_ENDPOINTS.GROUP.MY);
+    const response = await apiClient.get<Group[]>(API_ENDPOINTS.GROUP.MY);
     return response.data;
   },
 
