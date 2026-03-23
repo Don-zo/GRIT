@@ -7,6 +7,7 @@ import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
 import grit.global.exception.EntityAlreadyExistsException;
 import grit.global.exception.EntityNotFoundException;
+import grit.global.exception.InvalidInputException;
 import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
 import java.time.Duration;
@@ -64,10 +65,14 @@ public class MemberService {
         }
     }
 
-    // 단일 회원 조회
     public Member findMemberById(Long id) {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원입니다."));
+    }
+
+    public Member findMemberByNickname(String nickname) {
+        return memberRepository.findByNickname(nickname)
+                .orElseThrow(() -> new EntityNotFoundException("해당 닉네임의 사용자가 없습니다."));
     }
 
     @Transactional
@@ -80,7 +85,7 @@ public class MemberService {
         }
 
         if (image != null && !s3Service.isObjectExists(S3Directory.PROFILE_IMAGES, image.toString())) {
-            throw new IllegalArgumentException("유효하지 않은 이미지입니다.");
+            throw new InvalidInputException("유효하지 않은 이미지입니다.");
         }
 
         member.initializeProfile(nickname, introduction, image, dDayDate, dDayTitle,
@@ -98,7 +103,7 @@ public class MemberService {
         }
 
         if (image != null && !s3Service.isObjectExists(S3Directory.PROFILE_IMAGES, image.toString())) {
-            throw new IllegalArgumentException("유효하지 않은 이미지입니다.");
+            throw new InvalidInputException("유효하지 않은 이미지입니다.");
         }
 
         member.updateProfile(nickname, introduction, image, dDayDate, dDayTitle,

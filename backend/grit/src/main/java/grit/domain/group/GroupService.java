@@ -9,6 +9,7 @@ import grit.domain.member.entity.Member;
 import grit.global.exception.AccessDeniedException;
 import grit.global.exception.EntityAlreadyExistsException;
 import grit.global.exception.EntityNotFoundException;
+import grit.global.exception.InvalidInputException;
 import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
 import grit.global.util.GroupCodeGenerator;
@@ -31,7 +32,7 @@ public class GroupService {
     @Transactional
     public Group createGroup(Member member, String name, UUID imageName) {
         if (imageName != null && !s3Service.isObjectExists(S3Directory.GROUP_IMAGES, imageName.toString())) {
-            throw new IllegalArgumentException("유효하지 않은 그룹 이미지입니다.");
+            throw new InvalidInputException("유효하지 않은 그룹 이미지입니다.");
         }
 
         String groupCode = generateGroupCode();
@@ -112,7 +113,7 @@ public class GroupService {
         }
 
         if (imageName != null && !s3Service.isObjectExists(S3Directory.GROUP_IMAGES, imageName.toString())) {
-            throw new IllegalArgumentException("유효하지 않은 그룹 이미지입니다.");
+            throw new InvalidInputException("유효하지 않은 그룹 이미지입니다.");
         }
 
         group.updateInfo(name, imageName);
