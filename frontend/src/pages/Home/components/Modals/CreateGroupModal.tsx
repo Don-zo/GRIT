@@ -35,7 +35,7 @@ export default function CreateGroupModal({
         name: groupName,
         imageUrl: defaultImageUrl,
       });
-      setInviteCode(response.inviteCode);
+      setInviteCode(response.groupCode);
       setCopied(false);
     } catch (e) {
       console.error("그룹 생성 실패:", e);

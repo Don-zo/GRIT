@@ -1,8 +1,8 @@
 export interface Group {
-    id: number;
-    groupName: string;
-    image?: string;
-    isLive: boolean;
-    totalMembers: number;
-    liveMembers: number;
+  groupCode: string;
+  name: string;
+  memberCount: number;
+  imageUrl?: string;
+  isLive?: boolean;
+  liveMembers?: number;
 }

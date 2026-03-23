@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/services/group";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -6,24 +6,44 @@ import { ImageUploader } from "@/components/ImageUploader";
 type GroupSettingsModalProps = {
   open: boolean;
   onClose: () => void;
-  groupId: number;
-  initialName?: string; //기존 그룹 이름
-  initialImage?: string; //기존 그룹 이미지
+  groupCode: string;
+  initialName?: string;
+  initialImage?: string;
 };
 
 export default function GroupSettingsModal({
   open,
   onClose,
-  groupId,
+  groupCode,
   initialName = "",
   initialImage = "",
 }: GroupSettingsModalProps) {
+  const [baseGroupName, setBaseGroupName] = useState(initialName);
+  const [baseGroupImage, setBaseGroupImage] = useState(initialImage);
   const [groupName, setGroupName] = useState(initialName);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchGroupDetail = async () => {
+      try {
+        const groupInfo = await groupApi.getMyGroup(groupCode);
+        setBaseGroupName(groupInfo.name);
+        setBaseGroupImage(groupInfo.imageUrl);
+        setGroupName(groupInfo.name);
+        setImageFile(null);
+      } catch (error) {
+        console.error("그룹 상세 조회 에러", error);
+      }
+    };
+
+    fetchGroupDetail();
+  }, [open, groupCode]);
+
   const handleClose = () => {
-    setGroupName(initialName);
+    setGroupName(baseGroupName);
     setImageFile(null);
     setIsLoading(false);
     onClose();
@@ -31,13 +51,14 @@ export default function GroupSettingsModal({
 
   const handleSave = async () => {
     if (!groupName.trim()) return;
+
     setIsLoading(true);
     try {
-      await groupApi.update(groupId, {
+      await groupApi.update(groupCode, {
         name: groupName.trim(),
         imageUrl: imageFile
           ? "업로드된_URL"
-          : initialImage ||
+          : baseGroupImage ||
             "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
       });
       handleClose();
@@ -47,8 +68,9 @@ export default function GroupSettingsModal({
       setIsLoading(false);
     }
   };
+
   return (
-    <Modal isOpen={open} onClose={onClose}>
+    <Modal isOpen={open} onClose={handleClose}>
       <Modal.Overlay />
       <Modal.Content>
         <Modal.CloseButton />
@@ -60,11 +82,10 @@ export default function GroupSettingsModal({
         <Modal.Body className="px-8 flex flex-col items-center pb-8">
           <ImageUploader
             size={160}
-            initialImage={initialImage}
+            initialImage={baseGroupImage}
             onImageChange={(file) => setImageFile(file)}
           />
 
-          {/* 폼 */}
           <div className="mx-auto mt-10 w-full max-w-[360px]">
             <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
               그룹 이름
