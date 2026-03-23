@@ -2,6 +2,7 @@ package grit.domain.member.entity;
 
 import grit.domain.member.constant.Role;
 import grit.domain.member.constant.SocialProvider;
+import grit.global.exception.InvalidInputException;
 import grit.global.exception.ProfileAlreadyInitializedException;
 import grit.global.exception.ProfileNotInitializedException;
 import java.time.LocalDate;
@@ -129,20 +130,20 @@ public class Member {
         boolean hasDate = (dDayDate != null);
         boolean hasTitle = (dDayTitle != null && !dDayTitle.isBlank());
         if (hasDate != hasTitle) {
-            throw new IllegalArgumentException("D-Day 날짜와 제목은 함께 제공되거나 함께 비어 있어야 합니다.");
+            throw new InvalidInputException("D-Day 날짜와 제목은 함께 제공되거나 함께 비어 있어야 합니다.");
         }
     }
 
     private String validateAndGet(String value, String fieldName) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(fieldName + "은(는) 필수이며 공백일 수 없습니다.");
+            throw new InvalidInputException(fieldName + "은(는) 필수이며 공백일 수 없습니다.");
         }
         return value;
     }
 
     private String requireNotNull(String value, String fieldName) {
         if (value == null) {
-            throw new IllegalArgumentException(fieldName + "은(는) 필수입니다.");
+            throw new InvalidInputException(fieldName + "은(는) 필수입니다.");
         }
         return value;
     }

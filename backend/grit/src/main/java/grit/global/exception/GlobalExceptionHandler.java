@@ -50,6 +50,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
     }
 
+    @ExceptionHandler(SelfReferenceException.class)
+    public ResponseEntity<ErrorResponseDto> handleSelfReference(SelfReferenceException ex) {
+        return ResponseEntity.badRequest().body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidInputException.class)
+    public ResponseEntity<ErrorResponseDto> handleInvalidInput(InvalidInputException ex) {
+        return ResponseEntity.badRequest().body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponseDto> handleConstraintValidation(ConstraintViolationException ex) {
         String message = ex.getConstraintViolations().stream()

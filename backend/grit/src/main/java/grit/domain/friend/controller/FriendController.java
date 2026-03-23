@@ -1,8 +1,10 @@
 package grit.domain.friend.controller;
 
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
-import grit.domain.friend.service.FriendService;
 import grit.domain.friend.dto.FriendResponseDto;
+import grit.domain.friend.service.FriendService;
+import grit.domain.member.entity.Member;
+import grit.domain.member.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,6 +25,7 @@ import java.util.List;
 public class FriendController {
 
     private final FriendService friendService;
+    private final MemberService memberService;
 
     @Operation(summary = "친구 추가", description = "특정 사용자를 친구로 추가합니다.")
     @ApiResponses(value = {
@@ -36,7 +39,8 @@ public class FriendController {
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "친구의 닉네임", example = "그릿유저친구") @PathVariable String nickname) {
 
-        FriendResponseDto addedFriend = friendService.addFriend(memberPrincipal.id(), nickname);
+        Member member = memberService.findMemberById(memberPrincipal.id());
+        FriendResponseDto addedFriend = friendService.addFriend(member, nickname);
         return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(addedFriend);
     }
 
@@ -52,7 +56,8 @@ public class FriendController {
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "친구의 닉네임", example = "그릿유저친구") @PathVariable String nickname) {
 
-        FriendResponseDto removedFriend = friendService.removeFriend(memberPrincipal.id(), nickname);
+        Member member = memberService.findMemberById(memberPrincipal.id());
+        FriendResponseDto removedFriend = friendService.removeFriend(member, nickname);
         return ResponseEntity.ok(removedFriend);
     }
 
@@ -65,6 +70,8 @@ public class FriendController {
     @GetMapping
     public ResponseEntity<List<FriendResponseDto>> findFriends(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
-        return ResponseEntity.ok(friendService.getFriendList(memberPrincipal.id()));
+
+        Member member = memberService.findMemberById(memberPrincipal.id());
+        return ResponseEntity.ok(friendService.getFriendList(member));
     }
 }
