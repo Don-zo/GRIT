@@ -1,4 +1,6 @@
+import { useState } from "react";
 import Modal from "@/components/Modal";
+import { groupApi } from "@/apis/services/group";
 
 type JoinGroupModalProps = {
   open: boolean;
@@ -6,6 +8,30 @@ type JoinGroupModalProps = {
 };
 
 export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
+  const [inviteCode, setInviteCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleJoinNewGroup = async () => {
+    const groupCode = inviteCode.trim();
+
+    if (!groupCode) {
+      alert("초대 코드 입력 요망");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await groupApi.join(groupCode);
+      setInviteCode("");
+      onClose();
+    } catch (error) {
+      console.log("그룹 참여 실패", error);
+      alert("그룹 참여 실패");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Modal isOpen={open} onClose={onClose}>
       <Modal.Overlay />
@@ -22,16 +48,22 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
           <div className="mt-10 w-full max-w-[360px]">
             <input
               type="text"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
               className="h-14 w-full rounded-xl bg-white px-6 text-lg text-gray-900 outline-none"
               aria-label="초대 코드"
+              placeholder="초대 코드를 입력하세요"
+              disabled={isLoading}
             />
           </div>
 
           <button
             type="button"
-            className="mt-4 h-14 w-full max-w-[360px] rounded-xl bg-[#3E7358] text-lg font-semibold text-white hover:bg-emerald-800 transition"
+            onClick={handleJoinNewGroup}
+            disabled={isLoading || !inviteCode.trim()}
+            className="mt-4 h-14 w-full max-w-[360px] rounded-xl bg-[#3E7358] text-lg font-semibold text-white hover:bg-emerald-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            참여하기
+            {isLoading ? "참여 중..." : "참여하기"}
           </button>
         </Modal.Body>
       </Modal.Content>

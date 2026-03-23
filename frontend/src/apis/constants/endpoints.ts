@@ -9,8 +9,10 @@ export const API_ENDPOINTS = {
     INFO: "/api/members/me",
   },
   GROUP: {
-    BASE: "/api/groups",
-    DETAIL: (id: number) => `/api/groups/${id}`,
+    CREATE: "/api/groups",
+    MY: "/api/groups/my",
+    DETAIL: (groupCode: string) => `/api/groups/${groupCode}`,
+    JOIN: (groupCode: string) => `/api/groups/${groupCode}/join`,
   },
   LIVEKIT: {
     URL: import.meta.env.VITE_LIVEKIT_URL,

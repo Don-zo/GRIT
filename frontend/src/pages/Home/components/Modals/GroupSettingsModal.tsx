@@ -6,7 +6,7 @@ import { ImageUploader } from "@/components/ImageUploader";
 type GroupSettingsModalProps = {
   open: boolean;
   onClose: () => void;
-  groupId: number;
+  groupCode: string;
   initialName?: string; //기존 그룹 이름
   initialImage?: string; //기존 그룹 이미지
 };
@@ -14,7 +14,7 @@ type GroupSettingsModalProps = {
 export default function GroupSettingsModal({
   open,
   onClose,
-  groupId,
+  groupCode,
   initialName = "",
   initialImage = "",
 }: GroupSettingsModalProps) {
@@ -33,7 +33,7 @@ export default function GroupSettingsModal({
     if (!groupName.trim()) return;
     setIsLoading(true);
     try {
-      await groupApi.update(groupId, {
+      await groupApi.update(groupCode, {
         name: groupName.trim(),
         imageUrl: imageFile
           ? "업로드된_URL"
