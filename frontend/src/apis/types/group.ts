@@ -1,12 +1,8 @@
-export interface GroupCoreInfo {
-  id: number;
+export interface Group {
+  groupCode: string;
   name: string;
   memberCount: number;
   imageUrl: string;
-}
-
-export interface Group extends GroupCoreInfo {
-  inviteCode: string;
 }
 
 export interface GroupInput {

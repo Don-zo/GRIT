@@ -5,7 +5,6 @@ import type {
   UpdateGroupRequest,
   Group,
   GroupList,
-  GroupCoreInfo,
 } from "@/apis/types";
 
 export const groupApi = {
@@ -18,7 +17,7 @@ export const groupApi = {
   },
 
   getMyGroups: async (groupCode: string) => {
-    const response = await apiClient.get<GroupCoreInfo>(
+    const response = await apiClient.get<Group>(
       API_ENDPOINTS.GROUP.DETAIL(groupCode),
     );
     return response.data;
@@ -30,7 +29,7 @@ export const groupApi = {
   },
 
   join: async (groupCode: string) => {
-    const response = await apiClient.post<GroupCoreInfo>(
+    const response = await apiClient.post<Group>(
       API_ENDPOINTS.GROUP.JOIN(groupCode),
     );
     return response.data;
