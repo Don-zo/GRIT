@@ -7,6 +7,7 @@ import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.entity.Member;
 import grit.global.exception.AccessDeniedException;
+import grit.global.exception.EntityAlreadyExistsException;
 import grit.global.exception.EntityNotFoundException;
 import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
@@ -71,7 +72,7 @@ public class GroupService {
 
         boolean isAlreadyMember = memberGroupRepository.existsByMemberAndGroup(member, group);
         if (isAlreadyMember) {
-            throw new IllegalStateException("이미 가입된 그룹입니다.");
+            throw new EntityAlreadyExistsException("이미 가입된 그룹입니다.");
         }
 
         MemberGroup memberGroup = MemberGroup.builder()

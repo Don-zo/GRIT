@@ -5,6 +5,7 @@ import grit.domain.member.constant.SocialProvider;
 import grit.domain.member.dto.MemberProfileImageUploadUrlResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
+import grit.global.exception.EntityAlreadyExistsException;
 import grit.global.exception.EntityNotFoundException;
 import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
@@ -59,7 +60,7 @@ public class MemberService {
         Optional<Member> member = memberRepository.findByEmail(email);
         if (member.isPresent()) {
             String providerDescription = member.get().getProvider().getDescription();
-            throw new IllegalStateException("이미 " + providerDescription + " 서비스를 통해 가입된 계정입니다.");
+            throw new EntityAlreadyExistsException("이미 " + providerDescription + " 서비스를 통해 가입된 계정입니다.");
         }
     }
 

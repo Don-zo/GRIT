@@ -30,6 +30,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponseDto.of(ex.getMessage()));
     }
 
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDto> handleEntityAlreadyExists(EntityAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
     @ExceptionHandler(ProfileAlreadyInitializedException.class)
     public ResponseEntity<ErrorResponseDto> handleProfileAlreadyInitialized(ProfileAlreadyInitializedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
