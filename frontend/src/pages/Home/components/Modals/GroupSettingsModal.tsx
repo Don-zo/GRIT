@@ -25,7 +25,7 @@ export default function GroupSettingsModal({
   const [groupName, setGroupName] = useState(initialName);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const { data: groupInfo, isLoading: isGroupDetailLoading } = useQuery({
+  const { data: groupInfo } = useQuery({
     queryKey: QUERY_KEYS.groups.detail(groupCode),
     queryFn: () => groupApi.getMyGroup(groupCode),
     enabled: open && !!groupCode,
@@ -113,7 +113,7 @@ export default function GroupSettingsModal({
             <button
               type="button"
               onClick={handleSave}
-              disabled={isGroupDetailLoading}
+              disabled={isGroupInfoSaving}
               className="mt-4 h-14 w-full rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
             >
               {isGroupInfoSaving ? "저장 중..." : "그룹 정보 저장하기"}
