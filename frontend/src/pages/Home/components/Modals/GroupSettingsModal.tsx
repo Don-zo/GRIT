@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/services/group";
 import { ImageUploader } from "@/components/ImageUploader";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type GroupSettingsModalProps = {
   open: boolean;
@@ -25,7 +26,7 @@ export default function GroupSettingsModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const { data: groupInfo, isLoading: isGroupDetailLoading } = useQuery({
-    queryKey: ["groups", "detail", groupCode],
+    queryKey: QUERY_KEYS.groups.detail(groupCode),
     queryFn: () => groupApi.getMyGroup(groupCode),
     enabled: open && !!groupCode,
   });
@@ -37,7 +38,7 @@ export default function GroupSettingsModal({
     setBaseGroupImage(groupInfo.imageUrl ?? "");
     setGroupName(groupInfo.name);
     setImageFile(null);
-  }, [open, groupCode]);
+  }, [open, groupInfo]);
 
   const handleClose = () => {
     setGroupName(baseGroupName);
@@ -59,9 +60,11 @@ export default function GroupSettingsModal({
         }),
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          queryKey: ["groups", "detail", groupCode],
+          queryKey: QUERY_KEYS.groups.detail(groupCode),
         });
-        await queryClient.invalidateQueries({ queryKey: ["groups", "my"] });
+        await queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.groups.my,
+        });
         handleClose();
       },
       onError: (error) => {

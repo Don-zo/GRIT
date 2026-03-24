@@ -4,6 +4,7 @@ import { Copy } from "lucide-react";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/services/group";
 import { ImageUploader } from "@/components/ImageUploader";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type CreateGroupModalProps = {
   open: boolean;
@@ -14,7 +15,6 @@ export default function CreateGroupModal({
   open,
   onClose,
 }: CreateGroupModalProps) {
-  //group input 값
   const [groupName, setGroupName] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [inviteCode, setInviteCode] = useState("");
@@ -35,7 +35,7 @@ export default function CreateGroupModal({
     },
     onSuccess: async (newGroup) => {
       setInviteCode(newGroup.groupCode);
-      await queryClient.invalidateQueries({ queryKey: ["groups", "my"] });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups.my });
     },
     onError: (error) => {
       console.error("그룹 생성 실패", error);

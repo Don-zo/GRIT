@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/services/group";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type JoinGroupModalProps = {
   open: boolean;
@@ -15,7 +16,7 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
   const { mutateAsync: joinGroup, isPending } = useMutation({
     mutationFn: (groupCode: string) => groupApi.join(groupCode),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["groups", "my"] });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups.my });
       setInviteCode("");
       onClose();
     },

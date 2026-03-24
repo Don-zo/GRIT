@@ -6,6 +6,7 @@ import GroupCard from "./GroupCard";
 import { groupApi } from "@/apis/services/group";
 import CreateGroupModal from "@/pages/Home/components/Modals/CreateGroupModal";
 import JoinGroupModal from "@/pages/Home/components/Modals/JoinGroupModal";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 export default function GroupSection() {
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function GroupSection() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["groups", "my"],
+    queryKey: QUERY_KEYS.groups.my,
     queryFn: groupApi.getMyGroupList,
   });
 
