@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Copy } from "lucide-react";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/services/group";
@@ -17,32 +18,37 @@ export default function CreateGroupModal({
   const [groupName, setGroupName] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [inviteCode, setInviteCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleCreateGroup = async () => {
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: createNewGroup, isPending } = useMutation({
+    mutationFn: () => {
+      const trimmedGroupName = groupName.trim();
+      const defaultImageUrl =
+        "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png";
+
+      return groupApi.create({
+        name: trimmedGroupName,
+        imageUrl: defaultImageUrl,
+      });
+    },
+    onSuccess: async (newGroup) => {
+      setInviteCode(newGroup.groupCode);
+      await queryClient.invalidateQueries({ queryKey: ["groups", "my"] });
+    },
+    onError: (error) => {
+      console.error("그룹 생성 실패", error);
+    },
+  });
+
+  const handleCreateGroup = () => {
     if (!groupName.trim()) {
       alert("그룹 이름을 입력해주세요");
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      const defaultImageUrl =
-        "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png";
-      const response = await groupApi.create({
-        name: groupName,
-        imageUrl: defaultImageUrl,
-      });
-      setInviteCode(response.groupCode);
-      setCopied(false);
-    } catch (e) {
-      console.error("그룹 생성 실패:", e);
-      alert("그룹 생성에 실패했습니다");
-    } finally {
-      setIsLoading(false);
-    }
+    return createNewGroup();
   };
 
   const handleCopy = async () => {
@@ -91,10 +97,10 @@ export default function CreateGroupModal({
             <button
               type="button"
               onClick={handleCreateGroup}
-              disabled={isLoading || !groupName.trim()}
+              disabled={isPending || !groupName.trim()}
               className="mt-4 h-14 w-full rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "생성 중..." : "그룹 생성하기"}
+              {isPending ? "생성 중..." : "그룹 생성하기"}
             </button>
 
             <p className="mt-6 text-center text-xs text-[#D6FDE5]">
