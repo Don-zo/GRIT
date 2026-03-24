@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/services/group";
 import { ImageUploader } from "@/components/ImageUploader";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type GroupSettingsModalProps = {
   open: boolean;
@@ -22,51 +24,60 @@ export default function GroupSettingsModal({
   const [baseGroupImage, setBaseGroupImage] = useState(initialImage);
   const [groupName, setGroupName] = useState(initialName);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { data: groupInfo } = useQuery({
+    queryKey: QUERY_KEYS.groups.detail(groupCode),
+    queryFn: () => groupApi.getMyGroup(groupCode),
+    enabled: open && !!groupCode,
+  });
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !groupInfo) return;
 
-    const fetchGroupDetail = async () => {
-      try {
-        const groupInfo = await groupApi.getMyGroup(groupCode);
-        setBaseGroupName(groupInfo.name);
-        setBaseGroupImage(groupInfo.imageUrl);
-        setGroupName(groupInfo.name);
-        setImageFile(null);
-      } catch (error) {
-        console.error("그룹 상세 조회 에러", error);
-      }
-    };
-
-    fetchGroupDetail();
-  }, [open, groupCode]);
+    setBaseGroupName(groupInfo.name);
+    setBaseGroupImage(groupInfo.imageUrl ?? "");
+    setGroupName(groupInfo.name);
+    setImageFile(null);
+  }, [open, groupInfo]);
 
   const handleClose = () => {
     setGroupName(baseGroupName);
     setImageFile(null);
-    setIsLoading(false);
     onClose();
   };
 
-  const handleSave = async () => {
-    if (!groupName.trim()) return;
+  const queryClient = useQueryClient();
 
-    setIsLoading(true);
-    try {
-      await groupApi.update(groupCode, {
-        name: groupName.trim(),
-        imageUrl: imageFile
-          ? "업로드된_URL"
-          : baseGroupImage ||
-            "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
-      });
-      handleClose();
-    } catch (error) {
-      console.error("그룹 정보 수정 실패:", error);
-    } finally {
-      setIsLoading(false);
+  const { mutateAsync: updateGroup, isPending: isGroupInfoSaving } =
+    useMutation({
+      mutationFn: () =>
+        groupApi.update(groupCode, {
+          name: groupName.trim(),
+          imageUrl: imageFile
+            ? "업로드된_URL"
+            : baseGroupImage ||
+              "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
+        }),
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.groups.detail(groupCode),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.groups.my,
+        });
+        handleClose();
+      },
+      onError: (error) => {
+        console.error("그룹 정보 수정 실패:", error);
+      },
+    });
+
+  const handleSave = async () => {
+    if (!groupName.trim()) {
+      alert("그룹 이름을 입력해주세요.");
+      return;
     }
+    await updateGroup();
   };
 
   return (
@@ -102,10 +113,10 @@ export default function GroupSettingsModal({
             <button
               type="button"
               onClick={handleSave}
-              disabled={isLoading}
+              disabled={isGroupInfoSaving}
               className="mt-4 h-14 w-full rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
             >
-              {isLoading ? "저장 중..." : "그룹 정보 저장하기"}
+              {isGroupInfoSaving ? "저장 중..." : "그룹 정보 저장하기"}
             </button>
 
             <p className="mt-6 text-center text-xs text-[#D6FDE5]">

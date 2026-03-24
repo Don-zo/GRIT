@@ -1,29 +1,25 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import Button from "./Button";
 import GroupCard from "./GroupCard";
-import type { Group } from "@/apis/types/group";
 import { groupApi } from "@/apis/services/group";
 import CreateGroupModal from "@/pages/Home/components/Modals/CreateGroupModal";
 import JoinGroupModal from "@/pages/Home/components/Modals/JoinGroupModal";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 export default function GroupSection() {
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isJoinGroupModalOpen, setIsJoinGroupModalOpen] = useState(false);
-  const [groups, setGroups] = useState<Group[]>([]);
 
-  useEffect(() => {
-    const fetchMyGroupList = async () => {
-      try {
-        const response = await groupApi.getMyGroupList();
-        setGroups(response ?? []);
-      } catch (error) {
-        console.error("내 그룹 조회 실패:", error);
-        setGroups([]);
-      }
-    };
-    fetchMyGroupList();
-  }, []);
+  const {
+    data: groups = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: QUERY_KEYS.groups.my,
+    queryFn: groupApi.getMyGroupList,
+  });
 
   return (
     <section className="w-auto h-auto bg-[#2E3039] rounded-3xl px-16 py-16">
@@ -49,15 +45,22 @@ export default function GroupSection() {
           />
         </div>
 
-        {groups.map((group) => (
-          <GroupCard
-            key={group.groupCode}
-            groupCode={group.groupCode}
-            name={group.name}
-            memberCount={group.memberCount}
-            imageUrl={group.imageUrl}
-          />
-        ))}
+        {isLoading && <div className="text-gray-300">그룹 불러오는 중...</div>}
+        {isError && (
+          <div className="text-red-400">그룹 조회에 실패했습니다.</div>
+        )}
+
+        {!isLoading &&
+          !isError &&
+          groups.map((group) => (
+            <GroupCard
+              key={group.groupCode}
+              groupCode={group.groupCode}
+              name={group.name}
+              memberCount={group.memberCount}
+              imageUrl={group.imageUrl}
+            />
+          ))}
       </div>
 
       <CreateGroupModal
