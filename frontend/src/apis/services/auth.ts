@@ -1,12 +1,10 @@
 import apiClient from "@/apis/client/apiClient";
-
 import type {
   GoogleLoginRequest,
   GoogleLoginResponse,
-  Member,
 } from "@/apis/types/auth";
 import { OAUTH_CONFIG } from "@/apis/constants/oauth";
-import { API_ENDPOINTS } from "@/apis/constants/endpoints";
+import { ENDPOINTS } from "@/apis/constants/endpoints";
 import type { RefreshTokenResponse } from "@/apis/types/auth";
 
 export const loginGoogle = async (
@@ -17,7 +15,7 @@ export const loginGoogle = async (
     redirectUri: OAUTH_CONFIG.GOOGLE.REDIRECT_URI,
   };
   const response = await apiClient.post<GoogleLoginResponse>(
-    API_ENDPOINTS.AUTH.GOOGLE,
+    ENDPOINTS.AUTH.GOOGLE,
     requestBody,
     { withCredentials: true },
   );
@@ -40,7 +38,7 @@ export const loginGoogle = async (
 
 export const refreshAccessToken = async (): Promise<string> => {
   const response = await apiClient.post<RefreshTokenResponse>(
-    API_ENDPOINTS.AUTH.REFRESH,
+    ENDPOINTS.AUTH.REFRESH,
     {},
     { withCredentials: true },
   );
@@ -55,19 +53,14 @@ export const refreshAccessToken = async (): Promise<string> => {
   return accessToken;
 };
 
-export const getUserInfo = async (): Promise<Member> => {
-  const response = await apiClient.get<Member>(API_ENDPOINTS.AUTH.INFO);
-  return response.data;
-};
-
 export const logout = async (): Promise<void> => {
-  await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, {
+  await apiClient.post(ENDPOINTS.AUTH.LOGOUT, {
     withCredentials: true,
   });
   localStorage.removeItem("auth-storage");
 };
 
 export const signout = async (): Promise<void> => {
-  await apiClient.delete(API_ENDPOINTS.AUTH.INFO);
+  await apiClient.delete(ENDPOINTS.MY.INFO);
   localStorage.removeItem("auth-storage");
 };

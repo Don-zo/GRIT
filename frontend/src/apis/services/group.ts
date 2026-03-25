@@ -1,5 +1,5 @@
 import apiClient from "@/apis/client/apiClient";
-import { API_ENDPOINTS } from "@/apis/constants/endpoints";
+import { ENDPOINTS } from "@/apis/constants/endpoints";
 import type {
   CreateGroupRequest,
   UpdateGroupRequest,
@@ -8,28 +8,25 @@ import type {
 
 export const groupApi = {
   create: async (data: CreateGroupRequest): Promise<Group> => {
-    const response = await apiClient.post<Group>(
-      API_ENDPOINTS.GROUP.CREATE,
-      data,
-    );
+    const response = await apiClient.post<Group>(ENDPOINTS.GROUP.CREATE, data);
     return response.data;
   },
 
   getMyGroup: async (groupCode: string) => {
     const response = await apiClient.get<Group>(
-      API_ENDPOINTS.GROUP.DETAIL(groupCode),
+      ENDPOINTS.GROUP.INFO(groupCode),
     );
     return response.data;
   },
 
   getMyGroupList: async () => {
-    const response = await apiClient.get<Group[]>(API_ENDPOINTS.GROUP.MY);
+    const response = await apiClient.get<Group[]>(ENDPOINTS.GROUP.MY);
     return response.data;
   },
 
   join: async (groupCode: string) => {
     const response = await apiClient.post<Group>(
-      API_ENDPOINTS.GROUP.JOIN(groupCode),
+      ENDPOINTS.GROUP.JOIN(groupCode),
     );
     return response.data;
   },
@@ -39,7 +36,7 @@ export const groupApi = {
     data: UpdateGroupRequest,
   ): Promise<Group> => {
     const response = await apiClient.put<Group>(
-      API_ENDPOINTS.GROUP.DETAIL(groupCode),
+      ENDPOINTS.GROUP.INFO(groupCode),
       data,
     );
     return response.data;
