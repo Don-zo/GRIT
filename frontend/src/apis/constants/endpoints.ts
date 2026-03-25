@@ -19,7 +19,6 @@ export const ENDPOINTS = {
     IMAGE_UPLOAD: "/api/groups/image-upload-url",
   },
   LIVEKIT: {
-    URL: import.meta.env.VITE_LIVEKIT_URL,
     TOKEN: "/livekit/token",
   },
 } as const;
