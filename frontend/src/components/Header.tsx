@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "@/routes/path";
 import type { Member } from "@/apis/types";
-import { getUserInfo, logout, signout } from "@/apis/services/auth";
+import { logout, signout } from "@/apis/services/auth";
+import { getUserInfo } from "@/apis/services/my";
 
 type HeaderProps = {
   variant: "light" | "dark";
@@ -16,7 +17,7 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
   const navigate = useNavigate();
   const [user, setUser] = useState<Member | null>(null);
 
-useEffect(() => {
+  useEffect(() => {
     let mounted = true;
     const fetchUser = async () => {
       try {
