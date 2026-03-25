@@ -58,7 +58,7 @@ export default function GroupCard({
         onClose={() => setIsSettingsOpen(false)}
         groupCode={groupCode}
         initialName={name}
-        initialImage={imageName}
+        initialImage={imageUrl}
       />
     </div>
   );
