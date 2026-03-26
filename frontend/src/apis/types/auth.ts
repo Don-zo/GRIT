@@ -1,4 +1,3 @@
-//구글 로그인
 export interface Member {
   id: number;
   nickname: string;
@@ -19,7 +18,6 @@ export interface GoogleLoginResponse {
   firstTimeUser: boolean;
 }
 
-//토큰
 export interface RefreshTokenResponse {
   accessToken: string;
 }

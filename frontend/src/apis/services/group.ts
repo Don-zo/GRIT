@@ -1,9 +1,11 @@
+import axios from "axios";
 import apiClient from "@/apis/client/apiClient";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
 import type {
   CreateGroupRequest,
   UpdateGroupRequest,
   Group,
+  S3uploadResponse,
 } from "@/apis/types";
 
 export const groupApi = {
@@ -12,19 +14,19 @@ export const groupApi = {
     return response.data;
   },
 
-  getMyGroup: async (groupCode: string) => {
+  getMyGroup: async (groupCode: string): Promise<Group> => {
     const response = await apiClient.get<Group>(
       ENDPOINTS.GROUP.INFO(groupCode),
     );
     return response.data;
   },
 
-  getMyGroupList: async () => {
+  getMyGroupList: async (): Promise<Group[]> => {
     const response = await apiClient.get<Group[]>(ENDPOINTS.GROUP.MY);
     return response.data;
   },
 
-  join: async (groupCode: string) => {
+  join: async (groupCode: string): Promise<Group> => {
     const response = await apiClient.post<Group>(
       ENDPOINTS.GROUP.JOIN(groupCode),
     );
@@ -40,5 +42,27 @@ export const groupApi = {
       data,
     );
     return response.data;
+  },
+
+  getPresignedUploadInfo: async (): Promise<S3uploadResponse> => {
+    const response = await apiClient.get<S3uploadResponse>(
+      ENDPOINTS.GROUP.IMAGE_UPLOAD,
+    );
+    return response.data;
+  },
+
+  putImageToS3: async (uploadUrl: string, file: File): Promise<void> => {
+    const contentType = file.type;
+    await axios.put(uploadUrl, file, {
+      headers: {
+        "Content-Type": contentType,
+      },
+    });
+  },
+
+  uploadImage: async (file: File): Promise<string> => {
+    const { uploadUrl, fileName } = await groupApi.getPresignedUploadInfo();
+    await groupApi.putImageToS3(uploadUrl, file);
+    return fileName;
   },
 } as const;

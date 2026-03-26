@@ -50,14 +50,21 @@ export default function GroupSettingsModal({
 
   const { mutateAsync: updateGroup, isPending: isGroupInfoSaving } =
     useMutation({
-      mutationFn: () =>
-        groupApi.update(groupCode, {
-          name: groupName.trim(),
-          imageUrl: imageFile
-            ? "업로드된_URL"
-            : baseGroupImage ||
-              "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png",
-        }),
+      mutationFn: async () => {
+        const trimmedGroupName = groupName.trim();
+        if (imageFile) {
+          const imageName = await groupApi.uploadImage(imageFile);
+
+          return groupApi.update(groupCode, {
+            name: trimmedGroupName,
+            imageName,
+          });
+        }
+        return groupApi.update(groupCode, {
+          name: trimmedGroupName,
+        });
+      },
+
       onSuccess: async () => {
         await queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.groups.detail(groupCode),
@@ -67,6 +74,7 @@ export default function GroupSettingsModal({
         });
         handleClose();
       },
+
       onError: (error) => {
         console.error("그룹 정보 수정 실패:", error);
       },

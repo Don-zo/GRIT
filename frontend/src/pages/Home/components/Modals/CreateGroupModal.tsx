@@ -18,19 +18,25 @@ export default function CreateGroupModal({
   const [groupName, setGroupName] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [inviteCode, setInviteCode] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [_, setCopied] = useState(false);
 
   const queryClient = useQueryClient();
 
   const { mutateAsync: createNewGroup, isPending } = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const trimmedGroupName = groupName.trim();
-      const defaultImageUrl =
-        "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png";
+
+      if (imageFile) {
+        const imageName = await groupApi.uploadImage(imageFile);
+
+        return groupApi.create({
+          name: trimmedGroupName,
+          imageName,
+        });
+      }
 
       return groupApi.create({
         name: trimmedGroupName,
-        imageUrl: defaultImageUrl,
       });
     },
     onSuccess: async (newGroup) => {
