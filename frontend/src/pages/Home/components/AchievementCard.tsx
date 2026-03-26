@@ -1,5 +1,7 @@
 import React from "react";
-import { Trophy } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Trophy, Settings } from "lucide-react";
+import { PATHS } from "@/routes/path";
 
 interface AchievementCardProps {
   todayProgress?: number; // 0-100
@@ -21,9 +23,10 @@ const AchievementCard: React.FC<AchievementCardProps> = ({
     { day: "수", progress: 55 },
   ],
 }) => {
+  const navigate = useNavigate();
+
   return (
-    <div className="w-1/2 h-70 bg-[#2E3039] rounded-2xl p-6">
-        
+    <div className="w-1/2 h-70 bg-[#2E3039] rounded-2xl p-6 select-none">
       {/* 오늘의 달성도 섹션 */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-3">
@@ -31,9 +34,20 @@ const AchievementCard: React.FC<AchievementCardProps> = ({
             <Trophy className="w-6 h-6 text-green-normal" strokeWidth={2} />
             <span className="text-white text-bodyLg">오늘의 달성도</span>
           </div>
-          <span className="text-white text-bodyLg">
-            {todayProgress}%
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-white text-bodyLg">{todayProgress}%</span>
+            <button
+              type="button"
+              onClick={() => navigate(PATHS.TODO)}
+              aria-label="할 일로 이동"
+              className="shrink-0"
+            >
+              <Settings
+                className="w-4 h-4 text-white cursor-pointer"
+                strokeWidth={2}
+              />
+            </button>
+          </div>
         </div>
         <div className="w-full h-4 bg-gray-semidark rounded-full overflow-hidden">
           <div
