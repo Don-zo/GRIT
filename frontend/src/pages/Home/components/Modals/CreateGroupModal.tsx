@@ -27,12 +27,11 @@ export default function CreateGroupModal({
       const trimmedGroupName = groupName.trim();
 
       if (imageFile) {
-        const { uploadUrl, fileName } = await groupApi.imageUpload();
-        await groupApi.putImage(uploadUrl, imageFile);
+        const imageName = await groupApi.uploadImage(imageFile);
 
         return groupApi.create({
           name: trimmedGroupName,
-          imageName: fileName,
+          imageName,
         });
       }
 

@@ -44,19 +44,25 @@ export const groupApi = {
     return response.data;
   },
 
-  imageUpload: async (): Promise<S3uploadResponse> => {
+  getPresignedUploadInfo: async (): Promise<S3uploadResponse> => {
     const response = await apiClient.get<S3uploadResponse>(
       ENDPOINTS.GROUP.IMAGE_UPLOAD,
     );
     return response.data;
   },
 
-  putImage: async (uploadUrl: string, file: globalThis.File): Promise<void> => {
+  putImageToS3: async (uploadUrl: string, file: File): Promise<void> => {
     const contentType = file.type;
     await axios.put(uploadUrl, file, {
       headers: {
         "Content-Type": contentType,
       },
     });
+  },
+
+  uploadImage: async (file: File): Promise<string> => {
+    const { uploadUrl, fileName } = await groupApi.getPresignedUploadInfo();
+    await groupApi.putImageToS3(uploadUrl, file);
+    return fileName;
   },
 } as const;

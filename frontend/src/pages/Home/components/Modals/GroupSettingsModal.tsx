@@ -53,12 +53,11 @@ export default function GroupSettingsModal({
       mutationFn: async () => {
         const trimmedGroupName = groupName.trim();
         if (imageFile) {
-          const { uploadUrl, fileName } = await groupApi.imageUpload();
-          await groupApi.putImage(uploadUrl, imageFile);
+          const imageName = await groupApi.uploadImage(imageFile);
 
-          return await groupApi.update(groupCode, {
+          return groupApi.update(groupCode, {
             name: trimmedGroupName,
-            imageName: fileName,
+            imageName,
           });
         }
         return groupApi.update(groupCode, {
