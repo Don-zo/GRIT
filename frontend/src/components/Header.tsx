@@ -2,7 +2,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "@/routes/path";
-import type { Member } from "@/apis/types";
+import type { MemberResponse } from "@/apis/types";
 import { logout, signout } from "@/apis/services/auth";
 import { userApi } from "@/apis/services/user";
 
@@ -15,7 +15,7 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(alwaysVisible);
   const [isDropDownOpen, SetIsDropDownOpen] = useState(false);
   const navigate = useNavigate();
-  const [user, setUser] = useState<Member | null>(null);
+  const [user, setUser] = useState<MemberResponse | null>(null);
 
   useEffect(() => {
     let mounted = true;

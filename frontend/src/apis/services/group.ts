@@ -1,4 +1,3 @@
-import axios from "axios";
 import apiClient from "@/apis/client/apiClient";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
 import type {
