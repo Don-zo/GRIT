@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/services/group";
+import { fileApi } from "@/apis/services/file";
 import { ImageUploader } from "@/components/ImageUploader";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
@@ -53,8 +54,10 @@ export default function GroupSettingsModal({
       mutationFn: async () => {
         const trimmedGroupName = groupName.trim();
         if (imageFile) {
-          const imageName = await groupApi.uploadImage(imageFile);
-
+          const imageName = await fileApi.uploadFileWithPresignedInfo(
+            imageFile,
+            groupApi.getPresignedInfo,
+          );
           return groupApi.update(groupCode, {
             name: trimmedGroupName,
             imageName,

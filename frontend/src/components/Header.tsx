@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { PATHS } from "@/routes/path";
 import type { Member } from "@/apis/types";
 import { logout, signout } from "@/apis/services/auth";
-import { getUserInfo } from "@/apis/services/my";
+import { userApi } from "@/apis/services/user";
 
 type HeaderProps = {
   variant: "light" | "dark";
@@ -21,7 +21,7 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
     let mounted = true;
     const fetchUser = async () => {
       try {
-        const data = await getUserInfo();
+        const data = await userApi.get();
         if (mounted) setUser(data);
       } catch (error) {
         if (mounted) setUser(null);
