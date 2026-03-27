@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Settings, MessageCircle } from "lucide-react";
 import Avatar from "@/pages/Room/components/Cam/Avatar";
 import SettingsModal from "@/pages/Home/components/Modals/ProfileSettingsModal";
@@ -11,6 +11,7 @@ interface ProfileCardProps {
   examName?: string;
   currentTime?: string;
   targetTime?: string;
+  initialSettingsOpen: boolean;
 }
 
 const ProfileCard = ({
@@ -21,8 +22,15 @@ const ProfileCard = ({
   examName = "sqld 시험",
   currentTime = "2:37:23",
   targetTime = "4:00:00",
+  initialSettingsOpen = false,
 }: ProfileCardProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialSettingsOpen) {
+      setIsSettingsOpen(true);
+    }
+  }, [initialSettingsOpen]);
 
   const timeToSeconds = (timeStr: string): number => {
     const parts = timeStr.split(":").map(Number);
