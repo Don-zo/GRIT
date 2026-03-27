@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { userApi } from "@/apis/services/user";
+import type { CreateMemberRequest } from "@/apis/types";
 import Modal from "@/components/Modal";
 import { Divider } from "@/components/Divider";
 import { FormInput } from "@/components/FormInput";
@@ -14,6 +17,46 @@ export default function ProfileSettingsModal({
   onClose,
 }: ProfileSettingsModalProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [nickname, setNickname] = useState("");
+  const [introduction, setIntroduction] = useState("");
+  const [dDayDate, setDDayDate] = useState("");
+  const [dDayTitle, setDDayTitle] = useState("");
+  const [weeklyStudyTimeGoal, setWeeklyStudyTimeGoal] = useState("");
+
+  const { mutateAsync: createInitialProfile, isPending } = useMutation({
+    mutationFn: async () => {
+      const trimmedNickname = nickname.trim();
+
+      if (!trimmedNickname) {
+        throw new Error("닉네임을 입력해주세요");
+      }
+
+      if (!introduction) {
+        throw new Error("소개를 입력해주세요");
+      }
+
+      const profileInput: CreateMemberRequest = {
+        nickname: trimmedNickname,
+        introduction: introduction,
+        dDayDate: dDayDate || null,
+        dDayTitle: dDayTitle || null,
+        weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
+      };
+
+      return userApi.createInitialInfo(profileInput);
+    },
+    onSuccess: () => {
+      onClose();
+    },
+    onError: (error) => {
+      console.error("프로필 초기화 에러", error);
+    },
+  });
+
+  const handleSave = async () => {
+    await createInitialProfile();
+  };
+
   return (
     <Modal isOpen={open} onClose={onClose}>
       <Modal.Overlay />
@@ -37,8 +80,18 @@ export default function ProfileSettingsModal({
                 onImageChange={(file) => setImageFile(file)}
               />
               <div className="flex flex-col gap-5">
-                <FormInput label="닉네임" type="text" />
-                <FormInput label="한 줄 소개" type="text" />
+                <FormInput
+                  label="닉네임"
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                />
+                <FormInput
+                  label="한 줄 소개"
+                  type="text"
+                  value={introduction}
+                  onChange={(e) => setIntroduction(e.target.value)}
+                />
               </div>
             </div>
           </section>
@@ -49,8 +102,18 @@ export default function ProfileSettingsModal({
             <h3 className="text-lg font-semibold text-[#D6FDE5]">D-day 설정</h3>
 
             <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormInput label="D-day 날짜" type="date" />
-              <FormInput label="D-day 이름" type="text" />
+              <FormInput
+                label="D-day 날짜"
+                type="date"
+                value={dDayDate}
+                onChange={(e) => setDDayDate(e.target.value)}
+              />
+              <FormInput
+                label="D-day 이름"
+                type="text"
+                value={dDayTitle}
+                onChange={(e) => setDDayTitle(e.target.value)}
+              />
             </div>
           </section>
 
@@ -81,13 +144,11 @@ export default function ProfileSettingsModal({
         <Modal.Footer className="px-8 pb-8 flex justify-center">
           <button
             type="button"
-            onClick={() => {
-              console.log("저장된 이미지", imageFile);
-              // 추후 서버 업로드 로직 추가
-            }}
+            onClick={handleSave}
+            disabled={isPending}
             className="h-14 w-full max-w-[360px] rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition"
           >
-            저장하기
+            {isPending ? "저장 중..." : "저장하기"}
           </button>
         </Modal.Footer>
       </Modal.Content>
