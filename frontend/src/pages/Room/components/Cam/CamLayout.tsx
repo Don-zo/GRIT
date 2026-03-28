@@ -1,6 +1,6 @@
-import React from "react";  
+import React from "react";
 import { NameBadge } from "./NameBadge";
-import Avatar from "./Avatar";
+import Avatar from "../../../../components/Avatar";
 import { getLayoutPreset } from "./layoutPresets";
 
 interface Participant {
@@ -68,7 +68,6 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
     }
   })();
 
-
   return (
     <div
       className={`relative w-full h-full bg-gray-darkest px-18 ${verticalPadding}`}
@@ -85,13 +84,27 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
             <div
               key={box.id}
               className={`relative rounded-3xl bg-green-dark overflow-hidden ${box.className}`}
-              style={'transform' in box && box.transform ? { transform: box.transform } : undefined}
+              style={
+                "transform" in box && box.transform
+                  ? { transform: box.transform }
+                  : undefined
+              }
             >
               <div className="flex items-center justify-center w-full h-full">
-                {participant.video ?? <Avatar size={'avatarSize' in box && typeof box.avatarSize === 'number' ? box.avatarSize : undefined} />}
+                {participant.video ?? (
+                  <Avatar
+                    size={
+                      "avatarSize" in box && typeof box.avatarSize === "number"
+                        ? box.avatarSize
+                        : undefined
+                    }
+                  />
+                )}
               </div>
 
-              <div className={`absolute left-4 bottom-4 flex ${'nameBadgeLeftSpacing' in box && box.nameBadgeLeftSpacing ? box.nameBadgeLeftSpacing : ""}`}>
+              <div
+                className={`absolute left-4 bottom-4 flex ${"nameBadgeLeftSpacing" in box && box.nameBadgeLeftSpacing ? box.nameBadgeLeftSpacing : ""}`}
+              >
                 <NameBadge
                   name={participant.name}
                   isMuted={participant.isMuted ?? false}
@@ -103,9 +116,7 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
         })}
 
         {pomodoro && (
-          <div
-            className={`absolute z-50 ${pomodoroPositionClass}`}
-          >
+          <div className={`absolute z-50 ${pomodoroPositionClass}`}>
             {pomodoro}
           </div>
         )}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "@/apis/services/user";
-import type { CreateMemberRequest } from "@/apis/types";
 import Modal from "@/components/Modal";
 import { Divider } from "@/components/Divider";
 import { FormInput } from "@/components/FormInput";
@@ -82,7 +81,7 @@ export default function ProfileSettingsModal({
       onClose();
     },
     onError: (error) => {
-      console.error("프로필 초기화 에러", error);
+      console.error("프로필 저장 에러", error);
     },
   });
 
