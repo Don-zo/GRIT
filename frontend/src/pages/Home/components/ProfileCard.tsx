@@ -12,6 +12,7 @@ interface ProfileCardProps {
   currentTime?: string;
   targetTime?: string;
   initialSettingsOpen: boolean;
+  oauthFirstTimeUser: boolean;
 }
 
 const ProfileCard = ({
@@ -23,14 +24,17 @@ const ProfileCard = ({
   currentTime = "2:37:23",
   targetTime = "4:00:00",
   initialSettingsOpen = false,
+  oauthFirstTimeUser = true,
 }: ProfileCardProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isInitialProfileSave, setIsInitialProfileSave] = useState(false);
 
   useEffect(() => {
-    if (initialSettingsOpen) {
+    if (initialSettingsOpen && oauthFirstTimeUser) {
+      setIsInitialProfileSave(true);
       setIsSettingsOpen(true);
     }
-  }, [initialSettingsOpen]);
+  }, [initialSettingsOpen, oauthFirstTimeUser]);
 
   const timeToSeconds = (timeStr: string): number => {
     const parts = timeStr.split(":").map(Number);
@@ -52,7 +56,10 @@ const ProfileCard = ({
       <div className="flex justify-end mb-4">
         <button
           type="button"
-          onClick={() => setIsSettingsOpen(true)}
+          onClick={() => {
+            setIsInitialProfileSave(false);
+            setIsSettingsOpen(true);
+          }}
           aria-label="설정"
         >
           <Settings
@@ -119,6 +126,7 @@ const ProfileCard = ({
       <SettingsModal
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        isInitialProfile={isInitialProfileSave}
       />
     </div>
   );

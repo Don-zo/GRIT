@@ -1,20 +1,23 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "@/apis/services/user";
 import type { CreateMemberRequest } from "@/apis/types";
 import Modal from "@/components/Modal";
 import { Divider } from "@/components/Divider";
 import { FormInput } from "@/components/FormInput";
 import { ImageUploader } from "@/components/ImageUploader";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type ProfileSettingsModalProps = {
   open: boolean;
   onClose: () => void;
+  isInitialProfile: boolean;
 };
 
 export default function ProfileSettingsModal({
   open,
   onClose,
+  isInitialProfile,
 }: ProfileSettingsModalProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [nickname, setNickname] = useState("");
@@ -23,7 +26,29 @@ export default function ProfileSettingsModal({
   const [dDayTitle, setDDayTitle] = useState("");
   const [weeklyStudyTimeGoal, setWeeklyStudyTimeGoal] = useState("");
 
-  const { mutateAsync: createInitialProfile, isPending } = useMutation({
+  const {
+    data: member,
+    isLoading: isMemberInfoLoading,
+    isError,
+  } = useQuery({
+    queryKey: QUERY_KEYS.member.me,
+    queryFn: userApi.get,
+    enabled: open,
+  });
+
+  useEffect(() => {
+    if (!open || !member) return;
+    setNickname(member.nickname);
+    setIntroduction(member.introduction);
+    setDDayDate(member.dDayDate ?? "");
+    setDDayTitle(member.dDayTitle ?? "");
+    setWeeklyStudyTimeGoal(member.weeklyStudyTimeGoal ?? "");
+    setImageFile(null);
+  }, [open, member]);
+
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: saveProfile, isPending } = useMutation({
     mutationFn: async () => {
       const trimmedNickname = nickname.trim();
 
@@ -35,17 +60,25 @@ export default function ProfileSettingsModal({
         throw new Error("소개를 입력해주세요");
       }
 
-      const profileInput: CreateMemberRequest = {
+      if (isInitialProfile) {
+        return userApi.createInitialInfo({
+          nickname: trimmedNickname,
+          introduction: introduction,
+          dDayDate: dDayDate || null,
+          dDayTitle: dDayTitle || null,
+          weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
+        });
+      }
+      return userApi.update({
         nickname: trimmedNickname,
         introduction: introduction,
         dDayDate: dDayDate || null,
         dDayTitle: dDayTitle || null,
         weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
-      };
-
-      return userApi.createInitialInfo(profileInput);
+      });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.member.me });
       onClose();
     },
     onError: (error) => {
@@ -54,8 +87,10 @@ export default function ProfileSettingsModal({
   });
 
   const handleSave = async () => {
-    await createInitialProfile();
+    await saveProfile();
   };
+
+  const isFormDisabled = isMemberInfoLoading || isPending;
 
   return (
     <Modal isOpen={open} onClose={onClose}>
@@ -68,6 +103,11 @@ export default function ProfileSettingsModal({
         </Modal.Header>
 
         <Modal.Body className="px-8 w-full">
+          {isError && (
+            <p className="mb-4 text-sm text-red-400">
+              내 정보를 불러오지 못했습니다.
+            </p>
+          )}
           <section className="w-full">
             <h2 className="text-lg font-semibold text-[#D6FDE5]">
               개인 정보 설정
@@ -85,6 +125,7 @@ export default function ProfileSettingsModal({
                   type="text"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
+                  disabled={isFormDisabled}
                 />
                 <FormInput
                   label="한 줄 소개"
@@ -146,7 +187,7 @@ export default function ProfileSettingsModal({
             type="button"
             onClick={handleSave}
             disabled={isPending}
-            className="h-14 w-full max-w-[360px] rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition"
+            className="h-14 w-full max-w-[360px] rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
           >
             {isPending ? "저장 중..." : "저장하기"}
           </button>

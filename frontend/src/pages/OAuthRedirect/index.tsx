@@ -46,7 +46,7 @@ const GoogleOAuthRedirectPage = () => {
 
         if (firstTimeUser) {
           navigate(PATHS.HOME, {
-            state: { openProfileSetupModal: true },
+            state: { openProfileSetupModal: true, firstTimeUser: true },
           });
         } else {
           navigate(PATHS.HOME);

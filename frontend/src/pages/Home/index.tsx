@@ -7,6 +7,7 @@ import LeftSidebar from "@/pages/Home/components/LeftSidebar";
 
 type HomeLocationState = {
   openProfileSetupModal: boolean;
+  firstTimeUser: boolean;
 };
 
 const HomePage = () => {
@@ -14,6 +15,7 @@ const HomePage = () => {
   const state = location.state as HomeLocationState;
 
   const shouldOpenProfileSetup = state?.openProfileSetupModal === true;
+  const oauthFirstTimeUser = state?.firstTimeUser === true;
 
   return (
     <div className="flex flex-col pt-[65px] w-full h-auto bg-gray-darkest">
@@ -25,7 +27,10 @@ const HomePage = () => {
         <div className="flex-1 ">
           <div className="flex items-center justify-center flex-1 mx-20 mt-10 gap-6">
             <Achievement />
-            <ProfileCard initialSettingsOpen={shouldOpenProfileSetup} />
+            <ProfileCard
+              initialSettingsOpen={shouldOpenProfileSetup}
+              oauthFirstTimeUser={oauthFirstTimeUser}
+            />
           </div>
 
           <div className="m-20">
