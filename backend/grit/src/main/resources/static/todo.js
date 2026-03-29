@@ -43,6 +43,7 @@ function escapeHtml(str) {
 async function fetchTodos() {
     const userId = getMemberId();
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos`);
+    if (response.status === 403) throw new Error('본인 계정의 투두만 볼 수 있습니다. (로그인·member_id 불일치)');
     if (!response.ok) throw new Error('투두 목록을 불러오지 못했습니다.');
     return response.json();
 }
@@ -50,15 +51,70 @@ async function fetchTodos() {
 async function fetchAchievement() {
     const userId = getMemberId();
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos/achievement/last-7-days`);
+    if (response.status === 403) throw new Error('본인 계정의 달성도만 볼 수 있습니다.');
     if (!response.ok) throw new Error('달성도를 불러오지 못했습니다.');
     return response.json();
 }
 
-async function createTodo(content, subjectCategory, dueDate) {
+async function fetchTodoCategories() {
     const userId = getMemberId();
-    const body = { content };
-    if (subjectCategory) body.subjectCategory = subjectCategory;
-    if (dueDate) body.dueDate = dueDate;
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todo-categories`);
+    if (response.status === 403) throw new Error('본인 카테고리만 볼 수 있습니다.');
+    if (!response.ok) throw new Error('카테고리 목록을 불러오지 못했습니다.');
+    return response.json();
+}
+
+async function createTodoCategory(name) {
+    const userId = getMemberId();
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todo-categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+    });
+    if (response.status === 409) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || '이미 같은 이름의 카테고리가 있습니다.');
+    }
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || '카테고리 등록에 실패했습니다.');
+    }
+    return response.json();
+}
+
+async function deleteTodoCategory(categoryId) {
+    const userId = getMemberId();
+    const response = await apiFetch(
+        `${API_CONFIG.BASE_URL}/api/users/${userId}/todo-categories/${categoryId}`,
+        { method: 'DELETE' }
+    );
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || '카테고리 삭제에 실패했습니다.');
+    }
+}
+
+/**
+ * 그룹 투두 목록. 멤버만 호출 가능.
+ * @param {string} groupCode
+ * @param {string|number} userId 맨 위에 올릴 작성자 회원 PK (필수, 해당 그룹 멤버여야 함)
+ */
+async function fetchGroupTodos(groupCode, userId) {
+    const url = `${API_CONFIG.BASE_URL}/api/groups/${encodeURIComponent(groupCode)}/todos?userId=${encodeURIComponent(userId)}`;
+    const response = await apiFetch(url);
+    if (response.status === 403) throw new Error('해당 그룹의 멤버만 투두를 볼 수 있습니다.');
+    if (response.status === 400) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || '잘못된 요청입니다.');
+    }
+    if (!response.ok) throw new Error('그룹 투두 목록을 불러오지 못했습니다.');
+    return response.json();
+}
+
+async function createTodo(content, categoryId, dueDate) {
+    const userId = getMemberId();
+    const body = { content, dueDate };
+    if (categoryId) body.categoryId = categoryId;
 
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos`, {
         method: 'POST',
@@ -73,8 +129,7 @@ async function createTodo(content, subjectCategory, dueDate) {
 }
 
 async function updateTodo(todoId, patch) {
-    const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}?userId=${userId}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -88,8 +143,7 @@ async function updateTodo(todoId, patch) {
 }
 
 async function deleteTodo(todoId) {
-    const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}?userId=${userId}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}`, {
         method: 'DELETE'
     });
     if (response.status === 403) throw new Error('본인의 투두만 삭제할 수 있습니다.');
@@ -101,19 +155,13 @@ async function deleteTodo(todoId) {
 // ────────────────────────────────────────
 
 let allTodos = [];
+let todoCategories = [];
 let activeFilter = 'all';
 let activeCategoryFilter = '';
 
 // ────────────────────────────────────────
 // 달성도 렌더링
 // ────────────────────────────────────────
-
-const CATEGORY_LABELS = {
-    SCHOOL: '학교 과제',
-    PROJECT: '프로젝트',
-    CERT: '자격증',
-    ETC: '기타'
-};
 
 function renderAchievement(data) {
     const container = document.getElementById('achievement-bars');
@@ -150,7 +198,8 @@ function getFilteredTodos() {
             : activeFilter === 'done'
                 ? todo.isDone
                 : !todo.isDone;
-        const categoryOk = !activeCategoryFilter || todo.subjectCategory === activeCategoryFilter;
+        const categoryOk = !activeCategoryFilter
+            || String(todo.categoryId ?? '') === activeCategoryFilter;
         return filterOk && categoryOk;
     });
 }
@@ -179,7 +228,7 @@ function renderTodoList() {
 
     container.innerHTML = sorted.map(todo => {
         const isOverdue = !todo.isDone && todo.dueDate && new Date(todo.dueDate) < new Date();
-        const categoryLabel = todo.subjectCategory ? CATEGORY_LABELS[todo.subjectCategory] || todo.subjectCategory : '';
+        const categoryLabel = todo.categoryName ? escapeHtml(todo.categoryName) : '';
         const dueDateStr = todo.dueDate ? new Date(todo.dueDate).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '';
 
         return `
@@ -259,7 +308,7 @@ function openEditModal(todoId) {
     document.getElementById('modal-title').textContent = '투두 수정';
     document.getElementById('edit-todo-id').value = todoId;
     document.getElementById('todo-content').value = todo.content;
-    document.getElementById('todo-category').value = todo.subjectCategory || '';
+    document.getElementById('todo-category').value = todo.categoryId != null ? String(todo.categoryId) : '';
     document.getElementById('todo-duedate').value = todo.dueDate || '';
     document.getElementById('todo-submit-btn').textContent = '저장';
     hideError('todo-error');
@@ -272,12 +321,16 @@ document.getElementById('todo-cancel-btn').addEventListener('click', () => close
 document.getElementById('todo-submit-btn').addEventListener('click', async () => {
     hideError('todo-error');
     const content = document.getElementById('todo-content').value.trim();
-    const category = document.getElementById('todo-category').value;
+    const categoryVal = document.getElementById('todo-category').value;
     const dueDate = document.getElementById('todo-duedate').value;
     const editId = document.getElementById('edit-todo-id').value;
 
     if (!content) {
         showError('todo-error', '내용을 입력해주세요.');
+        return;
+    }
+    if (!dueDate) {
+        showError('todo-error', '마감일을 선택해주세요.');
         return;
     }
 
@@ -288,17 +341,16 @@ document.getElementById('todo-submit-btn').addEventListener('click', async () =>
 
     try {
         if (editId) {
-            // 수정
-            const patch = { content };
-            if (category) patch.subjectCategory = category;
-            if (dueDate) patch.dueDate = dueDate;
+            const patch = { content, dueDate };
+            if (categoryVal === '') patch.removeCategory = true;
+            else patch.categoryId = Number(categoryVal);
             const updated = await updateTodo(Number(editId), patch);
             const idx = allTodos.findIndex(t => t.id === Number(editId));
             if (idx !== -1) allTodos[idx] = updated;
             toast.success('투두가 수정되었습니다.');
         } else {
-            // 추가
-            const created = await createTodo(content, category || null, dueDate || null);
+            const categoryId = categoryVal ? Number(categoryVal) : null;
+            const created = await createTodo(content, categoryId, dueDate);
             allTodos.unshift(created);
             toast.success('투두가 추가되었습니다.');
         }
@@ -365,10 +417,86 @@ async function loadTodos() {
     }
 }
 
+function refreshCategorySelects() {
+    const todoSel = document.getElementById('todo-category');
+    const filterSel = document.getElementById('category-filter');
+    const todoPrev = todoSel.value;
+    const filterPrev = filterSel.value;
+
+    todoSel.innerHTML = '<option value="">선택 안함</option>'
+        + todoCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    filterSel.innerHTML = '<option value="">모든 카테고리</option>'
+        + todoCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+
+    if ([...todoSel.options].some(o => o.value === todoPrev)) todoSel.value = todoPrev;
+    if ([...filterSel.options].some(o => o.value === filterPrev)) filterSel.value = filterPrev;
+}
+
+function renderCategoryManageList() {
+    const ul = document.getElementById('category-manage-list');
+    if (!todoCategories.length) {
+        ul.innerHTML = '<li style="font-size:13px;color:var(--text-muted);">등록된 카테고리가 없습니다.</li>';
+        return;
+    }
+    ul.innerHTML = todoCategories.map(c => `
+        <li style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(99,102,241,0.12);font-size:13px;">
+            <span>${escapeHtml(c.name)}</span>
+            <button type="button" class="icon-btn danger" data-del-cat="${c.id}" title="삭제" style="padding:2px;width:24px;height:24px;">×</button>
+        </li>`).join('');
+}
+
+async function loadCategories() {
+    try {
+        todoCategories = await fetchTodoCategories();
+        refreshCategorySelects();
+        renderCategoryManageList();
+        hideError('category-manage-error');
+    } catch (e) {
+        showError('category-manage-error', e.message);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (!checkAuth()) return;
-    loadTodos();
-    loadAchievement();
+
+    document.getElementById('category-manage-list').addEventListener('click', async e => {
+        const del = e.target.closest('[data-del-cat]');
+        if (!del) return;
+        const id = Number(del.getAttribute('data-del-cat'));
+        if (!confirm('이 카테고리를 삭제할까요? 투두의 카테고리만 해제됩니다.')) return;
+        try {
+            await deleteTodoCategory(id);
+            await loadCategories();
+            await loadTodos();
+            toast.info('카테고리를 삭제했습니다.');
+        } catch (err) {
+            toast.error(err.message);
+        }
+    });
+
+    document.getElementById('add-category-btn').addEventListener('click', async () => {
+        hideError('category-manage-error');
+        const input = document.getElementById('new-category-name');
+        const name = input.value.trim();
+        if (!name) {
+            showError('category-manage-error', '카테고리 이름을 입력해주세요.');
+            return;
+        }
+        try {
+            await createTodoCategory(name);
+            input.value = '';
+            await loadCategories();
+            toast.success('카테고리를 등록했습니다.');
+        } catch (err) {
+            showError('category-manage-error', err.message);
+        }
+    });
+
+    (async () => {
+        await loadCategories();
+        loadTodos();
+        loadAchievement();
+    })();
 });
 
 document.getElementById('logout-link').addEventListener('click', () => {

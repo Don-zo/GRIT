@@ -1,6 +1,5 @@
-package grit.domain.todo;
+package grit.domain.todo.entity;
 
-import grit.domain.group.entity.Group;
 import grit.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -19,12 +18,12 @@ public class Todo {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
-    private Group group;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private Member owner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private TodoCategory category;
 
     @Column(nullable = false, length = 500)
     private String content;
@@ -35,10 +34,6 @@ public class Todo {
     public void setIsDone(boolean isDone) {
         this.isDone = isDone;
     }
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "subject_category", nullable = false, length = 20)
-    private SubjectCategory subjectCategory;
 
     @Column(name = "due_date")
     private LocalDate dueDate;
@@ -60,22 +55,4 @@ public class Todo {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-    public enum SubjectCategory {
-        SCHOOL("학교 과제"),
-        PROJECT("프로젝트"),
-        CERT("자격증"),
-        ETC("기타");
-
-        private final String label;
-
-        SubjectCategory(String label) {
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-    }
 }
-
