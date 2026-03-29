@@ -12,16 +12,14 @@ import java.util.Optional;
 
 public interface TodoRepository extends JpaRepository<Todo, Long> {
 
-    @Query("SELECT t FROM Todo t LEFT JOIN FETCH t.category JOIN FETCH t.owner WHERE t.owner.id = :ownerId")
+    @Query("SELECT DISTINCT t FROM Todo t JOIN FETCH t.owner LEFT JOIN FETCH t.category WHERE t.owner.id = :ownerId")
     List<Todo> findByOwnerIdWithRelations(@Param("ownerId") Long ownerId);
 
-    @Query("SELECT t FROM Todo t LEFT JOIN FETCH t.category JOIN FETCH t.owner WHERE t.id = :id")
+    @Query("SELECT DISTINCT t FROM Todo t JOIN FETCH t.owner LEFT JOIN FETCH t.category WHERE t.id = :id")
     Optional<Todo> findByIdWithRelations(@Param("id") Long id);
 
-    /** 그룹 멤버가 작성한 투두 전부 (투두 엔티티에 그룹을 저장하지 않음) */
     @Query("""
-            SELECT t FROM Todo t LEFT JOIN FETCH t.category
-            JOIN FETCH t.owner o
+            SELECT DISTINCT t FROM Todo t JOIN FETCH t.owner o LEFT JOIN FETCH t.category
             WHERE EXISTS (
                 SELECT 1 FROM MemberGroup mg
                 WHERE mg.group.id = :groupId AND mg.member.id = o.id
