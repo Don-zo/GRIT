@@ -1,6 +1,6 @@
 package grit.domain.todo.dto;
 
-import grit.domain.todo.Todo;
+import grit.domain.todo.entity.Todo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,8 +33,11 @@ public class TodoResponseDTO {
     @Schema(description = "완료 여부", example = "false")
     private Boolean isDone;
 
-    @Schema(description = "과목 카테고리", example = "SCHOOL")
-    private Todo.SubjectCategory subjectCategory;
+    @Schema(description = "카테고리 ID (선택사항)", example = "1")
+    private Long categoryId;
+
+    @Schema(description = "카테고리 이름", example = "학교 과제")
+    private String categoryName;
 
     @Schema(description = "마감일", example = "2025-01-25")
     private LocalDate dueDate;
@@ -53,7 +56,8 @@ public class TodoResponseDTO {
                 todo.getOwner().getNickname(),
                 todo.getContent(),
                 todo.isDone(),
-                todo.getSubjectCategory(),
+                todo.getCategory() != null ? todo.getCategory().getId() : null,
+                todo.getCategory() != null ? todo.getCategory().getName() : null,
                 todo.getDueDate(),
                 todo.getCreatedAt(),
                 todo.getUpdatedAt()

@@ -1,4 +1,4 @@
-package grit.domain.todo;
+package grit.domain.todo.entity;
 
 import grit.domain.group.entity.Group;
 import grit.domain.member.entity.Member;
@@ -36,9 +36,9 @@ public class Todo {
         this.isDone = isDone;
     }
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "subject_category", nullable = false, length = 20)
-    private SubjectCategory subjectCategory;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private TodoCategory category;
 
     @Column(name = "due_date")
     private LocalDate dueDate;
@@ -60,22 +60,4 @@ public class Todo {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-    public enum SubjectCategory {
-        SCHOOL("학교 과제"),
-        PROJECT("프로젝트"),
-        CERT("자격증"),
-        ETC("기타");
-
-        private final String label;
-
-        SubjectCategory(String label) {
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-    }
 }
-

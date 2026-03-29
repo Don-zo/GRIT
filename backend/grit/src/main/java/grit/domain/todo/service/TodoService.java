@@ -1,4 +1,4 @@
-package grit.domain.todo;
+package grit.domain.todo.service;
 
 import grit.domain.group.entity.Group;
 import grit.domain.group.repository.MemberGroupRepository;
@@ -8,6 +8,10 @@ import grit.domain.member.repository.MemberRepository;
 import grit.domain.todo.dto.CreateTodoRequestDTO;
 import grit.domain.todo.dto.DailyAchievementDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
+import grit.domain.todo.entity.Todo;
+import grit.domain.todo.entity.TodoCategory;
+import grit.domain.todo.repository.TodoCategoryRepository;
+import grit.domain.todo.repository.TodoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,11 +27,15 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class TodoService {
     private final TodoRepository todoRepository;
+    private final TodoCategoryRepository todoCategoryRepository;
     private final MemberGroupRepository memberGroupRepository;
     private final MemberRepository memberRepository;
     private final GroupRepository groupRepository;
 
     public List<Todo> findAll(Long groupId, Long userId, Long ownerId) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "그룹을 찾을 수 없습니다.");
+        }
         if (!memberGroupRepository.existsByMemberIdAndGroupId(userId, groupId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
         }
@@ -51,17 +59,25 @@ public class TodoService {
         Todo todo = new Todo();
         todo.setOwner(owner);
         todo.setContent(request.getContent());
-        todo.setSubjectCategory(request.getSubjectCategory());
         todo.setDueDate(request.getDueDate());
         todo.setIsDone(false);
 
+        if (request.getCategoryId() != null) {
+            TodoCategory category = todoCategoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다."));
+            if (!category.getOwner().getId().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 카테고리만 사용할 수 있습니다.");
+            }
+            todo.setCategory(category);
+        }
+
         if (request.getGroupId() != null) {
             Long groupId = request.getGroupId();
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "그룹을 찾을 수 없습니다."));
             if (!memberGroupRepository.existsByMemberIdAndGroupId(userId, groupId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
             }
-            Group group = groupRepository.findById(groupId)
-                    .orElseThrow(() -> new NoSuchElementException("그룹을 찾을 수 없습니다."));
             todo.setGroup(group);
         }
 
@@ -71,7 +87,7 @@ public class TodoService {
     @Transactional
     public Todo update(Long todoId, Long userId, UpdateTodoRequestDTO request) {
         Todo todo = todoRepository.findByIdWithRelations(todoId)
-                .orElseThrow(() -> new NoSuchElementException("투두를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
 
         if (!todo.getOwner().getId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 수정할 수 있습니다.");
@@ -83,8 +99,15 @@ public class TodoService {
         if (request.getIsDone() != null) {
             todo.setIsDone(request.getIsDone());
         }
-        if (request.getSubjectCategory() != null) {
-            todo.setSubjectCategory(request.getSubjectCategory());
+        if (Boolean.TRUE.equals(request.getClearCategory())) {
+            todo.setCategory(null);
+        } else if (request.getCategoryId() != null) {
+            TodoCategory category = todoCategoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다."));
+            if (!category.getOwner().getId().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 카테고리만 사용할 수 있습니다.");
+            }
+            todo.setCategory(category);
         }
         if (request.getDueDate() != null) {
             todo.setDueDate(request.getDueDate());
@@ -96,7 +119,7 @@ public class TodoService {
     @Transactional
     public void delete(Long todoId, Long userId) {
         Todo todo = todoRepository.findByIdWithRelations(todoId)
-                .orElseThrow(() -> new NoSuchElementException("투두를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
 
         if (!todo.getOwner().getId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 삭제할 수 있습니다.");
@@ -113,7 +136,6 @@ public class TodoService {
         List<Todo> todos = todoRepository.findByOwnerIdAndDueDateBetween(userId, from, to);
 
         Map<LocalDate, List<Todo>> todosByDate = todos.stream()
-                .filter(todo -> todo.getDueDate() != null)
                 .collect(Collectors.groupingBy(Todo::getDueDate));
 
         List<DailyAchievementDTO> result = new ArrayList<>();
@@ -126,14 +148,9 @@ public class TodoService {
                     .filter(Todo::isDone)
                     .count();
 
-            if (total == 0) {
-                result.add(new DailyAchievementDTO(date, null, null, null));
-            } else {
-                result.add(new DailyAchievementDTO(date, total, done));
-            }
+            result.add(new DailyAchievementDTO(date, total, done));
         }
 
         return result;
     }
 }
-
