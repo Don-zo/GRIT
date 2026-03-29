@@ -60,27 +60,12 @@ public class TodoService {
         }
 
         List<Todo> todos = new ArrayList<>(todoRepository.findByGroupMembersTodosWithRelations(group.getId()));
-        Comparator<Todo> byFocusFirst = (a, b) -> {
-            boolean af = a.getOwner().getId().equals(focusUserId);
-            boolean bf = b.getOwner().getId().equals(focusUserId);
-            if (af != bf) {
-                return af ? -1 : 1;
-            }
-            if (a.isDone() != b.isDone()) {
-                return a.isDone() ? 1 : -1;
-            }
-            if (a.getDueDate() != null && b.getDueDate() != null) {
-                return a.getDueDate().compareTo(b.getDueDate());
-            }
-            if (a.getDueDate() != null) {
-                return -1;
-            }
-            if (b.getDueDate() != null) {
-                return 1;
-            }
-            return Long.compare(a.getId(), b.getId());
-        };
-        todos.sort(byFocusFirst);
+        Comparator<Todo> comparator = Comparator
+                .comparing((Todo t) -> !t.getOwner().getId().equals(focusUserId))
+                .thenComparing((a, b) -> Boolean.compare(a.isDone(), b.isDone()))
+                .thenComparing(Todo::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(Todo::getId);
+        todos.sort(comparator);
         return todos;
     }
 
@@ -158,7 +143,6 @@ public class TodoService {
         List<Todo> todos = todoRepository.findByOwnerIdAndDueDateBetween(userId, from, to);
 
         Map<LocalDate, List<Todo>> todosByDate = todos.stream()
-                .filter(t -> t.getDueDate() != null)
                 .collect(Collectors.groupingBy(Todo::getDueDate));
 
         List<DailyAchievementDTO> result = new ArrayList<>();

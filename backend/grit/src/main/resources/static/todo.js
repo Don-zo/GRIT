@@ -129,8 +129,7 @@ async function createTodo(content, categoryId, dueDate) {
 }
 
 async function updateTodo(todoId, patch) {
-    const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}?userId=${userId}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -144,8 +143,7 @@ async function updateTodo(todoId, patch) {
 }
 
 async function deleteTodo(todoId) {
-    const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}?userId=${userId}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}`, {
         method: 'DELETE'
     });
     if (response.status === 403) throw new Error('본인의 투두만 삭제할 수 있습니다.');

@@ -82,7 +82,7 @@ public class TodoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(TodoResponseDTO.from(todo));
     }
 
-    @Operation(summary = "투두 수정", description = "본인 투두만 수정 가능합니다.")
+    @Operation(summary = "투두 수정", description = "로그인한 사용자 본인의 투두만 수정 가능합니다. 사용자 ID는 JWT에서만 사용합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "투두 수정 성공"),
             @ApiResponse(responseCode = "403", description = "본인의 투두만 수정할 수 있음", content = @Content),
@@ -92,14 +92,12 @@ public class TodoController {
     public ResponseEntity<TodoResponseDTO> update(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
-            @Parameter(description = "사용자 ID (PK), 로그인 사용자와 동일", example = "1") @RequestParam Long userId,
             @RequestBody UpdateTodoRequestDTO request) {
-        MemberSelfAssert.assertSameMember(principal, userId);
-        Todo todo = todoService.update(todoId, userId, request);
+        Todo todo = todoService.update(todoId, principal.id(), request);
         return ResponseEntity.ok(TodoResponseDTO.from(todo));
     }
 
-    @Operation(summary = "투두 삭제", description = "본인 투두만 삭제 가능합니다.")
+    @Operation(summary = "투두 삭제", description = "로그인한 사용자 본인의 투두만 삭제 가능합니다. 사용자 ID는 JWT에서만 사용합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "투두 삭제 성공 (반환값 없음)"),
             @ApiResponse(responseCode = "403", description = "본인의 투두만 삭제할 수 있음", content = @Content),
@@ -108,10 +106,8 @@ public class TodoController {
     @DeleteMapping("/api/todos/{todoId}")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
-            @Parameter(description = "사용자 ID (PK), 로그인 사용자와 동일", example = "1") @RequestParam Long userId) {
-        MemberSelfAssert.assertSameMember(principal, userId);
-        todoService.delete(todoId, userId);
+            @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId) {
+        todoService.delete(todoId, principal.id());
         return ResponseEntity.noContent().build();
     }
 
