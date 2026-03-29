@@ -42,13 +42,23 @@ public class JwtProvider {
     public Authentication getAuthentication(String accessToken) {
         Claims claims = getClaims(accessToken);
 
-        Long memberId = Long.parseLong(claims.getSubject());
+        String subject = claims.getSubject();
+        if (subject == null || subject.isBlank()) {
+            throw new BadCredentialsException("Invalid access token subject");
+        }
+        long memberId;
+        try {
+            memberId = Long.parseLong(subject);
+        } catch (NumberFormatException ex) {
+            throw new BadCredentialsException("Invalid access token subject");
+        }
+
         String email = claims.get("email", String.class);
         String nickname = claims.get("nickname", String.class);
         String role = claims.get("role", String.class);
 
         Collection<? extends GrantedAuthority> authorities =
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + role));
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + (role != null ? role : "USER")));
 
         MemberPrincipal principal = new MemberPrincipal(memberId, email, nickname);
         return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
