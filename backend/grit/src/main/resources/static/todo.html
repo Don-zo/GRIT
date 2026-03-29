@@ -77,6 +77,16 @@
             <div class="todo-body-layout">
                 <!-- 왼쪽: 필터 + 목록 -->
                 <div class="todo-main-col">
+                    <div class="glass-card todo-category-manager" style="margin-bottom:1rem;padding:1rem 1.25rem;">
+                        <h3 style="margin:0 0 0.75rem;font-size:1rem;">내 카테고리</h3>
+                        <p style="margin:0 0 0.75rem;font-size:13px;color:var(--text-muted);">이름 변경은 불가합니다. 삭제 시 해당 카테고리만 투두에서 해제됩니다.</p>
+                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;margin-bottom:0.75rem;">
+                            <input type="text" id="new-category-name" class="form-input form-input-sm" placeholder="새 카테고리 이름" maxlength="50" style="flex:1;min-width:140px;" />
+                            <button type="button" class="btn btn-outline btn-sm" id="add-category-btn">등록</button>
+                        </div>
+                        <ul id="category-manage-list" class="todo-category-chips" style="list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0.5rem;"></ul>
+                        <div id="category-manage-error" class="error-message" style="margin-top:0.5rem;"></div>
+                    </div>
                     <!-- 필터 탭 -->
                     <div class="todo-filter-row">
                         <div class="filter-tabs">
@@ -87,10 +97,6 @@
                         <div class="filter-category">
                             <select class="form-input form-input-sm" id="category-filter">
                                 <option value="">모든 카테고리</option>
-                                <option value="SCHOOL">학교 과제</option>
-                                <option value="PROJECT">프로젝트</option>
-                                <option value="CERT">자격증</option>
-                                <option value="ETC">기타</option>
                             </select>
                         </div>
                     </div>
@@ -133,21 +139,17 @@
             <input type="hidden" id="edit-todo-id" />
             <div class="form-group">
                 <label for="todo-content">내용 *</label>
-                <input type="text" id="todo-content" class="form-input" placeholder="할일을 입력하세요" maxlength="200" />
+                <input type="text" id="todo-content" class="form-input" placeholder="할일을 입력하세요" maxlength="500" />
             </div>
             <div class="form-group">
-                <label for="todo-category">카테고리</label>
+                <label for="todo-category">카테고리 (선택)</label>
                 <select id="todo-category" class="form-input">
                     <option value="">선택 안함</option>
-                    <option value="SCHOOL">학교 과제</option>
-                    <option value="PROJECT">프로젝트</option>
-                    <option value="CERT">자격증</option>
-                    <option value="ETC">기타</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="todo-duedate">마감일</label>
-                <input type="date" id="todo-duedate" class="form-input" />
+                <label for="todo-duedate">마감일 *</label>
+                <input type="date" id="todo-duedate" class="form-input" required />
             </div>
             <div id="todo-error" class="error-message"></div>
             <div class="modal-actions">
