@@ -9,6 +9,8 @@ export const ENDPOINTS = {
   },
   MY: {
     INFO: "/api/members/me",
+    PROFILE: "/api/members/me/profile",
+    NICKNAME_CHECK: "/api/members/nickname-availability",
     IMAGE_UPLOAD: `/api/members/me/profile-image/upload-url`,
   },
   GROUP: {

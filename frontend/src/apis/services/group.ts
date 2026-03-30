@@ -1,4 +1,3 @@
-import axios from "axios";
 import apiClient from "@/apis/client/apiClient";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
 import type {
@@ -44,25 +43,10 @@ export const groupApi = {
     return response.data;
   },
 
-  getPresignedUploadInfo: async (): Promise<S3uploadResponse> => {
+  getPresignedInfo: async (): Promise<S3uploadResponse> => {
     const response = await apiClient.get<S3uploadResponse>(
       ENDPOINTS.GROUP.IMAGE_UPLOAD,
     );
     return response.data;
-  },
-
-  putImageToS3: async (uploadUrl: string, file: File): Promise<void> => {
-    const contentType = file.type;
-    await axios.put(uploadUrl, file, {
-      headers: {
-        "Content-Type": contentType,
-      },
-    });
-  },
-
-  uploadImage: async (file: File): Promise<string> => {
-    const { uploadUrl, fileName } = await groupApi.getPresignedUploadInfo();
-    await groupApi.putImageToS3(uploadUrl, file);
-    return fileName;
   },
 } as const;

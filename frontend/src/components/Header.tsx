@@ -1,10 +1,11 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { PATHS } from "@/routes/path";
-import type { Member } from "@/apis/types";
 import { logout, signout } from "@/apis/services/auth";
-import { getUserInfo } from "@/apis/services/my";
+import { userApi } from "@/apis/services/user";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type HeaderProps = {
   variant: "light" | "dark";
@@ -15,24 +16,11 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(alwaysVisible);
   const [isDropDownOpen, SetIsDropDownOpen] = useState(false);
   const navigate = useNavigate();
-  const [user, setUser] = useState<Member | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-    const fetchUser = async () => {
-      try {
-        const data = await getUserInfo();
-        if (mounted) setUser(data);
-      } catch (error) {
-        if (mounted) setUser(null);
-        console.error("유저 정보 조회 실패", error);
-      }
-    };
-    fetchUser();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const { data: user } = useQuery({
+    queryKey: QUERY_KEYS.member.me,
+    queryFn: userApi.get,
+  });
 
   useEffect(() => {
     if (alwaysVisible) return;
@@ -102,15 +90,8 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
           {user ? (
             <>
               <span className={`text-sm ${currentStyle.userInfo}`}>
-                {user.nickname || user.email}님
+                {user.nickname || user.email} 님
               </span>
-              {/* <button
-                onClick={handleLogout}
-                className="px-6 py-2 rounded-lg bg-green-semidark/80 text-white text-sm shadow-md hover:bg-green-semidark transition cursor-pointer"
-              >
-                로그아웃
-              </button> */}
-              {/* 드롭다운 컴포넌트 */}
               <div className="relative">
                 <button
                   type="button"
@@ -130,14 +111,14 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
                   <div className="absolute bg-[#2B2F36] right-0 mt-6 w-28  rounded-lg shadow-lg border-none p-1 z-50">
                     <button
                       type="button"
-                      className="text-white w-full px-4 py-2 text-center text-sm text-gray-700 hover:bg-gray-900 hover:rounded-md transition"
+                      className="text-white w-full px-4 py-2 text-center text-sm text-gray-700 hover:bg-gray-900 hover:rounded-md transition cursor-pointer"
                       onClick={handleLogout}
                     >
                       로그아웃
                     </button>
                     <button
                       type="button"
-                      className="w-full px-4 py-2 text-center text-sm text-red-500 hover:bg-gray-900"
+                      className="w-full px-4 py-2 text-center text-sm text-red-500 hover:bg-gray-900 hover:rounded-md transition transition cursor-pointer"
                       onClick={handleSignout}
                     >
                       탈퇴하기

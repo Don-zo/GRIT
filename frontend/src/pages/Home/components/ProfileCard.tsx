@@ -1,51 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Settings, MessageCircle } from "lucide-react";
-import Avatar from "@/pages/Room/components/Cam/Avatar";
+import Avatar from "@/components/Avatar";
 import SettingsModal from "@/pages/Home/components/Modals/ProfileSettingsModal";
+import { userApi } from "@/apis/services/user";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
+import { formatDisplayDate, getDaysUntilDDay } from "@/utils/date";
 
 interface ProfileCardProps {
-  userName?: string;
-  motivation?: string;
-  targetDate?: string;
-  daysLeft?: number;
-  examName?: string;
-  currentTime?: string;
-  targetTime?: string;
+  initialSettingsOpen: boolean;
+  oauthFirstTimeUser: boolean;
 }
 
 const ProfileCard = ({
-  userName = "김윤영",
-  motivation = "앞으로 열심히 살자 아자스!",
-  targetDate = "2026.01.23",
-  daysLeft = 11,
-  examName = "sqld 시험",
-  currentTime = "2:37:23",
-  targetTime = "4:00:00",
+  initialSettingsOpen = false,
+  oauthFirstTimeUser = false,
 }: ProfileCardProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isInitialProfileSave, setIsInitialProfileSave] = useState(false);
 
-  const timeToSeconds = (timeStr: string): number => {
-    const parts = timeStr.split(":").map(Number);
-    if (parts.length === 3) {
-      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  const {
+    data: member,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: QUERY_KEYS.member.me,
+    queryFn: userApi.get,
+  });
+
+  useEffect(() => {
+    if (initialSettingsOpen && oauthFirstTimeUser) {
+      setIsInitialProfileSave(true);
+      setIsSettingsOpen(true);
     }
-    return 0;
-  };
+  }, [initialSettingsOpen, oauthFirstTimeUser]);
 
-  const currentSeconds = timeToSeconds(currentTime);
-  const targetSeconds = timeToSeconds(targetTime);
-  const progress =
-    targetSeconds > 0
-      ? Math.min((currentSeconds / targetSeconds) * 100, 100)
-      : 0;
+  const daysLeft = member ? getDaysUntilDDay(member.dDayDate) : null;
+  const targetDateLabel = member ? formatDisplayDate(member.dDayDate) : "—";
+  const examName = member?.dDayTitle?.trim() || "미설정";
+  const displayName = member?.nickname?.trim() || member?.email || "—";
+  const motivation = member?.introduction?.trim() || "소개를 입력해주세요";
+  const goalTimeLabel = member?.weeklyStudyTimeGoal?.trim() || "미설정";
+
   return (
     <div className="w-1/2 h-70 bg-green-dark rounded-2xl p-6">
-      {/* 설정 아이콘 - 상단 우측 */}
       <div className="flex justify-end mb-4">
         <button
           type="button"
-          onClick={() => setIsSettingsOpen(true)}
+          onClick={() => {
+            setIsInitialProfileSave(false);
+            setIsSettingsOpen(true);
+          }}
+          disabled={isLoading}
           aria-label="설정"
+          className="disabled:opacity-50"
         >
           <Settings
             className="w-4 h-4 text-white cursor-pointer"
@@ -54,63 +63,76 @@ const ProfileCard = ({
         </button>
       </div>
 
-      {/* 상단 섹션 */}
+      {isError && (
+        <p className="mb-3 text-sm text-red-300">
+          프로필을 불러오지 못했습니다.{" "}
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="underline cursor-pointer"
+          >
+            다시 시도
+          </button>
+        </p>
+      )}
+
       <div className="flex items-stretch justify-between mb-14">
-        {/* 왼쪽: 프로필 정보 */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <Avatar size={80} />
-            <div className="flex flex-col gap-1">
-              <div className="text-white flex items-center gap-1">
-                <span className="text-h4 font-bold">{userName}</span>
-                <span className="text-bodyMd">님, 화이팅 ^^</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-green-light" />
-                <span className="text-green-light text-caption">
-                  {motivation}
-                </span>
-              </div>
+        <div className="flex items-start gap-3">
+          <Avatar size={80} src={member?.imageUrl} />
+          <div className="flex min-w-0 flex-col gap-3">
+            <div className="text-white flex flex-wrap items-center gap-1">
+              <span className="text-h4 font-bold">
+                {isLoading ? "…" : displayName}
+              </span>
+              <span className="text-bodyMd">님, 화이팅 ^^</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-green-light shrink-0" />
+              <span className="text-green-light text-caption line-clamp-2">
+                {isLoading ? "불러오는 중…" : motivation}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="w-[1.5px] bg-green-darkest self-stretch"></div>
+        <div className="w-[1.5px] bg-green-darkest self-stretch mx-4 shrink-0" />
 
-        {/* 오른쪽: 목표 날짜 정보 */}
-        <div className="flex flex-col items-end">
+        <div className="flex flex-col items-end text-right shrink-0">
           <div className="flex items-center text-white text-bodySm gap-1">
-            <span className="font-medium">{targetDate}</span>
+            <span className="font-medium">{targetDateLabel}</span>
             <span className="font-normal">까지</span>
           </div>
-          <span className="text-white text-h1 font-bold">D-{daysLeft}</span>
+          <span className="text-white text-h1 font-bold">
+            {daysLeft === null
+              ? "D-?"
+              : daysLeft >= 0
+                ? `D-${daysLeft}`
+                : `D+${Math.abs(daysLeft)}`}
+          </span>
           <span className="text-white text-bodySm">{examName}</span>
         </div>
       </div>
 
-      {/* 하단: 이번 주 목표 공부시간 */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <span className="text-white text-bodyMd">이번 주 목표 공부시간</span>
-          <div className="flex items-center gap-1">
-            <span className="text-white text-bodyMd">{currentTime}</span>
-            <span className="text-white text-bodySm font-light">
-              / {targetTime}
-            </span>
-          </div>
+          <span className="text-white text-bodyMd">
+            {isLoading ? "…" : `목표 ${goalTimeLabel}`}
+          </span>
         </div>
         <div className="w-full h-4 bg-gray-dark rounded-full overflow-hidden">
           <div
             className="h-full bg-green-normal rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
+            style={{ width: "0%" }}
+            title="실시간 공부 시간 연동 전"
           />
         </div>
       </div>
 
-      {/* 설정 모달 */}
       <SettingsModal
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        isInitialProfile={isInitialProfileSave}
       />
     </div>
   );
