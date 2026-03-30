@@ -1,3 +1,8 @@
+export interface TodoCategoryApiItem {
+  id: number;
+  name: string;
+}
+
 export interface TodoApiItem {
   id: number;
   ownerId: number;

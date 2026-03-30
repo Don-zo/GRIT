@@ -23,5 +23,7 @@ export const ENDPOINTS = {
   },
   TODO: {
     BY_USER: (userId: number) => `/api/users/${userId}/todos`,
+    CATEGORIES_BY_USER: (userId: number) =>
+      `/api/users/${userId}/todo-categories`,
   },
 } as const;

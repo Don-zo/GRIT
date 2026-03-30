@@ -1,26 +1,13 @@
-import { useEffect, useMemo, useState, type DragEvent } from "react";
+import { useMemo, useState, type DragEvent } from "react";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import CustomCheckbox from "@/components/Checkbox";
-import { getStoredMember } from "@/apis/services/auth";
-import { fetchUserTodos } from "@/apis/services/todo";
-import type { TodoApiItem } from "@/apis/types/todo";
 import type { Category, TodoItem } from "@/pages/Todo/types";
-
-function mapTodoApiToItem(row: TodoApiItem): TodoItem {
-  return {
-    id: String(row.id),
-    title: row.content,
-    completed: row.isDone,
-    dueDate: row.dueDate,
-    categoryId: row.categoryId != null ? String(row.categoryId) : "",
-    categoryName: row.categoryName,
-  };
-}
 
 type TodoListProps = {
   todos: TodoItem[];
   categories: Category[];
-  onTodosLoaded: (todos: TodoItem[]) => void;
+  isLoading: boolean;
+  isError: boolean;
   onEditTodo: (todo: TodoItem) => void;
   onToggleComplete: (id: string) => void;
   onMoveTodoToDate: (id: string, dueDate: string) => void;
@@ -249,31 +236,14 @@ function formatMonthHeading(weekStart: Date): string {
 export default function TodoList({
   todos,
   categories,
-  onTodosLoaded,
+  isLoading,
+  isError,
   onEditTodo,
   onToggleComplete,
   onMoveTodoToDate,
 }: TodoListProps) {
   const [anchor, setAnchor] = useState(() => new Date());
   const [dragOverDateKey, setDragOverDateKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const member = getStoredMember();
-      if (!member?.id) return;
-      try {
-        const rows = await fetchUserTodos(member.id);
-        if (cancelled) return;
-        onTodosLoaded(rows.map(mapTodoApiToItem));
-      } catch (err) {
-        console.error("투두 목록 조회 실패:", err);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [onTodosLoaded]);
 
   const clearDnDHighlight = () => setDragOverDateKey(null);
 
@@ -333,6 +303,15 @@ export default function TodoList({
         </div>
         <div className="mt-3 border-b border-white/10" />
       </div>
+
+      {isError ? (
+        <p className="shrink-0 text-sm text-red-400/90">
+          투두 목록을 불러오지 못했습니다.
+        </p>
+      ) : null}
+      {isLoading ? (
+        <p className="shrink-0 text-sm text-white/45">투두 불러오는 중…</p>
+      ) : null}
 
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto pt-4">
         {/* 7열 위클리 */}
