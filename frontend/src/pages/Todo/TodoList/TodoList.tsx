@@ -1,11 +1,26 @@
-import { useMemo, useState, type DragEvent } from "react";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import CustomCheckbox from "@/components/Checkbox";
+import { getStoredMember } from "@/apis/services/auth";
+import { fetchUserTodos } from "@/apis/services/todo";
+import type { TodoApiItem } from "@/apis/types/todo";
 import type { Category, TodoItem } from "@/pages/Todo/types";
+
+function mapTodoApiToItem(row: TodoApiItem): TodoItem {
+  return {
+    id: String(row.id),
+    title: row.content,
+    completed: row.isDone,
+    dueDate: row.dueDate,
+    categoryId: row.categoryId != null ? String(row.categoryId) : "",
+    categoryName: row.categoryName,
+  };
+}
 
 type TodoListProps = {
   todos: TodoItem[];
   categories: Category[];
+  onTodosLoaded: (todos: TodoItem[]) => void;
   onEditTodo: (todo: TodoItem) => void;
   onToggleComplete: (id: string) => void;
   onMoveTodoToDate: (id: string, dueDate: string) => void;
@@ -234,12 +249,31 @@ function formatMonthHeading(weekStart: Date): string {
 export default function TodoList({
   todos,
   categories,
+  onTodosLoaded,
   onEditTodo,
   onToggleComplete,
   onMoveTodoToDate,
 }: TodoListProps) {
   const [anchor, setAnchor] = useState(() => new Date());
   const [dragOverDateKey, setDragOverDateKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const member = getStoredMember();
+      if (!member?.id) return;
+      try {
+        const rows = await fetchUserTodos(member.id);
+        if (cancelled) return;
+        onTodosLoaded(rows.map(mapTodoApiToItem));
+      } catch (err) {
+        console.error("투두 목록 조회 실패:", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [onTodosLoaded]);
 
   const clearDnDHighlight = () => setDragOverDateKey(null);
 
@@ -256,9 +290,10 @@ export default function TodoList({
     return t;
   }, []);
 
-  const categoryLabel = (id: string) => {
-    if (!id?.trim()) return "";
-    return categories.find((c) => c.id === id)?.label ?? "기타";
+  const categoryLabelForTodo = (todo: TodoItem) => {
+    if (todo.categoryName) return todo.categoryName;
+    if (!todo.categoryId?.trim()) return "";
+    return categories.find((c) => c.id === todo.categoryId)?.label ?? "기타";
   };
 
   const prevWeek = () => setAnchor((d) => addDays(d, -7));
@@ -395,7 +430,7 @@ export default function TodoList({
                       <TodoRow
                         key={t.id}
                         todo={t}
-                        catLabel={categoryLabel(t.categoryId)}
+                        catLabel={categoryLabelForTodo(t)}
                         variant="compact"
                         onEditTodo={onEditTodo}
                         onToggleComplete={onToggleComplete}

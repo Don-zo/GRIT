@@ -5,7 +5,7 @@ import type {
 } from "@/apis/types/auth";
 import { OAUTH_CONFIG } from "@/apis/constants/oauth";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
-import type { RefreshTokenResponse } from "@/apis/types/auth";
+import type { Member, RefreshTokenResponse } from "@/apis/types/auth";
 
 export const loginGoogle = async (
   code: string,
@@ -64,3 +64,15 @@ export const signout = async (): Promise<void> => {
   await apiClient.delete(ENDPOINTS.MY.INFO);
   localStorage.removeItem("auth-storage");
 };
+
+/** 로컬에 저장된 로그인 회원 정보 (없으면 null) */
+export function getStoredMember(): Member | null {
+  try {
+    const raw = localStorage.getItem("auth-storage");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { state?: { member?: Member } };
+    return parsed.state?.member ?? null;
+  } catch {
+    return null;
+  }
+}

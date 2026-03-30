@@ -21,4 +21,7 @@ export const ENDPOINTS = {
   LIVEKIT: {
     TOKEN: "/livekit/token",
   },
+  TODO: {
+    BY_USER: (userId: number) => `/api/users/${userId}/todos`,
+  },
 } as const;

@@ -58,6 +58,7 @@ const TodoPage = () => {
         <TodoList
           todos={todos}
           categories={categories}
+          onTodosLoaded={setTodos}
           onEditTodo={(todo) => setEditingId(todo.id)}
           onToggleComplete={(id) =>
             setTodos((prev) =>
