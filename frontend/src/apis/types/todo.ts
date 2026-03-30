@@ -3,9 +3,22 @@ export interface TodoCategoryApiItem {
   name: string;
 }
 
-/** POST /api/users/{userId}/todo-categories */
 export interface CreateTodoCategoryBody {
   name: string;
+}
+
+export interface CreateTodoBody {
+  content: string;
+  dueDate: string;
+  categoryId?: number;
+}
+
+export interface UpdateTodoBody {
+  content?: string;
+  isDone?: boolean;
+  dueDate?: string;
+  removeCategory?: boolean;
+  categoryId?: number;
 }
 
 export interface TodoApiItem {

@@ -12,9 +12,17 @@ import { Header } from "@/components/Header";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { getStoredMember } from "@/apis/services/auth";
 import { todoApi } from "@/apis/services/todo";
-import type { TodoApiItem, TodoCategoryApiItem } from "@/apis/types/todo";
+import type {
+  CreateTodoBody,
+  TodoApiItem,
+  TodoCategoryApiItem,
+  UpdateTodoBody,
+} from "@/apis/types/todo";
 import EditCard from "@/pages/Todo/Edit/EditCard";
 import TodoList from "@/pages/Todo/TodoList/TodoList";
+import TodoToast, {
+  type TodoToastPayload,
+} from "@/pages/Todo/TodoToast";
 import {
   DEFAULT_CATEGORIES,
   type Category,
@@ -36,12 +44,107 @@ function mapTodoApiToItem(row: TodoApiItem): TodoItem {
   };
 }
 
+function buildCreateTodoBody(item: {
+  title: string;
+  dueDate: string;
+  categoryId: string;
+}): CreateTodoBody {
+  const body: CreateTodoBody = {
+    content: item.title.trim(),
+    dueDate: item.dueDate.trim(),
+  };
+  const raw = item.categoryId?.trim();
+  if (raw && !raw.startsWith("opt-")) {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) {
+      body.categoryId = n;
+    }
+  }
+  return body;
+}
+
+function buildUpdateTodoBody(
+  prev: TodoItem,
+  item: { title: string; dueDate: string; categoryId: string },
+): UpdateTodoBody {
+  const body: UpdateTodoBody = {
+    content: item.title.trim(),
+    dueDate: item.dueDate.trim(),
+    isDone: prev.completed,
+  };
+  const raw = item.categoryId?.trim();
+  if (!raw) {
+    body.removeCategory = true;
+    return body;
+  }
+  if (raw.startsWith("opt-")) {
+    body.removeCategory = true;
+    return body;
+  }
+  const n = Number(raw);
+  if (Number.isFinite(n) && n > 0) {
+    body.removeCategory = false;
+    body.categoryId = n;
+  } else {
+    body.removeCategory = true;
+  }
+  return body;
+}
+
+function buildOptimisticTodoItem(
+  item: { title: string; dueDate: string; categoryId: string },
+  tempId: string,
+  categories: Category[],
+): TodoItem {
+  const raw = item.categoryId?.trim() ?? "";
+  let categoryName: string | null | undefined;
+  if (raw && !raw.startsWith("opt-")) {
+    const cat = categories.find((c) => c.id === raw);
+    categoryName = cat?.label ?? undefined;
+  }
+  return {
+    id: tempId,
+    title: item.title.trim(),
+    dueDate: item.dueDate.trim(),
+    categoryId: raw,
+    categoryName,
+    completed: false,
+  };
+}
+
+function applyTodoUpdateOptimistic(
+  prev: TodoItem,
+  body: UpdateTodoBody,
+  categories: Category[],
+): TodoItem {
+  let categoryId = prev.categoryId;
+  let categoryName = prev.categoryName ?? null;
+
+  if (body.removeCategory) {
+    categoryId = "";
+    categoryName = null;
+  } else if (body.categoryId !== undefined) {
+    categoryId = String(body.categoryId);
+    const cat = categories.find((c) => c.id === categoryId);
+    categoryName = cat?.label ?? null;
+  }
+
+  return {
+    ...prev,
+    title: body.content !== undefined ? body.content : prev.title,
+    completed: body.isDone !== undefined ? body.isDone : prev.completed,
+    dueDate: body.dueDate !== undefined ? body.dueDate : prev.dueDate,
+    categoryId,
+    categoryName,
+  };
+}
+
 const TodoPage = () => {
   const queryClient = useQueryClient();
   const userId = getStoredMember()?.id ?? null;
 
   const {
-    data: todos = [],
+    data: serverTodos = [],
     isLoading: isTodosLoading,
     isError: isTodosError,
   } = useQuery({
@@ -55,6 +158,9 @@ const TodoPage = () => {
     },
     enabled: userId != null,
   });
+
+  const [guestTodos, setGuestTodos] = useState<TodoItem[]>([]);
+  const todos = userId != null ? serverTodos : guestTodos;
 
   const {
     data: serverCategories = [],
@@ -92,13 +198,19 @@ const TodoPage = () => {
     );
   };
 
-  const setTodosCache = (updater: (prev: TodoItem[]) => TodoItem[]) => {
-    if (userId == null) return;
-    queryClient.setQueryData<TodoItem[]>(
-      QUERY_KEYS.todos.byUser(userId),
-      (prev) => updater(prev ?? []),
-    );
-  };
+  const patchTodos = useCallback(
+    (updater: (prev: TodoItem[]) => TodoItem[]) => {
+      if (userId == null) {
+        setGuestTodos((prev) => updater(prev));
+        return;
+      }
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) => updater(prev ?? []),
+      );
+    },
+    [userId, queryClient],
+  );
 
   const [categoryRemap, setCategoryRemap] = useState<{
     tempId: string;
@@ -115,6 +227,21 @@ const TodoPage = () => {
   const onCategoryCreateFailedConsumed = useCallback(() => {
     setCategoryCreateFailedTempId(null);
   }, []);
+
+  const [todoToast, setTodoToast] = useState<TodoToastPayload | null>(null);
+
+  const clearTodoToast = useCallback(() => setTodoToast(null), []);
+
+  const notifyTodo = useCallback(
+    (text: string, variant: "success" | "error" = "success") => {
+      setTodoToast((prev) => ({
+        key: (prev?.key ?? 0) + 1,
+        text,
+        variant,
+      }));
+    },
+    [],
+  );
 
   const createCategoryMutation = useMutation({
     mutationFn: ({
@@ -155,12 +282,12 @@ const TodoPage = () => {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 409) {
-          window.alert("같은 이름의 카테고리가 이미 있어요.");
+          notifyTodo("같은 이름의 카테고리가 이미 있어요.", "error");
         } else {
-          window.alert("카테고리를 추가하지 못했어요.");
+          notifyTodo("카테고리를 추가하지 못했어요.", "error");
         }
       } else {
-        window.alert("카테고리를 추가하지 못했어요.");
+        notifyTodo("카테고리를 추가하지 못했어요.", "error");
       }
     },
     onSuccess: (data, { tempId }) => {
@@ -184,6 +311,193 @@ const TodoPage = () => {
     createCategoryMutation.mutate({ name: trimmed, tempId });
     return { tempId };
   };
+
+  const createTodoMutation = useMutation({
+    mutationFn: (vars: {
+      item: {
+        title: string;
+        dueDate: string;
+        categoryId: string;
+      };
+      tempId: string;
+    }) => todoApi.createTodo(userId!, buildCreateTodoBody(vars.item)),
+    onMutate: async ({ item, tempId }) => {
+      if (userId == null) return {};
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.todos.byUser(userId),
+      });
+      const previous = queryClient.getQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+      );
+      const cats =
+        queryClient.getQueryData<Category[]>(
+          QUERY_KEYS.todoCategories.byUser(userId),
+        ) ?? [];
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) => [
+          ...(prev ?? []),
+          buildOptimisticTodoItem(item, tempId, cats),
+        ],
+      );
+      return { previous };
+    },
+    onSuccess: (data, { tempId }) => {
+      if (userId == null) return;
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) => {
+          const list = prev ?? [];
+          const mapped = mapTodoApiToItem(data);
+          if (!list.some((t) => t.id === tempId)) {
+            return [...list, mapped];
+          }
+          return list.map((t) => (t.id === tempId ? mapped : t));
+        },
+      );
+      notifyTodo("생성됐어요");
+    },
+    onError: (err, _v, context) => {
+      if (userId == null) return;
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          QUERY_KEYS.todos.byUser(userId),
+          context.previous,
+        );
+      }
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 400) {
+          notifyTodo("입력값을 확인해 주세요.", "error");
+        } else if (status === 403) {
+          notifyTodo("권한이 없어요.", "error");
+        } else if (status === 404) {
+          notifyTodo("사용자 또는 카테고리를 찾을 수 없어요.", "error");
+        } else {
+          notifyTodo("할 일을 추가하지 못했어요.", "error");
+        }
+      } else {
+        notifyTodo("할 일을 추가하지 못했어요.", "error");
+      }
+    },
+  });
+
+  const updateTodoMutation = useMutation({
+    mutationFn: ({
+      todoId,
+      body,
+    }: {
+      todoId: number;
+      todoIdStr: string;
+      body: UpdateTodoBody;
+    }) => todoApi.updateTodo(todoId, body),
+    onMutate: async ({ body, todoIdStr }) => {
+      if (userId == null) return {};
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.todos.byUser(userId),
+      });
+      const previous = queryClient.getQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+      );
+      const cats =
+        queryClient.getQueryData<Category[]>(
+          QUERY_KEYS.todoCategories.byUser(userId),
+        ) ?? [];
+      const prevTodo = previous?.find((t) => t.id === todoIdStr);
+      if (!prevTodo) return { previous };
+      const next = applyTodoUpdateOptimistic(prevTodo, body, cats);
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) =>
+          (prev ?? []).map((t) => (t.id === todoIdStr ? next : t)),
+      );
+      setEditingId(null);
+      return { previous };
+    },
+    onSuccess: (data) => {
+      if (userId == null) return;
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) =>
+          (prev ?? []).map((t) =>
+            t.id === String(data.id) ? mapTodoApiToItem(data) : t,
+          ),
+      );
+      setEditingId(null);
+      notifyTodo("수정됐어요");
+    },
+    onError: (err, _v, context) => {
+      if (userId == null) return;
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          QUERY_KEYS.todos.byUser(userId),
+          context.previous,
+        );
+      }
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 400) {
+          notifyTodo("내용은 비울 수 없어요.", "error");
+        } else if (status === 403) {
+          notifyTodo("권한이 없어요.", "error");
+        } else if (status === 404) {
+          notifyTodo("할 일 또는 카테고리를 찾을 수 없어요.", "error");
+        } else {
+          notifyTodo("수정에 실패했어요.", "error");
+        }
+      } else {
+        notifyTodo("수정에 실패했어요.", "error");
+      }
+    },
+  });
+
+  const deleteTodoMutation = useMutation({
+    mutationFn: async ({
+      todoId,
+    }: {
+      todoId: number;
+      todoIdStr: string;
+    }) => {
+      await todoApi.deleteTodo(todoId);
+    },
+    onMutate: async ({ todoIdStr }) => {
+      if (userId == null) return {};
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.todos.byUser(userId),
+      });
+      const previous = queryClient.getQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+      );
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) => (prev ?? []).filter((t) => t.id !== todoIdStr),
+      );
+      setEditingId((cur) => (cur === todoIdStr ? null : cur));
+      return { previous };
+    },
+    onError: (err, _vars, context) => {
+      if (userId == null) return;
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          QUERY_KEYS.todos.byUser(userId),
+          context.previous,
+        );
+      }
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 403 || status === 404) {
+          notifyTodo("할 일을 삭제할 수 없어요.", "error");
+        } else {
+          notifyTodo("삭제에 실패했어요.", "error");
+        }
+      } else {
+        notifyTodo("삭제에 실패했어요.", "error");
+      }
+    },
+    onSuccess: () => {
+      notifyTodo("삭제됐어요");
+    },
+  });
 
   const deleteCategoryMutation = useMutation({
     mutationFn: async ({
@@ -219,12 +533,12 @@ const TodoPage = () => {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 403 || status === 404) {
-          window.alert("카테고리를 삭제할 수 없어요.");
+          notifyTodo("카테고리를 삭제할 수 없어요.", "error");
         } else {
-          window.alert("카테고리 삭제에 실패했어요.");
+          notifyTodo("카테고리 삭제에 실패했어요.", "error");
         }
       } else {
-        window.alert("카테고리 삭제에 실패했어요.");
+        notifyTodo("카테고리 삭제에 실패했어요.", "error");
       }
     },
   });
@@ -268,29 +582,68 @@ const TodoPage = () => {
     dueDate: string;
     categoryId: string;
   }) => {
-    setTodosCache((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), ...item, completed: false },
-    ]);
+    if (userId == null) {
+      patchTodos((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), ...item, completed: false },
+      ]);
+      notifyTodo("생성됐어요");
+      return;
+    }
+    const tempId = `opt-todo-${crypto.randomUUID()}`;
+    createTodoMutation.mutate({ item, tempId });
   };
 
   const handleUpdateTodo = (
     id: string,
     item: { title: string; dueDate: string; categoryId: string },
   ) => {
-    setTodosCache((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...item } : t)),
-    );
-    setEditingId(null);
+    if (userId == null) {
+      patchTodos((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, ...item } : t)),
+      );
+      setEditingId(null);
+      notifyTodo("수정됐어요");
+      return;
+    }
+    const prevTodo = todos.find((t) => t.id === id);
+    if (!prevTodo) return;
+    const todoIdNum = Number(id);
+    if (!Number.isFinite(todoIdNum) || todoIdNum <= 0) {
+      patchTodos((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, ...item } : t)),
+      );
+      setEditingId(null);
+      notifyTodo("수정됐어요");
+      return;
+    }
+    updateTodoMutation.mutate({
+      todoId: todoIdNum,
+      todoIdStr: id,
+      body: buildUpdateTodoBody(prevTodo, item),
+    });
   };
 
   const handleDeleteTodo = (id: string) => {
-    setTodosCache((prev) => prev.filter((t) => t.id !== id));
-    setEditingId(null);
+    if (userId == null) {
+      patchTodos((prev) => prev.filter((t) => t.id !== id));
+      setEditingId(null);
+      notifyTodo("삭제됐어요");
+      return;
+    }
+    const num = Number(id);
+    if (!Number.isFinite(num) || num <= 0) {
+      patchTodos((prev) => prev.filter((t) => t.id !== id));
+      setEditingId(null);
+      notifyTodo("삭제됐어요");
+      return;
+    }
+    deleteTodoMutation.mutate({ todoId: num, todoIdStr: id });
   };
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-gray-darkest pt-[65px]">
+    <div className="relative flex h-screen w-full flex-col overflow-hidden bg-gray-darkest pt-[65px]">
+      <TodoToast toast={todoToast} onClear={clearTodoToast} />
       <Header variant="dark" alwaysVisible />
       <div className="flex min-h-0 flex-1 flex-col gap-2 px-8 pb-8 pt-4">
         {userId != null && isCategoriesError ? (
@@ -308,14 +661,14 @@ const TodoPage = () => {
             isError={isTodosError}
             onEditTodo={(todo) => setEditingId(todo.id)}
             onToggleComplete={(id) =>
-              setTodosCache((prev) =>
+              patchTodos((prev) =>
                 prev.map((t) =>
                   t.id === id ? { ...t, completed: !t.completed } : t,
                 ),
               )
             }
             onMoveTodoToDate={(id, dueDate) =>
-              setTodosCache((prev) =>
+              patchTodos((prev) =>
                 prev.map((t) => (t.id === id ? { ...t, dueDate } : t)),
               )
             }

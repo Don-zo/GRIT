@@ -1,9 +1,11 @@
 import apiClient from "@/apis/client/apiClient";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
 import type {
+  CreateTodoBody,
   CreateTodoCategoryBody,
   TodoApiItem,
   TodoCategoryApiItem,
+  UpdateTodoBody,
 } from "@/apis/types/todo";
 
 export const todoApi = {
@@ -21,6 +23,32 @@ export const todoApi = {
       ENDPOINTS.TODO.CATEGORIES_BY_USER(userId),
     );
     return response.data;
+  },
+
+  createTodo: async (
+    userId: number,
+    body: CreateTodoBody,
+  ): Promise<TodoApiItem> => {
+    const response = await apiClient.post<TodoApiItem>(
+      ENDPOINTS.TODO.BY_USER(userId),
+      body,
+    );
+    return response.data;
+  },
+
+  updateTodo: async (
+    todoId: number,
+    body: UpdateTodoBody,
+  ): Promise<TodoApiItem> => {
+    const response = await apiClient.put<TodoApiItem>(
+      ENDPOINTS.TODO.BY_ID(todoId),
+      body,
+    );
+    return response.data;
+  },
+
+  deleteTodo: async (todoId: number): Promise<void> => {
+    await apiClient.delete(ENDPOINTS.TODO.BY_ID(todoId));
   },
 
   createCategory: async (

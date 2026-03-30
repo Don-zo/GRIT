@@ -22,6 +22,7 @@ export const ENDPOINTS = {
     TOKEN: "/livekit/token",
   },
   TODO: {
+    BY_ID: (todoId: number) => `/api/todos/${todoId}`,
     BY_USER: (userId: number) => `/api/users/${userId}/todos`,
     CATEGORIES_BY_USER: (userId: number) =>
       `/api/users/${userId}/todo-categories`,
