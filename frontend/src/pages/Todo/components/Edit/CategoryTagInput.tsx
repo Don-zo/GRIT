@@ -1,6 +1,6 @@
 import { useState, type Dispatch, type KeyboardEvent, type SetStateAction } from "react";
 import { X } from "lucide-react";
-import type { Category } from "@/pages/Todo/types";
+import type { Category } from "@/pages/Todo/components/types";
 
 const ADD_PLACEHOLDER = "추가 · Enter";
 const MAX_CATEGORY_NAME_LEN = 50;

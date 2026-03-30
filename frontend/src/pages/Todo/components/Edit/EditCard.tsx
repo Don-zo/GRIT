@@ -1,6 +1,6 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import CategoryTagInput from "@/pages/Todo/Edit/CategoryTagInput";
-import type { Category, TodoItem } from "@/pages/Todo/types";
+import CategoryTagInput from "./CategoryTagInput";
+import type { Category, TodoItem } from "@/pages/Todo/components/types";
 
 function localDateKey(d = new Date()) {
   const y = d.getFullYear();

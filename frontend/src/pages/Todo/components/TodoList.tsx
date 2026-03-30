@@ -1,7 +1,7 @@
 import { useMemo, useState, type DragEvent } from "react";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import CustomCheckbox from "@/components/Checkbox";
-import type { Category, TodoItem } from "@/pages/Todo/types";
+import type { Category, TodoItem } from "./types";
 
 type TodoListProps = {
   todos: TodoItem[];
