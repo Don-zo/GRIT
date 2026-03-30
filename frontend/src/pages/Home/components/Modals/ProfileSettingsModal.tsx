@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { userApi } from "@/apis/services/user";
+import { fileApi } from "@/apis/services/file";
 import Modal from "@/components/Modal";
 import { Divider } from "@/components/Divider";
 import { FormInput } from "@/components/FormInput";
@@ -51,12 +53,34 @@ export default function ProfileSettingsModal({
     mutationFn: async () => {
       const trimmedNickname = nickname.trim();
 
-      if (!trimmedNickname) {
-        throw new Error("닉네임을 입력해주세요");
-      }
+      if (!trimmedNickname) throw new Error("닉네임을 입력해주세요");
+      if (!introduction) throw new Error("소개를 입력해주세요");
 
-      if (!introduction) {
-        throw new Error("소개를 입력해주세요");
+      if (imageFile) {
+        const imageName = await fileApi.uploadFileWithPresignedInfo(
+          imageFile,
+          userApi.getPresignedInfo,
+        );
+
+        if (isInitialProfile) {
+          return userApi.createInitialInfo({
+            nickname: trimmedNickname,
+            introduction: introduction,
+            imageName,
+            dDayDate: dDayDate || null,
+            dDayTitle: dDayTitle || null,
+            weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
+          });
+        }
+
+        return userApi.update({
+          nickname: trimmedNickname,
+          introduction: introduction,
+          imageName,
+          dDayDate: dDayDate || null,
+          dDayTitle: dDayTitle || null,
+          weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
+        });
       }
 
       if (isInitialProfile) {
@@ -68,6 +92,7 @@ export default function ProfileSettingsModal({
           weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
         });
       }
+
       return userApi.update({
         nickname: trimmedNickname,
         introduction: introduction,
@@ -84,6 +109,28 @@ export default function ProfileSettingsModal({
       console.error("프로필 저장 에러", error);
     },
   });
+
+  const { mutate: checkNicknameDuplicate, isPending: isNicknameCheckPending } =
+    useMutation({
+      mutationFn: (trimmedNickname: string) =>
+        userApi.checkNicknameAvailability(trimmedNickname),
+      onSuccess: (data) => {
+        if (data.isAvailable) {
+          console.log("사용 가능 닉네임"); //TODO: 토스트
+        } else {
+          console.log("이미 사용중인 닉네임"); //TODO: 토스트
+        }
+      },
+      onError: () => {
+        console.log("요청 실패"); //TODO: 토스트
+      },
+    });
+
+  const handleCheckNicknameDuplicate = () => {
+    const trimmedNickname = nickname.trim();
+    if (!trimmedNickname) return; //TODO: 토스트
+    checkNicknameDuplicate(trimmedNickname);
+  };
 
   const handleSave = async () => {
     await saveProfile();
@@ -115,17 +162,32 @@ export default function ProfileSettingsModal({
             <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">
               <ImageUploader
                 size={180}
+                initialImage={member?.imageUrl}
                 className="shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
                 onImageChange={(file) => setImageFile(file)}
               />
               <div className="flex flex-col gap-5">
-                <FormInput
-                  label="닉네임"
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  disabled={isFormDisabled}
-                />
+                <div className="flex items-end gap-2">
+                  <FormInput
+                    label="닉네임"
+                    type="text"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    disabled={isFormDisabled}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCheckNicknameDuplicate}
+                    disabled={isFormDisabled || isNicknameCheckPending}
+                    className="min-w-[88px] h-12 shrink-0 rounded-lg bg-[#3E7358] px-4 inline-flex items-center justify-center text-md text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
+                  >
+                    {isNicknameCheckPending ? (
+                      <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                    ) : (
+                      "중복 확인"
+                    )}
+                  </button>
+                </div>
                 <FormInput
                   label="한 줄 소개"
                   type="text"
@@ -186,9 +248,13 @@ export default function ProfileSettingsModal({
             type="button"
             onClick={handleSave}
             disabled={isPending}
-            className="h-14 w-full max-w-[360px] rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
+            className="inline-flex h-14 w-full max-w-[360px] items-center justify-center rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
           >
-            {isPending ? "저장 중..." : "저장하기"}
+            {isPending ? (
+              <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
+            ) : (
+              "저장하기"
+            )}
           </button>
         </Modal.Footer>
       </Modal.Content>

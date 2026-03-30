@@ -45,7 +45,7 @@ export const userApi = {
   },
 
   getPresignedInfo: async (): Promise<S3uploadResponse> => {
-    const response = await apiClient.get<S3uploadResponse>(
+    const response = await apiClient.post<S3uploadResponse>(
       ENDPOINTS.MY.IMAGE_UPLOAD,
     );
     return response.data;
