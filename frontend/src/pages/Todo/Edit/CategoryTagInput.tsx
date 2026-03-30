@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import type { Category } from "@/pages/Todo/types";
 
 const ADD_PLACEHOLDER = "추가 · Enter";
+const MAX_CATEGORY_NAME_LEN = 50;
 
 type CategoryTagInputProps = {
   categories: Category[];
@@ -11,6 +12,7 @@ type CategoryTagInputProps = {
   setCategories: Dispatch<SetStateAction<Category[]>>;
   canDeleteCategory: boolean;
   onRemoveCategory: (id: string) => void;
+  onCreateCategory?: (name: string) => { tempId: string };
 };
 
 function addOrSelectByLabel(
@@ -36,10 +38,30 @@ export default function CategoryTagInput({
   setCategories,
   canDeleteCategory,
   onRemoveCategory,
+  onCreateCategory,
 }: CategoryTagInputProps) {
   const [query, setQuery] = useState("");
 
-  const commitInput = () => {
+  const commitInput = async () => {
+    const label = query.trim().slice(0, MAX_CATEGORY_NAME_LEN);
+    if (!label) return;
+
+    const found = categories.find(
+      (c) => c.label.trim().toLowerCase() === label.toLowerCase(),
+    );
+    if (found) {
+      onCategoryIdChange(found.id);
+      setQuery("");
+      return;
+    }
+
+    if (onCreateCategory) {
+      const { tempId } = onCreateCategory(label);
+      if (tempId) onCategoryIdChange(tempId);
+      setQuery("");
+      return;
+    }
+
     const id = addOrSelectByLabel(query, categories, setCategories);
     if (id) onCategoryIdChange(id);
     setQuery("");
@@ -118,11 +140,14 @@ export default function CategoryTagInput({
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) =>
+              setQuery(e.target.value.slice(0, MAX_CATEGORY_NAME_LEN))
+            }
             onKeyDown={onKeyDown}
             placeholder={ADD_PLACEHOLDER}
             aria-label="새 카테고리 이름"
-            className="absolute inset-0 box-border min-h-7 min-w-0 w-full border-0 bg-transparent py-1 pl-2 pr-1 leading-normal text-[#D6FDE5]/85 outline-none placeholder:text-[#D6FDE5]/40"
+            maxLength={MAX_CATEGORY_NAME_LEN}
+            className="absolute inset-0 box-border min-h-7 min-w-0 w-full border-0 bg-transparent py-1 pl-2 pr-1 leading-normal text-[#D6FDE5]/85 outline-none placeholder:text-[#D6FDE5]/40 disabled:opacity-50"
           />
         </div>
       </div>

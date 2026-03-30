@@ -1,11 +1,13 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { getStoredMember } from "@/apis/services/auth";
@@ -98,6 +100,155 @@ const TodoPage = () => {
     );
   };
 
+  const [categoryRemap, setCategoryRemap] = useState<{
+    tempId: string;
+    realId: string;
+  } | null>(null);
+
+  const [categoryCreateFailedTempId, setCategoryCreateFailedTempId] =
+    useState<string | null>(null);
+
+  const onCategoryRemapConsumed = useCallback(() => {
+    setCategoryRemap(null);
+  }, []);
+
+  const onCategoryCreateFailedConsumed = useCallback(() => {
+    setCategoryCreateFailedTempId(null);
+  }, []);
+
+  const createCategoryMutation = useMutation({
+    mutationFn: ({
+      name,
+      tempId: _tempId,
+    }: {
+      name: string;
+      tempId: string;
+    }) => todoApi.createCategory(userId!, { name }),
+    onMutate: async ({ name, tempId }) => {
+      if (userId == null) return {};
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.todoCategories.byUser(userId),
+      });
+      const previous = queryClient.getQueryData<Category[]>(
+        QUERY_KEYS.todoCategories.byUser(userId),
+      );
+      queryClient.setQueryData<Category[]>(
+        QUERY_KEYS.todoCategories.byUser(userId),
+        (prev) => [...(prev ?? []), { id: tempId, label: name }],
+      );
+      return { previous };
+    },
+    onError: (err, { tempId }, context) => {
+      if (userId == null) return;
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          QUERY_KEYS.todoCategories.byUser(userId),
+          context.previous,
+        );
+      } else {
+        queryClient.setQueryData<Category[]>(
+          QUERY_KEYS.todoCategories.byUser(userId),
+          (prev) => (prev ?? []).filter((c) => c.id !== tempId),
+        );
+      }
+      setCategoryCreateFailedTempId(tempId);
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 409) {
+          window.alert("같은 이름의 카테고리가 이미 있어요.");
+        } else {
+          window.alert("카테고리를 추가하지 못했어요.");
+        }
+      } else {
+        window.alert("카테고리를 추가하지 못했어요.");
+      }
+    },
+    onSuccess: (data, { tempId }) => {
+      if (userId == null) return;
+      queryClient.setQueryData<Category[]>(
+        QUERY_KEYS.todoCategories.byUser(userId),
+        (prev) =>
+          (prev ?? []).map((c) =>
+            c.id === tempId ? mapTodoCategoryApiToCategory(data) : c,
+          ),
+      );
+      setCategoryRemap({ tempId, realId: String(data.id) });
+    },
+  });
+
+  const handleCreateCategory = (name: string): { tempId: string } => {
+    if (userId == null) return { tempId: "" };
+    const trimmed = name.trim().slice(0, 50);
+    if (!trimmed) return { tempId: "" };
+    const tempId = `opt-${crypto.randomUUID()}`;
+    createCategoryMutation.mutate({ name: trimmed, tempId });
+    return { tempId };
+  };
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async ({
+      categoryId,
+    }: {
+      categoryId: number;
+      categoryIdStr: string;
+    }) => {
+      await todoApi.deleteCategory(userId!, categoryId);
+    },
+    onMutate: async ({ categoryIdStr }) => {
+      if (userId == null) return {};
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.todoCategories.byUser(userId),
+      });
+      const previous = queryClient.getQueryData<Category[]>(
+        QUERY_KEYS.todoCategories.byUser(userId),
+      );
+      queryClient.setQueryData<Category[]>(
+        QUERY_KEYS.todoCategories.byUser(userId),
+        (prev) => (prev ?? []).filter((c) => c.id !== categoryIdStr),
+      );
+      return { previous };
+    },
+    onError: (err, _vars, context) => {
+      if (userId == null) return;
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          QUERY_KEYS.todoCategories.byUser(userId),
+          context.previous,
+        );
+      }
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 403 || status === 404) {
+          window.alert("카테고리를 삭제할 수 없어요.");
+        } else {
+          window.alert("카테고리 삭제에 실패했어요.");
+        }
+      } else {
+        window.alert("카테고리 삭제에 실패했어요.");
+      }
+    },
+  });
+
+  const handleRemoveCategory = useCallback(
+    (id: string) => {
+      if (userId == null) {
+        setGuestCategories((prev) => prev.filter((c) => c.id !== id));
+        return;
+      }
+      if (id.startsWith("opt-")) {
+        queryClient.setQueryData<Category[]>(
+          QUERY_KEYS.todoCategories.byUser(userId),
+          (prev) => (prev ?? []).filter((c) => c.id !== id),
+        );
+        return;
+      }
+      const numId = Number(id);
+      if (!Number.isFinite(numId) || numId <= 0) return;
+      deleteCategoryMutation.mutate({ categoryId: numId, categoryIdStr: id });
+    },
+    [userId, queryClient, deleteCategoryMutation],
+  );
+
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const editingTodo = useMemo(
@@ -173,6 +324,14 @@ const TodoPage = () => {
           <EditCard
             categories={categories}
             setCategories={setCategories}
+            onRemoveCategory={handleRemoveCategory}
+            onCreateCategory={
+              userId != null ? handleCreateCategory : undefined
+            }
+            categoryRemap={categoryRemap}
+            onCategoryRemapConsumed={onCategoryRemapConsumed}
+            categoryCreateFailedTempId={categoryCreateFailedTempId}
+            onCategoryCreateFailedConsumed={onCategoryCreateFailedConsumed}
             editingTodo={editingTodo}
             onAddTodo={handleAddTodo}
             onUpdateTodo={handleUpdateTodo}

@@ -12,6 +12,12 @@ function localDateKey(d = new Date()) {
 type EditCardProps = {
   categories: Category[];
   setCategories: Dispatch<SetStateAction<Category[]>>;
+  onRemoveCategory: (id: string) => void;
+  onCreateCategory?: (name: string) => { tempId: string };
+  categoryRemap: { tempId: string; realId: string } | null;
+  onCategoryRemapConsumed: () => void;
+  categoryCreateFailedTempId: string | null;
+  onCategoryCreateFailedConsumed: () => void;
   editingTodo: TodoItem | null;
   onAddTodo: (item: {
     title: string;
@@ -28,6 +34,12 @@ type EditCardProps = {
 const EditCard = ({
   categories,
   setCategories,
+  onRemoveCategory: onRemoveCategoryFromPage,
+  onCreateCategory,
+  categoryRemap,
+  onCategoryRemapConsumed,
+  categoryCreateFailedTempId,
+  onCategoryCreateFailedConsumed,
   editingTodo,
   onAddTodo,
   onUpdateTodo,
@@ -49,6 +61,22 @@ const EditCard = ({
     }
   }, [editingTodo]);
 
+  useEffect(() => {
+    if (!categoryRemap) return;
+    setCategoryId((prev) =>
+      prev === categoryRemap.tempId ? categoryRemap.realId : prev,
+    );
+    onCategoryRemapConsumed();
+  }, [categoryRemap, onCategoryRemapConsumed]);
+
+  useEffect(() => {
+    if (!categoryCreateFailedTempId) return;
+    setCategoryId((id) =>
+      id === categoryCreateFailedTempId ? "" : id,
+    );
+    onCategoryCreateFailedConsumed();
+  }, [categoryCreateFailedTempId, onCategoryCreateFailedConsumed]);
+
   const isEditing = editingTodo !== null;
 
   const canSubmit =
@@ -57,7 +85,7 @@ const EditCard = ({
 
   const handleRemoveCategory = (id: string) => {
     if (!canDeleteCategory) return;
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    onRemoveCategoryFromPage(id);
     if (categoryId === id) setCategoryId("");
   };
 
@@ -153,6 +181,7 @@ const EditCard = ({
             setCategories={setCategories}
             canDeleteCategory={canDeleteCategory}
             onRemoveCategory={handleRemoveCategory}
+            onCreateCategory={onCreateCategory}
           />
         </section>
       </div>
