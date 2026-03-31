@@ -26,7 +26,6 @@ function saveTokens(accessToken) {
 
 // 사용자 정보 저장
 function saveMemberInfo(member) {
-    localStorage.setItem('member_id', member.id);
     localStorage.setItem('member_email', member.email);
     if (member.nickname) {
         localStorage.setItem('member_nickname', member.nickname);
