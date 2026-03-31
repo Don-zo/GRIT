@@ -1,11 +1,13 @@
 package grit.domain.friend.service;
 
-import grit.domain.friend.dto.FriendResponseDto;
+import grit.domain.member.dto.MemberResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
 import grit.global.exception.EntityAlreadyExistsException;
 import grit.global.exception.EntityNotFoundException;
 import grit.global.exception.SelfReferenceException;
+import grit.global.s3.S3Directory;
+import grit.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +21,10 @@ import java.util.List;
 public class FriendService {
 
     private final MemberService memberService;
+    private final S3Service s3Service;
 
     @Transactional
-    public FriendResponseDto addFriend(Member member, String friendNickname) {
+    public MemberResponseDto addFriend(Member member, String friendNickname) {
         Member friend = memberService.findMemberByNickname(friendNickname);
 
         if (member.equals(friend)) {
@@ -33,11 +36,11 @@ public class FriendService {
 
         member.addFriend(friend);
         friend.addFriend(member);
-        return FriendResponseDto.from(friend);
+        return toFriendDto(friend);
     }
 
     @Transactional
-    public FriendResponseDto removeFriend(Member member, String friendNickname) {
+    public MemberResponseDto removeFriend(Member member, String friendNickname) {
         Member friend = memberService.findMemberByNickname(friendNickname);
 
         if (member.equals(friend)) {
@@ -49,13 +52,18 @@ public class FriendService {
 
         member.removeFriend(friend);
         friend.removeFriend(member);
-        return FriendResponseDto.from(friend);
+        return toFriendDto(friend);
     }
 
-    public List<FriendResponseDto> getFriendList(Member member) {
+    public List<MemberResponseDto> getFriendList(Member member) {
         return member.getFriends().stream()
-                .map(FriendResponseDto::from)
-                .sorted(Comparator.comparing(FriendResponseDto::getNickname))
+                .map(this::toFriendDto)
+                .sorted(Comparator.comparing(MemberResponseDto::nickname))
                 .toList();
+    }
+
+    private MemberResponseDto toFriendDto(Member member) {
+        String imageUrl = s3Service.resolveUrl(S3Directory.PROFILE_IMAGES, member.getImageName());
+        return MemberResponseDto.fromForFriend(member, imageUrl);
     }
 }
