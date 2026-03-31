@@ -216,6 +216,7 @@ async function updateProfile(nickname, introduction, imageFileName, dDayDate, dD
         }
 
         const updated = await response.json();
+        localStorage.setItem('member_id', updated.id);
         localStorage.setItem('member_email', updated.email);
         if (updated.nickname) localStorage.setItem('member_nickname', updated.nickname);
         else localStorage.removeItem('member_nickname');
