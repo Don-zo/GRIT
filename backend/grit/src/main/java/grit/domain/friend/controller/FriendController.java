@@ -1,8 +1,8 @@
 package grit.domain.friend.controller;
 
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
-import grit.domain.friend.dto.FriendResponseDto;
 import grit.domain.friend.service.FriendService;
+import grit.domain.member.dto.MemberResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,12 +35,12 @@ public class FriendController {
             @ApiResponse(responseCode = "409", description = "이미 친구로 등록된 사용자", content = @Content)
     })
     @PostMapping("/{nickname}")
-    public ResponseEntity<FriendResponseDto> addFriend(
+    public ResponseEntity<MemberResponseDto> addFriend(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "친구의 닉네임", example = "그릿유저친구") @PathVariable String nickname) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
-        FriendResponseDto addedFriend = friendService.addFriend(member, nickname);
+        MemberResponseDto addedFriend = friendService.addFriend(member, nickname);
         return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(addedFriend);
     }
 
@@ -52,12 +52,12 @@ public class FriendController {
             @ApiResponse(responseCode = "404", description = "해당 닉네임의 친구가 존재하지 않음", content = @Content)
     })
     @DeleteMapping("/{nickname}")
-    public ResponseEntity<FriendResponseDto> removeFriend(
+    public ResponseEntity<MemberResponseDto> removeFriend(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "친구의 닉네임", example = "그릿유저친구") @PathVariable String nickname) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
-        FriendResponseDto removedFriend = friendService.removeFriend(member, nickname);
+        MemberResponseDto removedFriend = friendService.removeFriend(member, nickname);
         return ResponseEntity.ok(removedFriend);
     }
 
@@ -68,7 +68,7 @@ public class FriendController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자 ID", content = @Content)
     })
     @GetMapping
-    public ResponseEntity<List<FriendResponseDto>> findFriends(
+    public ResponseEntity<List<MemberResponseDto>> findFriends(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
