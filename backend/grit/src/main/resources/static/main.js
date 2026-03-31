@@ -32,6 +32,7 @@ function clearProfileSkeleton() {
 async function fetchUserInfo() {
     try {
         const token = localStorage.getItem('access_token');
+        const memberId = localStorage.getItem('member_id');
 
         if (!token) throw new Error('인증 정보가 없습니다.');
 
@@ -40,6 +41,7 @@ async function fetchUserInfo() {
         if (!response.ok) throw new Error('사용자 정보를 불러올 수 없습니다.');
 
         const memberInfo = await response.json();
+        localStorage.setItem('member_id', memberInfo.id);
         localStorage.setItem('member_email', memberInfo.email);
         if (memberInfo.nickname) localStorage.setItem('member_nickname', memberInfo.nickname);
         else localStorage.removeItem('member_nickname');

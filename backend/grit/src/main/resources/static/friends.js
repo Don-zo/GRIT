@@ -97,16 +97,21 @@ function renderFriendList(friends) {
         return;
     }
 
-    container.innerHTML = friends.map(friend => `
+    container.innerHTML = friends.map(friend => {
+        const initial = escapeHtml(friend.nickname.charAt(0));
+        const avatar = friend.imageUrl
+            ? `<img src="${escapeHtml(friend.imageUrl)}" alt="${initial}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.textContent='${initial}'">`
+            : initial;
+        return `
         <div class="item-card">
-            <div class="item-avatar">${escapeHtml(friend.nickname.charAt(0))}</div>
+            <div class="item-avatar">${avatar}</div>
             <div class="item-info">
                 <h3>${escapeHtml(friend.nickname)}</h3>
                 <p>${friend.introduction ? escapeHtml(friend.introduction) : '소개가 없습니다.'}</p>
             </div>
             <button class="btn btn-danger" onclick="handleRemoveFriend('${escapeHtml(friend.nickname)}')">삭제</button>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 // ────────────────────────────────────────
