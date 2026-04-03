@@ -20,6 +20,10 @@ export const ENDPOINTS = {
     JOIN: (groupCode: string) => `/api/groups/${groupCode}/join`,
     IMAGE_UPLOAD: "/api/groups/image-upload-url",
   },
+  FRIEND: {
+    LIST: "/api/friends",
+    DETAIL: (nickname: string) => `/api/friends/${nickname}`,
+  },
   LIVEKIT: {
     TOKEN: "/livekit/token",
   },
