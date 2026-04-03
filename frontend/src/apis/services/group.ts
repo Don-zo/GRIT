@@ -49,4 +49,8 @@ export const groupApi = {
     );
     return response.data;
   },
+
+  signout: async (groupCode: string): Promise<void> => {
+    await apiClient.delete(ENDPOINTS.GROUP.INFO(groupCode));
+  },
 } as const;
