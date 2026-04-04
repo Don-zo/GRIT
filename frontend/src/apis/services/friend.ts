@@ -2,7 +2,7 @@ import apiClient from "@/apis/client/apiClient";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
 import type { Friend, FriendListResponse } from "@/apis/types/friend";
 
-export const FriendApi = {
+export const friendApi = {
   getList: async (): Promise<FriendListResponse[]> => {
     const response = await apiClient.get<FriendListResponse[]>(
       ENDPOINTS.FRIEND.LIST,

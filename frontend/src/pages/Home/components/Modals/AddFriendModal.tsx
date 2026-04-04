@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
+import { friendApi } from "@/apis/services/friend";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type AddFriendModalProps = {
   open: boolean;
@@ -7,22 +10,41 @@ type AddFriendModalProps = {
 };
 
 export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
-  const [friendId, setFriendId] = useState("");
+  const [friendNickname, setFriendNickname] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!open) {
-      setFriendId("");
+      setFriendNickname("");
       setSubmitted(false);
     }
   }, [open]);
 
-  const handleSubmit = () => {
-    if (!friendId.trim()) return;
-    setSubmitted(true);
+  const { mutateAsync: addFriend, isPending: isAddingFriend } = useMutation({
+    mutationFn: (nickname: string) => friendApi.addFriend(nickname),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.friend.all });
+      console.log("친구 추가 성공"); //TODO: 토스트
+    },
+    onError: () => {
+      console.log("친구 추가 실패"); //TODO: 토스트
+    },
+  });
+
+  const handleSubmit = async () => {
+    const trimmedFriendNickname = friendNickname.trim();
+    try {
+      if (!trimmedFriendNickname) return;
+      await addFriend(trimmedFriendNickname);
+      setSubmitted(true);
+      onClose();
+    } catch (error) {
+      console.log("친구 추가 에러", error);
+    }
   };
 
-  const isDisabled = submitted || !friendId.trim();
+  const isDisabled = submitted || isAddingFriend || !friendNickname.trim();
 
   return (
     <Modal isOpen={open} onClose={onClose}>
@@ -32,18 +54,18 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
         <Modal.Header className="flex flex-col items-center text-center">
           <Modal.Title size="lg" />
           <p className="mt-4 text-sm font-medium text-[#D6FDE5]">
-            아이디를 입력해 주세요
+            닉네임을 입력해 주세요
           </p>
         </Modal.Header>
         <Modal.Body className="flex flex-col items-center pb-16">
           <div className="mt-12 w-full max-w-[360px]">
             <input
-              value={friendId}
-              onChange={(e) => setFriendId(e.target.value)}
+              value={friendNickname}
+              onChange={(e) => setFriendNickname(e.target.value)}
               disabled={submitted}
               placeholder=""
               className="h-14 w-full rounded-xl bg-white px-6 text-lg text-gray-900 outline-none disabled:opacity-90"
-              aria-label="친구 아이디"
+              aria-label="친구 닉네임"
             />
           </div>
 
@@ -63,7 +85,7 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
 
           {submitted && (
             <p className="mt-6 text-sm font-medium text-[#D6FDE5]">
-              김윤영 님과 친구가 되었습니다
+              {friendNickname} 님과 친구가 되었습니다
             </p>
           )}
         </Modal.Body>
