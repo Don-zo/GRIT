@@ -1,16 +1,14 @@
 import apiClient from "@/apis/client/apiClient";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
-import type { Friend, FriendListResponse } from "@/apis/types/friend";
+import type { FriendDetail } from "@/apis/types/friend";
 
 export const friendApi = {
-  getList: async (): Promise<FriendListResponse[]> => {
-    const response = await apiClient.get<FriendListResponse[]>(
-      ENDPOINTS.FRIEND.LIST,
-    );
+  getList: async (): Promise<FriendDetail[]> => {
+    const response = await apiClient.get<FriendDetail[]>(ENDPOINTS.FRIEND.LIST);
     return response.data;
   },
-  addFriend: async (nickname: string): Promise<Friend> => {
-    const response = await apiClient.post<Friend>(
+  addFriend: async (nickname: string): Promise<FriendDetail> => {
+    const response = await apiClient.post<FriendDetail>(
       ENDPOINTS.FRIEND.DETAIL(nickname),
     );
     return response.data;
