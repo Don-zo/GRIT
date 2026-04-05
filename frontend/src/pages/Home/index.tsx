@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
 import GroupSection from "@/pages/Home/components/GroupSection/GroupSection";
 import Achievement from "@/pages/Home/components/AchievementCard";
 import ProfileCard from "@/pages/Home/components/ProfileCard";
 import LeftSidebar from "@/pages/Home/components/LeftSidebar";
+import FriendManageModal from "@/pages/Home/components/Modals/FriendManageModal";
 
 type HomeLocationState = {
   openProfileSetupModal: boolean;
@@ -11,6 +13,7 @@ type HomeLocationState = {
 };
 
 const HomePage = () => {
+  const [isFriendManageOpen, setIsFriendManageOpen] = useState(false);
   const location = useLocation();
   const state = location.state as HomeLocationState;
 
@@ -19,7 +22,11 @@ const HomePage = () => {
 
   return (
     <div className="flex flex-col pt-[65px] w-full h-auto bg-gray-darkest">
-      <Header variant="dark" alwaysVisible />
+      <Header
+        variant="dark"
+        alwaysVisible
+        onOpenFriendManage={() => setIsFriendManageOpen(true)}
+      />
 
       <div className="flex">
         <LeftSidebar />
@@ -38,6 +45,10 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+      <FriendManageModal
+        open={isFriendManageOpen}
+        onClose={() => setIsFriendManageOpen(false)}
+      />
     </div>
   );
 };
