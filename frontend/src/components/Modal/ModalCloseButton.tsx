@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useModalContext } from "./index";
 
 type ModalCloseButtonProps = {
@@ -11,9 +12,9 @@ export function ModalCloseButton({ className = "" }: ModalCloseButtonProps) {
       type="button"
       onClick={onClose}
       aria-label="닫기"
-      className={`absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-full text-white/80 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-white/30 ${className}`}
+      className={`cursor-pointer absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-full text-white/80 hover:bg-white/10 hover:text-white focus:outline-none  ${className}`}
     >
-      <span className="text-2xl leading-none">X</span>
+      <X />
     </button>
   );
 }

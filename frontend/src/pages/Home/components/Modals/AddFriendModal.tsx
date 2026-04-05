@@ -58,7 +58,7 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
           </p>
         </Modal.Header>
         <Modal.Body className="flex flex-col items-center pb-16">
-          <div className="mt-12 w-full max-w-[360px]">
+          <div className="mt-6 w-full max-w-[360px]">
             <input
               value={friendNickname}
               onChange={(e) => setFriendNickname(e.target.value)}
@@ -74,7 +74,7 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
             onClick={handleSubmit}
             disabled={isDisabled}
             className={[
-              "mt-4 h-14 w-full max-w-[360px] rounded-xl text-lg font-semibold transition",
+              "mt-3 h-14 w-full max-w-[360px] rounded-xl text-lg font-semibold transition",
               isDisabled
                 ? "bg-[#C9CDCC] text-white cursor-not-allowed"
                 : "bg-[#3E7358] text-[#EDFFF4] hover:bg-emerald-800",

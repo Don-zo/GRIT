@@ -96,7 +96,10 @@ export default function LeftSidebar({
                 </button>
 
                 {hovered?.nickname === f.nickname && (
-                  <FriendTooltip nickname={f.nickname} />
+                  <FriendTooltip
+                    nickname={f.nickname}
+                    introduction={f.introduction}
+                  />
                 )}
               </div>
             );

@@ -8,7 +8,7 @@ type ModalContentProps = {
 export function ModalContent({ children, className = "" }: ModalContentProps) {
   return (
     <div
-      className={`relative w-[600px] max-w-[90vw] rounded-3xl bg-[#2B2F36] shadow-2xl ${className}`}
+      className={`relative w-[600px] max-w-[90vw] rounded-xl bg-[#2B2F36] ${className}`}
     >
       {children}
     </div>
