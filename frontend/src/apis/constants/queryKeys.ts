@@ -7,4 +7,7 @@ export const QUERY_KEYS = {
     my: ["groups", "my"] as const,
     detail: (groupCode: string) => ["groups", "detail", groupCode] as const,
   },
+  friend: {
+    all: ["friends"] as const,
+  },
 } as const;

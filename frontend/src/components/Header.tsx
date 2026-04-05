@@ -10,9 +10,14 @@ import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 type HeaderProps = {
   variant: "light" | "dark";
   alwaysVisible?: boolean;
+  onOpenFriendManage?: () => void;
 };
 
-export function Header({ variant, alwaysVisible = false }: HeaderProps) {
+export function Header({
+  variant,
+  alwaysVisible = false,
+  onOpenFriendManage,
+}: HeaderProps) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(alwaysVisible);
   const [isDropDownOpen, SetIsDropDownOpen] = useState(false);
   const navigate = useNavigate();
@@ -55,6 +60,11 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
 
   const toggleDropdown = () => {
     SetIsDropDownOpen((prev) => !prev);
+  };
+
+  const handleFriendManageModalOpen = () => {
+    SetIsDropDownOpen(false);
+    onOpenFriendManage?.();
   };
 
   const handleLogout = async () => {
@@ -109,6 +119,13 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
 
                 {isDropDownOpen && (
                   <div className="absolute bg-[#2B2F36] right-0 mt-6 w-28  rounded-lg shadow-lg border-none p-1 z-50">
+                    <button
+                      type="button"
+                      className="text-white w-full px-4 py-2 text-center text-sm text-gray-700 hover:bg-gray-900 hover:rounded-md transition cursor-pointer"
+                      onClick={handleFriendManageModalOpen}
+                    >
+                      친구관리
+                    </button>
                     <button
                       type="button"
                       className="text-white w-full px-4 py-2 text-center text-sm text-gray-700 hover:bg-gray-900 hover:rounded-md transition cursor-pointer"

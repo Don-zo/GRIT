@@ -11,7 +11,7 @@ export function ModalOverlay({ className = "" }: ModalOverlayProps) {
     <button
       type="button"
       aria-label="오버레이 닫기"
-      className={`absolute inset-0 bg-black/60 ${className}`}
+      className={`absolute inset-0 bg-black/80 ${className}`}
       onClick={onClose}
     />
   );
