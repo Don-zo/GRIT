@@ -21,7 +21,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "members")
-@ToString(exclude = { "memberGroups", "friends" }) // lombok 무한루프 방지용
+@ToString(callSuper = true, exclude = { "memberGroups", "friends" }) // lombok 무한루프 방지용
 public class Member extends BaseEntity {
 
     @Id
