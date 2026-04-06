@@ -1,13 +1,13 @@
 package grit.domain.auth.entity;
 
 import grit.domain.member.entity.Member;
+import grit.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import java.time.Duration;
 import java.util.UUID;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import org.springframework.beans.factory.annotation.Value;
 
 @Entity
 @Table(name = "refresh_tokens")
@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RefreshToken {
+public class RefreshToken extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

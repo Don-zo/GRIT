@@ -2,11 +2,11 @@ package grit.domain.member.entity;
 
 import grit.domain.member.constant.Role;
 import grit.domain.member.constant.SocialProvider;
+import grit.global.entity.BaseEntity;
 import grit.global.exception.InvalidInputException;
 import grit.global.exception.ProfileAlreadyInitializedException;
 import grit.global.exception.ProfileNotInitializedException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
@@ -21,8 +21,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "members")
-@ToString(exclude = { "memberGroups", "friends" }) // lombok 무한루프 방지용
-public class Member {
+@ToString(callSuper = true, exclude = { "memberGroups", "friends" }) // lombok 무한루프 방지용
+public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -61,10 +61,6 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.PENDING;
-
-    @org.hibernate.annotations.CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime joinDate;
 
     // group
     @Builder.Default
