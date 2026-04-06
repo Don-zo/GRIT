@@ -14,7 +14,7 @@ public class CookieUtils {
         return ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("None")
                 .path("/")
                 .maxAge(refreshTokenExpirationMs / 1000)
                 .build();
@@ -24,7 +24,7 @@ public class CookieUtils {
         return ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
                 .build();
