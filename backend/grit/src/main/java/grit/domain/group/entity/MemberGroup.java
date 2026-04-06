@@ -1,10 +1,9 @@
 package grit.domain.group.entity;
 
 import grit.domain.member.entity.Member;
+import grit.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -13,7 +12,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "member_groups")
-public class MemberGroup {
+public class MemberGroup extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,8 +25,4 @@ public class MemberGroup {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     private Group group;
-
-    @org.hibernate.annotations.CreationTimestamp
-    @Column(name = "group_join_date", nullable = false)
-    private LocalDateTime joinDate;
 }

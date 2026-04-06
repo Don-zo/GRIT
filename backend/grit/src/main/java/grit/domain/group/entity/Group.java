@@ -1,5 +1,6 @@
 package grit.domain.group.entity;
 
+import grit.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import java.util.UUID;
 import lombok.*;
@@ -16,7 +17,8 @@ import java.util.List;
 @Table(name = "groups", indexes = {
         @Index(name = "idx_group_code", columnList = "code")
 })
-public class Group {
+public class Group extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,7 +48,11 @@ public class Group {
     }
 
     public void updateInfo(String name, UUID imageName) {
-        if (name != null) this.name = name;
-        if (imageName != null) this.imageName = imageName;
+        if (name != null) {
+            this.name = name;
+        }
+        if (imageName != null) {
+            this.imageName = imageName;
+        }
     }
 }
