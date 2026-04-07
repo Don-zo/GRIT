@@ -1556,6 +1556,24 @@ textarea.form-input {
     flex-wrap: wrap;
 }
 
+/* Todo category chips — drag reorder */
+.todo-category-chips .todo-category-chip {
+    cursor: grab;
+    user-select: none;
+}
+
+.todo-category-chips .todo-category-chip:active {
+    cursor: grabbing;
+}
+
+.todo-category-chips .todo-category-chip.dragging {
+    opacity: 0.55;
+}
+
+.todo-category-chips .todo-category-chip.drag-over {
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.65);
+}
+
 /* ═══════════════════════════════════════════
    Group Grid & Cards
    ═══════════════════════════════════════════ */

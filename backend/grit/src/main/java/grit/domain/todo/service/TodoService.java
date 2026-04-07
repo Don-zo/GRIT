@@ -42,10 +42,6 @@ public class TodoService {
         return todoRepository.findByOwnerIdWithRelations(userId);
     }
 
-    /**
-     * 해당 그룹 멤버가 작성한 투두 전체. {@code focusUserId}는 그룹 멤버여야 하며, 해당 작성자의 투두가 목록 최상단에 오도록 정렬합니다.
-     * 요청자는 그룹 멤버여야 합니다.
-     */
     public List<Todo> findForGroup(String groupCode, Long requesterUserId, Long focusUserId) {
         Member requester = memberRepository.findById(requesterUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
