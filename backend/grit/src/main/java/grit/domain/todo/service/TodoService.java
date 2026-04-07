@@ -42,6 +42,10 @@ public class TodoService {
         return todoRepository.findByOwnerIdWithRelations(userId);
     }
 
+    /**
+     * 해당 그룹 멤버가 작성한 투두 전체. {@code focusUserId}는 그룹 멤버여야 하며, 해당 작성자의 투두가 목록 최상단에 오도록 정렬합니다.
+     * 요청자는 그룹 멤버여야 합니다.
+     */
     public List<Todo> findForGroup(String groupCode, Long requesterUserId, Long focusUserId) {
         Member requester = memberRepository.findById(requesterUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
@@ -89,12 +93,7 @@ public class TodoService {
 
     @Transactional
     public Todo update(Long todoId, Long userId, UpdateTodoRequestDTO request) {
-        Todo todo = todoRepository.findByIdWithRelations(todoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
-
-        if (!todo.getOwner().getId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 수정할 수 있습니다.");
-        }
+        Todo todo = getTodoAndValidateOwner(todoId, userId);
 
         if (request.getContent() != null) {
             String trimmed = request.getContent().trim();
@@ -123,40 +122,36 @@ public class TodoService {
 
     @Transactional
     public Todo moveDueDate(Long todoId, Long userId, MoveTodoDueDateRequestDTO request) {
-        Todo todo = todoRepository.findByIdWithRelations(todoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
-
-        if (!todo.getOwner().getId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 수정할 수 있습니다.");
-        }
-
+        Todo todo = getTodoAndValidateOwner(todoId, userId);
         todo.setDueDate(request.getDueDate());
         return todo;
     }
 
     @Transactional
     public Todo setDone(Long todoId, Long userId, SetTodoDoneRequestDTO request) {
-        Todo todo = todoRepository.findByIdWithRelations(todoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
-
-        if (!todo.getOwner().getId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 수정할 수 있습니다.");
-        }
-
+        Todo todo = getTodoAndValidateOwner(todoId, userId);
         todo.setIsDone(request.getIsDone());
         return todo;
     }
 
     @Transactional
     public void delete(Long todoId, Long userId) {
+        getTodoAndValidateOwner(todoId, userId, "본인의 투두만 삭제할 수 있습니다.");
+        todoRepository.deleteById(todoId);
+    }
+
+    private Todo getTodoAndValidateOwner(Long todoId, Long userId) {
+        return getTodoAndValidateOwner(todoId, userId, "본인의 투두만 수정할 수 있습니다.");
+    }
+
+    private Todo getTodoAndValidateOwner(Long todoId, Long userId, String forbiddenMessage) {
         Todo todo = todoRepository.findByIdWithRelations(todoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
 
         if (!todo.getOwner().getId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 삭제할 수 있습니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, forbiddenMessage);
         }
-
-        todoRepository.deleteById(todoId);
+        return todo;
     }
 
     public List<DailyAchievementDTO> getLast7DaysAchievement(Long userId) {
