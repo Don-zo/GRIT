@@ -55,6 +55,7 @@ const TodoPage = () => {
               categoryCreateFailedTempId={b.categoryCreateFailedTempId}
               onCategoryCreateFailedConsumed={b.onCategoryCreateFailedConsumed}
               editingTodo={b.editingTodo}
+              onCancelEdit={() => b.setEditingId(null)}
               onAddTodo={b.handleAddTodo}
               onUpdateTodo={b.handleUpdateTodo}
               onDeleteTodo={b.handleDeleteTodo}
