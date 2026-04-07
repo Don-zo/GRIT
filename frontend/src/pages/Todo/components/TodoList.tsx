@@ -1,5 +1,13 @@
-import { useMemo, useState, type DragEvent } from "react";
-import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+} from "react";
+import { createPortal } from "react-dom";
+import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 import CustomCheckbox from "@/components/Checkbox";
 import type { Category, TodoItem } from "./types";
 
@@ -9,6 +17,7 @@ type TodoListProps = {
   isLoading: boolean;
   isError: boolean;
   onEditTodo: (todo: TodoItem) => void;
+  onDeleteTodo: (id: string) => void;
   onToggleComplete: (id: string) => void;
   onMoveTodoToDate: (id: string, dueDate: string) => void;
 };
@@ -20,15 +29,127 @@ type TodoRowProps = {
   catLabel: string;
   variant: "comfortable" | "compact";
   onEditTodo: (todo: TodoItem) => void;
+  onDeleteTodo: (id: string) => void;
   onToggleComplete: (id: string) => void;
   weekDnD?: { onDragEnd: () => void };
 };
+
+function TodoRowMenu({
+  todo,
+  variant,
+  onEditTodo,
+  onDeleteTodo,
+}: {
+  todo: TodoItem;
+  variant: "comfortable" | "compact";
+  onEditTodo: (todo: TodoItem) => void;
+  onDeleteTodo: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState({ left: 0, top: 0 });
+
+  const syncMenuPosition = () => {
+    const el = buttonRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setMenuPos({ left: r.right + 4, top: r.top + r.height / 2 });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    syncMenuPosition();
+    window.addEventListener("scroll", syncMenuPosition, true);
+    window.addEventListener("resize", syncMenuPosition);
+    return () => {
+      window.removeEventListener("scroll", syncMenuPosition, true);
+      window.removeEventListener("resize", syncMenuPosition);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (wrapRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, [open]);
+
+  const triggerClass =
+    variant === "comfortable"
+      ? "shrink-0 rounded-md p-1 text-white/35 transition hover:bg-white/10 hover:text-white/80"
+      : "shrink-0 rounded p-0.5 text-white/30 opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-white/80";
+
+  const iconClass = variant === "comfortable" ? "h-4 w-4" : "h-3.5 w-3.5";
+
+  const menu = open ? (
+    <div
+      ref={menuRef}
+      role="menu"
+      style={{
+        position: "fixed",
+        left: menuPos.left,
+        top: menuPos.top,
+        transform: "translateY(-50%)",
+        zIndex: 60,
+      }}
+      className="min-w-[3rem] overflow-hidden rounded-md border border-white/12 bg-[#2A2F38] py-0.5 shadow-lg shadow-black/40"
+    >
+      <button
+        type="button"
+        role="menuitem"
+        className="block w-full px-2.5 py-1.5 text-left text-[11px] font-medium text-white/85 transition hover:bg-white/10"
+        onClick={() => {
+          onEditTodo(todo);
+          setOpen(false);
+        }}
+      >
+        수정
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        className="block w-full px-2.5 py-1.5 text-left text-[11px] font-medium text-red-300/90 transition hover:bg-red-500/15"
+        onClick={() => {
+          onDeleteTodo(todo.id);
+          setOpen(false);
+        }}
+      >
+        삭제
+      </button>
+    </div>
+  ) : null;
+
+  return (
+    <div ref={wrapRef} className="relative shrink-0">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={triggerClass}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="투두 메뉴"
+      >
+        <MoreVertical className={iconClass} strokeWidth={2} />
+      </button>
+      {menu ? createPortal(menu, document.body) : null}
+    </div>
+  );
+}
 
 function TodoRow({
   todo,
   catLabel,
   variant,
   onEditTodo,
+  onDeleteTodo,
   onToggleComplete,
   weekDnD,
 }: TodoRowProps) {
@@ -87,14 +208,12 @@ function TodoRow({
             </span>
           ) : null}
         </div>
-        <button
-          type="button"
-          onClick={() => onEditTodo(todo)}
-          className="shrink-0 rounded-md p-1 text-white/35 transition hover:bg-white/10 hover:text-[#82C397]"
-          aria-label="수정"
-        >
-          <Pencil className="h-4 w-4" strokeWidth={2} />
-        </button>
+        <TodoRowMenu
+          todo={todo}
+          variant="comfortable"
+          onEditTodo={onEditTodo}
+          onDeleteTodo={onDeleteTodo}
+        />
       </li>
     );
   }
@@ -132,14 +251,12 @@ function TodoRow({
             </span>
           ) : null}
         </div>
-        <button
-          type="button"
-          onClick={() => onEditTodo(todo)}
-          className="shrink-0 rounded p-0.5 text-white/30 opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-[#82C397]"
-          aria-label="수정"
-        >
-          <Pencil className="h-3 w-3" strokeWidth={2.5} />
-        </button>
+        <TodoRowMenu
+          todo={todo}
+          variant="compact"
+          onEditTodo={onEditTodo}
+          onDeleteTodo={onDeleteTodo}
+        />
       </div>
     </li>
   );
@@ -239,6 +356,7 @@ export default function TodoList({
   isLoading,
   isError,
   onEditTodo,
+  onDeleteTodo,
   onToggleComplete,
   onMoveTodoToDate,
 }: TodoListProps) {
@@ -412,6 +530,7 @@ export default function TodoList({
                         catLabel={categoryLabelForTodo(t)}
                         variant="compact"
                         onEditTodo={onEditTodo}
+                        onDeleteTodo={onDeleteTodo}
                         onToggleComplete={onToggleComplete}
                         weekDnD={{ onDragEnd: clearDnDHighlight }}
                       />

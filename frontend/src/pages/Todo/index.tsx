@@ -28,6 +28,7 @@ const TodoPage = () => {
               }
               isError={b.isTodosError}
               onEditTodo={(todo) => b.setEditingId(todo.id)}
+              onDeleteTodo={b.handleDeleteTodo}
               onToggleComplete={(id) =>
                 b.patchTodos((prev) =>
                   prev.map((t) =>
