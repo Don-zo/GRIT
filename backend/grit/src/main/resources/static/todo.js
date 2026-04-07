@@ -142,6 +142,36 @@ async function updateTodo(todoId, patch) {
     return response.json();
 }
 
+/** 마감일만 변경 (캘린더 드래그앤드롭 등). body: { dueDate: 'YYYY-MM-DD' } */
+async function patchTodoDueDate(todoId, dueDate) {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}/due-date`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dueDate })
+    });
+    if (response.status === 403) throw new Error('본인의 투두만 수정할 수 있습니다.');
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || '마감일 변경에 실패했습니다.');
+    }
+    return response.json();
+}
+
+/** 완료 체크/해제만. body: { isDone: boolean } */
+async function patchTodoDone(todoId, isDone) {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}/done`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDone })
+    });
+    if (response.status === 403) throw new Error('본인의 투두만 수정할 수 있습니다.');
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || '완료 상태 변경에 실패했습니다.');
+    }
+    return response.json();
+}
+
 async function deleteTodo(todoId) {
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}`, {
         method: 'DELETE'
@@ -261,7 +291,7 @@ function renderTodoList() {
 
 async function handleToggleDone(todoId, isDone) {
     try {
-        const updated = await updateTodo(todoId, { isDone });
+        const updated = await patchTodoDone(todoId, isDone);
         const idx = allTodos.findIndex(t => t.id === todoId);
         if (idx !== -1) allTodos[idx] = updated;
         renderTodoList();

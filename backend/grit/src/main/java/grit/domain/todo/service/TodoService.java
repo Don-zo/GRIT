@@ -7,6 +7,8 @@ import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
 import grit.domain.todo.dto.CreateTodoRequestDTO;
 import grit.domain.todo.dto.DailyAchievementDTO;
+import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
+import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
 import grit.domain.todo.entity.Todo;
 import grit.domain.todo.entity.TodoCategory;
@@ -40,10 +42,6 @@ public class TodoService {
         return todoRepository.findByOwnerIdWithRelations(userId);
     }
 
-    /**
-     * 해당 그룹 멤버가 작성한 투두 전체. {@code focusUserId}는 그룹 멤버여야 하며, 해당 작성자의 투두가 목록 최상단에 오도록 정렬합니다.
-     * 요청자는 그룹 멤버여야 합니다.
-     */
     public List<Todo> findForGroup(String groupCode, Long requesterUserId, Long focusUserId) {
         Member requester = memberRepository.findById(requesterUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
@@ -120,6 +118,32 @@ public class TodoService {
             todo.setCategory(category);
         }
 
+        return todo;
+    }
+
+    @Transactional
+    public Todo moveDueDate(Long todoId, Long userId, MoveTodoDueDateRequestDTO request) {
+        Todo todo = todoRepository.findByIdWithRelations(todoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
+
+        if (!todo.getOwner().getId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 수정할 수 있습니다.");
+        }
+
+        todo.setDueDate(request.getDueDate());
+        return todo;
+    }
+
+    @Transactional
+    public Todo setDone(Long todoId, Long userId, SetTodoDoneRequestDTO request) {
+        Todo todo = todoRepository.findByIdWithRelations(todoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "투두를 찾을 수 없습니다."));
+
+        if (!todo.getOwner().getId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 투두만 수정할 수 있습니다.");
+        }
+
+        todo.setIsDone(request.getIsDone());
         return todo;
     }
 
