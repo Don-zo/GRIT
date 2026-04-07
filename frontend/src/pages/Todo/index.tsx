@@ -1,17 +1,17 @@
 import { Header } from "@/components/Header";
 import EditCard from "@/pages/Todo/components/Edit/EditCard";
 import TodoList from "@/pages/Todo/components/TodoList";
-import TodoToast from "@/pages/Todo/components/TodoToast";
-import { useTodoBoard } from "@/pages/Todo/components/TodoBoard/useTodoBoard";
+import Toast from "@/components/Toast";
+import { useTodo } from "@/hooks/todo/useTodo";
 
 const TodoPage = () => {
-  const b = useTodoBoard();
+  const b = useTodo();
 
   return (
     <div className="relative flex h-screen w-full flex-col overflow-hidden bg-gray-darkest pt-[65px]">
       <Header variant="dark" alwaysVisible />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <TodoToast toast={b.todoToast} onClear={b.clearTodoToast} />
+        <Toast toast={b.toast} onClear={b.clearToast} />
         <div className="flex min-h-0 flex-1 flex-col gap-2 px-8 pb-8 pt-4">
           {b.userId != null && b.isCategoriesError ? (
             <p className="shrink-0 text-sm text-red-400/90">

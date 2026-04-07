@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { isAxiosError } from "axios";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, type QueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { todoApi } from "@/apis/services/todo";
 import type { UpdateTodoBody } from "@/apis/types/todo";
@@ -9,45 +9,30 @@ import {
   applyTodoUpdateOptimistic,
   buildCreateTodoBody,
   buildOptimisticTodoItem,
-  buildUpdateTodoBody,
   mapTodoApiToItem,
   mapTodoCategoryApiToCategory,
 } from "./mappers";
-import { useTodoData } from "./useTodoData";
-import { useTodoToast } from "./useTodoToast";
 
-export function useTodoBoard() {
+type Notify = (text: string, variant?: "success" | "error") => void;
+
+export function useTodoMutations(options: {
+  userId: number | null;
+  queryClient: QueryClient;
+  notify: Notify;
+  setCategoryRemap: Dispatch<
+    SetStateAction<{ tempId: string; realId: string } | null>
+  >;
+  setCategoryCreateFailedTempId: Dispatch<SetStateAction<string | null>>;
+  setEditingId: Dispatch<SetStateAction<string | null>>;
+}) {
   const {
     userId,
     queryClient,
-    todos,
-    categories,
-    isTodosLoading,
-    isCategoriesLoading,
-    isTodosError,
-    isCategoriesError,
-    setCategories,
-    patchTodos,
-    setGuestCategories,
-  } = useTodoData();
-
-  const { todoToast, clearTodoToast, notifyTodo } = useTodoToast();
-
-  const [categoryRemap, setCategoryRemap] = useState<{
-    tempId: string;
-    realId: string;
-  } | null>(null);
-
-  const [categoryCreateFailedTempId, setCategoryCreateFailedTempId] =
-    useState<string | null>(null);
-
-  const onCategoryRemapConsumed = useCallback(() => {
-    setCategoryRemap(null);
-  }, []);
-
-  const onCategoryCreateFailedConsumed = useCallback(() => {
-    setCategoryCreateFailedTempId(null);
-  }, []);
+    notify,
+    setCategoryRemap,
+    setCategoryCreateFailedTempId,
+    setEditingId,
+  } = options;
 
   const createCategoryMutation = useMutation({
     mutationFn: ({
@@ -88,12 +73,12 @@ export function useTodoBoard() {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 409) {
-          notifyTodo("같은 이름의 카테고리가 이미 있어요.", "error");
+          notify("같은 이름의 카테고리가 이미 있어요.", "error");
         } else {
-          notifyTodo("카테고리를 추가하지 못했어요.", "error");
+          notify("카테고리를 추가하지 못했어요.", "error");
         }
       } else {
-        notifyTodo("카테고리를 추가하지 못했어요.", "error");
+        notify("카테고리를 추가하지 못했어요.", "error");
       }
     },
     onSuccess: (data, { tempId }) => {
@@ -108,17 +93,6 @@ export function useTodoBoard() {
       setCategoryRemap({ tempId, realId: String(data.id) });
     },
   });
-
-  const handleCreateCategory = (name: string): { tempId: string } => {
-    if (userId == null) return { tempId: "" };
-    const trimmed = name.trim().slice(0, 50);
-    if (!trimmed) return { tempId: "" };
-    const tempId = `opt-${crypto.randomUUID()}`;
-    createCategoryMutation.mutate({ name: trimmed, tempId });
-    return { tempId };
-  };
-
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   const createTodoMutation = useMutation({
     mutationFn: (vars: {
@@ -163,7 +137,7 @@ export function useTodoBoard() {
           return list.map((t) => (t.id === tempId ? mapped : t));
         },
       );
-      notifyTodo("생성됐어요");
+      notify("생성됐어요");
     },
     onError: (err, _v, context) => {
       if (userId == null) return;
@@ -176,16 +150,16 @@ export function useTodoBoard() {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 400) {
-          notifyTodo("입력값을 확인해 주세요.", "error");
+          notify("입력값을 확인해 주세요.", "error");
         } else if (status === 403) {
-          notifyTodo("권한이 없어요.", "error");
+          notify("권한이 없어요.", "error");
         } else if (status === 404) {
-          notifyTodo("사용자 또는 카테고리를 찾을 수 없어요.", "error");
+          notify("사용자 또는 카테고리를 찾을 수 없어요.", "error");
         } else {
-          notifyTodo("할 일을 추가하지 못했어요.", "error");
+          notify("할 일을 추가하지 못했어요.", "error");
         }
       } else {
-        notifyTodo("할 일을 추가하지 못했어요.", "error");
+        notify("할 일을 추가하지 못했어요.", "error");
       }
     },
   });
@@ -232,7 +206,7 @@ export function useTodoBoard() {
           ),
       );
       setEditingId(null);
-      notifyTodo("수정됐어요");
+      notify("수정됐어요");
     },
     onError: (err, _v, context) => {
       if (userId == null) return;
@@ -245,16 +219,16 @@ export function useTodoBoard() {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 400) {
-          notifyTodo("내용은 비울 수 없어요.", "error");
+          notify("내용은 비울 수 없어요.", "error");
         } else if (status === 403) {
-          notifyTodo("권한이 없어요.", "error");
+          notify("권한이 없어요.", "error");
         } else if (status === 404) {
-          notifyTodo("할 일 또는 카테고리를 찾을 수 없어요.", "error");
+          notify("할 일 또는 카테고리를 찾을 수 없어요.", "error");
         } else {
-          notifyTodo("수정에 실패했어요.", "error");
+          notify("수정에 실패했어요.", "error");
         }
       } else {
-        notifyTodo("수정에 실패했어요.", "error");
+        notify("수정에 실패했어요.", "error");
       }
     },
   });
@@ -306,16 +280,16 @@ export function useTodoBoard() {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 400) {
-          notifyTodo("완료 상태를 바꿀 수 없어요.", "error");
+          notify("완료 상태를 바꿀 수 없어요.", "error");
         } else if (status === 403) {
-          notifyTodo("권한이 없어요.", "error");
+          notify("권한이 없어요.", "error");
         } else if (status === 404) {
-          notifyTodo("할 일을 찾을 수 없어요.", "error");
+          notify("할 일을 찾을 수 없어요.", "error");
         } else {
-          notifyTodo("완료 처리에 실패했어요.", "error");
+          notify("완료 처리에 실패했어요.", "error");
         }
       } else {
-        notifyTodo("완료 처리에 실패했어요.", "error");
+        notify("완료 처리에 실패했어요.", "error");
       }
     },
   });
@@ -355,7 +329,7 @@ export function useTodoBoard() {
             t.id === String(data.id) ? mapTodoApiToItem(data) : t,
           ),
       );
-      notifyTodo("이동 됐어요");
+      notify("이동됐어요");
     },
     onError: (err, _v, context) => {
       if (userId == null) return;
@@ -368,16 +342,16 @@ export function useTodoBoard() {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 400) {
-          notifyTodo("마감일을 바꿀 수 없어요.", "error");
+          notify("마감일을 바꿀 수 없어요.", "error");
         } else if (status === 403) {
-          notifyTodo("권한이 없어요.", "error");
+          notify("권한이 없어요.", "error");
         } else if (status === 404) {
-          notifyTodo("할 일을 찾을 수 없어요.", "error");
+          notify("할 일을 찾을 수 없어요.", "error");
         } else {
-          notifyTodo("이동에 실패했어요.", "error");
+          notify("이동에 실패했어요.", "error");
         }
       } else {
-        notifyTodo("이동에 실패했어요.", "error");
+        notify("이동에 실패했어요.", "error");
       }
     },
   });
@@ -417,16 +391,16 @@ export function useTodoBoard() {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 403 || status === 404) {
-          notifyTodo("할 일을 삭제할 수 없어요.", "error");
+          notify("할 일을 삭제할 수 없어요.", "error");
         } else {
-          notifyTodo("삭제에 실패했어요.", "error");
+          notify("삭제에 실패했어요.", "error");
         }
       } else {
-        notifyTodo("삭제에 실패했어요.", "error");
+        notify("삭제에 실패했어요.", "error");
       }
     },
     onSuccess: () => {
-      notifyTodo("삭제됐어요");
+      notify("삭제됐어요");
     },
   });
 
@@ -464,193 +438,23 @@ export function useTodoBoard() {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 403 || status === 404) {
-          notifyTodo("카테고리를 삭제할 수 없어요.", "error");
+          notify("카테고리를 삭제할 수 없어요.", "error");
         } else {
-          notifyTodo("카테고리 삭제에 실패했어요.", "error");
+          notify("카테고리 삭제에 실패했어요.", "error");
         }
       } else {
-        notifyTodo("카테고리 삭제에 실패했어요.", "error");
+        notify("카테고리 삭제에 실패했어요.", "error");
       }
     },
   });
 
-  const handleRemoveCategory = useCallback(
-    (id: string) => {
-      if (userId == null) {
-        setGuestCategories((prev) => prev.filter((c) => c.id !== id));
-        return;
-      }
-      if (id.startsWith("opt-")) {
-        queryClient.setQueryData<Category[]>(
-          QUERY_KEYS.todoCategories.byUser(userId),
-          (prev) => (prev ?? []).filter((c) => c.id !== id),
-        );
-        return;
-      }
-      const numId = Number(id);
-      if (!Number.isFinite(numId) || numId <= 0) return;
-      deleteCategoryMutation.mutate({ categoryId: numId, categoryIdStr: id });
-    },
-    [userId, queryClient, deleteCategoryMutation, setGuestCategories],
-  );
-
-  const editingTodo = useMemo(
-    () =>
-      editingId ? (todos.find((t) => t.id === editingId) ?? null) : null,
-    [editingId, todos],
-  );
-
-  useEffect(() => {
-    if (editingId && !todos.some((t) => t.id === editingId)) {
-      setEditingId(null);
-    }
-  }, [editingId, todos]);
-
-  const handleAddTodo = (item: {
-    title: string;
-    dueDate: string;
-    categoryId: string;
-  }) => {
-    if (userId == null) {
-      patchTodos((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), ...item, completed: false },
-      ]);
-      notifyTodo("생성됐어요");
-      return;
-    }
-    const tempId = `opt-todo-${crypto.randomUUID()}`;
-    createTodoMutation.mutate({ item, tempId });
-  };
-
-  const handleUpdateTodo = (
-    id: string,
-    item: { title: string; dueDate: string; categoryId: string },
-  ) => {
-    if (userId == null) {
-      patchTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, ...item } : t)),
-      );
-      setEditingId(null);
-      notifyTodo("수정됐어요");
-      return;
-    }
-    const prevTodo = todos.find((t) => t.id === id);
-    if (!prevTodo) return;
-    const todoIdNum = Number(id);
-    if (!Number.isFinite(todoIdNum) || todoIdNum <= 0) {
-      patchTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, ...item } : t)),
-      );
-      setEditingId(null);
-      notifyTodo("수정됐어요");
-      return;
-    }
-    updateTodoMutation.mutate({
-      todoId: todoIdNum,
-      todoIdStr: id,
-      body: buildUpdateTodoBody(prevTodo, item),
-    });
-  };
-
-  const handleDeleteTodo = (id: string) => {
-    if (userId == null) {
-      patchTodos((prev) => prev.filter((t) => t.id !== id));
-      setEditingId(null);
-      notifyTodo("삭제됐어요");
-      return;
-    }
-    const num = Number(id);
-    if (!Number.isFinite(num) || num <= 0) {
-      patchTodos((prev) => prev.filter((t) => t.id !== id));
-      setEditingId(null);
-      notifyTodo("삭제됐어요");
-      return;
-    }
-    deleteTodoMutation.mutate({ todoId: num, todoIdStr: id });
-  };
-
-  const handleToggleComplete = (id: string) => {
-    const todo = todos.find((t) => t.id === id);
-    if (!todo) return;
-    const nextDone = !todo.completed;
-
-    if (userId == null) {
-      patchTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, completed: nextDone } : t)),
-      );
-      return;
-    }
-
-    const todoIdNum = Number(id);
-    if (!Number.isFinite(todoIdNum) || todoIdNum <= 0) {
-      patchTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, completed: nextDone } : t)),
-      );
-      return;
-    }
-
-    toggleTodoDoneMutation.mutate({
-      todoId: todoIdNum,
-      todoIdStr: id,
-      isDone: nextDone,
-    });
-  };
-
-  const handleMoveTodoToDate = (id: string, dueDate: string) => {
-    const trimmed = dueDate.trim();
-    const todo = todos.find((t) => t.id === id);
-    if (!todo) return;
-    if (todo.dueDate.trim() === trimmed) return;
-
-    if (userId == null) {
-      patchTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, dueDate: trimmed } : t)),
-      );
-      notifyTodo("이동됐어요");
-      return;
-    }
-
-    const todoIdNum = Number(id);
-    if (!Number.isFinite(todoIdNum) || todoIdNum <= 0) {
-      patchTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, dueDate: trimmed } : t)),
-      );
-      notifyTodo("이동 됐어요");
-      return;
-    }
-
-    moveTodoDueDateMutation.mutate({
-      todoId: todoIdNum,
-      todoIdStr: id,
-      dueDate: trimmed,
-    });
-  };
-
   return {
-    userId,
-    todos,
-    categories,
-    isTodosLoading,
-    isCategoriesLoading,
-    isTodosError,
-    isCategoriesError,
-    todoToast,
-    clearTodoToast,
-    setCategories,
-    patchTodos,
-    setEditingId,
-    editingTodo,
-    categoryRemap,
-    onCategoryRemapConsumed,
-    categoryCreateFailedTempId,
-    onCategoryCreateFailedConsumed,
-    handleCreateCategory,
-    handleRemoveCategory,
-    handleAddTodo,
-    handleUpdateTodo,
-    handleDeleteTodo,
-    handleToggleComplete,
-    handleMoveTodoToDate,
+    createCategoryMutation,
+    createTodoMutation,
+    updateTodoMutation,
+    toggleTodoDoneMutation,
+    moveTodoDueDateMutation,
+    deleteTodoMutation,
+    deleteCategoryMutation,
   };
 }

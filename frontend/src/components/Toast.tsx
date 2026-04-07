@@ -2,18 +2,18 @@ import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 
-export type TodoToastPayload = {
+export type ToastPayload = {
   key: number;
   text: string;
   variant: "success" | "error";
 };
 
-type TodoToastProps = {
-  toast: TodoToastPayload | null;
+type ToastProps = {
+  toast: ToastPayload | null;
   onClear: () => void;
 };
 
-export default function TodoToast({ toast, onClear }: TodoToastProps) {
+export default function Toast({ toast, onClear }: ToastProps) {
   useEffect(() => {
     if (!toast) return;
     const id = window.setTimeout(onClear, 2800);
