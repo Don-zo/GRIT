@@ -84,8 +84,8 @@ public class TodoCategoryService {
             cat.setSortOrder(i);
         }
 
-        return todoCategoryRepository.findByOwner_IdOrderBySortOrderAscIdAsc(userId).stream()
-                .map(TodoCategoryResponseDto::from)
+        return orderedIds.stream()
+                .map(id -> TodoCategoryResponseDto.from(byId.get(id)))
                 .toList();
     }
 
