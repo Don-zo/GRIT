@@ -29,18 +29,8 @@ const TodoPage = () => {
               isError={b.isTodosError}
               onEditTodo={(todo) => b.setEditingId(todo.id)}
               onDeleteTodo={b.handleDeleteTodo}
-              onToggleComplete={(id) =>
-                b.patchTodos((prev) =>
-                  prev.map((t) =>
-                    t.id === id ? { ...t, completed: !t.completed } : t,
-                  ),
-                )
-              }
-              onMoveTodoToDate={(id, dueDate) =>
-                b.patchTodos((prev) =>
-                  prev.map((t) => (t.id === id ? { ...t, dueDate } : t)),
-                )
-              }
+              onToggleComplete={b.handleToggleComplete}
+              onMoveTodoToDate={b.handleMoveTodoToDate}
             />
 
             <EditCard

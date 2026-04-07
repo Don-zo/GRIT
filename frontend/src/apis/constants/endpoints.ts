@@ -23,6 +23,8 @@ export const ENDPOINTS = {
   },
   TODO: {
     BY_ID: (todoId: number) => `/api/todos/${todoId}`,
+    DONE: (todoId: number) => `/api/todos/${todoId}/done`,
+    DUE_DATE: (todoId: number) => `/api/todos/${todoId}/due-date`,
     BY_USER: (userId: number) => `/api/users/${userId}/todos`,
     CATEGORIES_BY_USER: (userId: number) =>
       `/api/users/${userId}/todo-categories`,

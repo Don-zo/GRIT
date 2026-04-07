@@ -259,6 +259,129 @@ export function useTodoBoard() {
     },
   });
 
+  const toggleTodoDoneMutation = useMutation({
+    mutationFn: ({
+      todoId,
+      isDone,
+    }: {
+      todoId: number;
+      todoIdStr: string;
+      isDone: boolean;
+    }) => todoApi.patchTodoDone(todoId, { isDone }),
+    onMutate: async ({ todoIdStr, isDone }) => {
+      if (userId == null) return {};
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.todos.byUser(userId),
+      });
+      const previous = queryClient.getQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+      );
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) =>
+          (prev ?? []).map((t) =>
+            t.id === todoIdStr ? { ...t, completed: isDone } : t,
+          ),
+      );
+      return { previous };
+    },
+    onSuccess: (data) => {
+      if (userId == null) return;
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) =>
+          (prev ?? []).map((t) =>
+            t.id === String(data.id) ? mapTodoApiToItem(data) : t,
+          ),
+      );
+    },
+    onError: (err, _v, context) => {
+      if (userId == null) return;
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          QUERY_KEYS.todos.byUser(userId),
+          context.previous,
+        );
+      }
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 400) {
+          notifyTodo("완료 상태를 바꿀 수 없어요.", "error");
+        } else if (status === 403) {
+          notifyTodo("권한이 없어요.", "error");
+        } else if (status === 404) {
+          notifyTodo("할 일을 찾을 수 없어요.", "error");
+        } else {
+          notifyTodo("완료 처리에 실패했어요.", "error");
+        }
+      } else {
+        notifyTodo("완료 처리에 실패했어요.", "error");
+      }
+    },
+  });
+
+  const moveTodoDueDateMutation = useMutation({
+    mutationFn: ({
+      todoId,
+      dueDate,
+    }: {
+      todoId: number;
+      todoIdStr: string;
+      dueDate: string;
+    }) => todoApi.patchTodoDueDate(todoId, { dueDate }),
+    onMutate: async ({ todoIdStr, dueDate }) => {
+      if (userId == null) return {};
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.todos.byUser(userId),
+      });
+      const previous = queryClient.getQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+      );
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) =>
+          (prev ?? []).map((t) =>
+            t.id === todoIdStr ? { ...t, dueDate } : t,
+          ),
+      );
+      return { previous };
+    },
+    onSuccess: (data) => {
+      if (userId == null) return;
+      queryClient.setQueryData<TodoItem[]>(
+        QUERY_KEYS.todos.byUser(userId),
+        (prev) =>
+          (prev ?? []).map((t) =>
+            t.id === String(data.id) ? mapTodoApiToItem(data) : t,
+          ),
+      );
+      notifyTodo("이동 됐어요");
+    },
+    onError: (err, _v, context) => {
+      if (userId == null) return;
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          QUERY_KEYS.todos.byUser(userId),
+          context.previous,
+        );
+      }
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 400) {
+          notifyTodo("마감일을 바꿀 수 없어요.", "error");
+        } else if (status === 403) {
+          notifyTodo("권한이 없어요.", "error");
+        } else if (status === 404) {
+          notifyTodo("할 일을 찾을 수 없어요.", "error");
+        } else {
+          notifyTodo("이동에 실패했어요.", "error");
+        }
+      } else {
+        notifyTodo("이동에 실패했어요.", "error");
+      }
+    },
+  });
+
   const deleteTodoMutation = useMutation({
     mutationFn: async ({
       todoId,
@@ -447,6 +570,63 @@ export function useTodoBoard() {
     deleteTodoMutation.mutate({ todoId: num, todoIdStr: id });
   };
 
+  const handleToggleComplete = (id: string) => {
+    const todo = todos.find((t) => t.id === id);
+    if (!todo) return;
+    const nextDone = !todo.completed;
+
+    if (userId == null) {
+      patchTodos((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, completed: nextDone } : t)),
+      );
+      return;
+    }
+
+    const todoIdNum = Number(id);
+    if (!Number.isFinite(todoIdNum) || todoIdNum <= 0) {
+      patchTodos((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, completed: nextDone } : t)),
+      );
+      return;
+    }
+
+    toggleTodoDoneMutation.mutate({
+      todoId: todoIdNum,
+      todoIdStr: id,
+      isDone: nextDone,
+    });
+  };
+
+  const handleMoveTodoToDate = (id: string, dueDate: string) => {
+    const trimmed = dueDate.trim();
+    const todo = todos.find((t) => t.id === id);
+    if (!todo) return;
+    if (todo.dueDate.trim() === trimmed) return;
+
+    if (userId == null) {
+      patchTodos((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, dueDate: trimmed } : t)),
+      );
+      notifyTodo("이동됐어요");
+      return;
+    }
+
+    const todoIdNum = Number(id);
+    if (!Number.isFinite(todoIdNum) || todoIdNum <= 0) {
+      patchTodos((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, dueDate: trimmed } : t)),
+      );
+      notifyTodo("이동 됐어요");
+      return;
+    }
+
+    moveTodoDueDateMutation.mutate({
+      todoId: todoIdNum,
+      todoIdStr: id,
+      dueDate: trimmed,
+    });
+  };
+
   return {
     userId,
     todos,
@@ -470,5 +650,7 @@ export function useTodoBoard() {
     handleAddTodo,
     handleUpdateTodo,
     handleDeleteTodo,
+    handleToggleComplete,
+    handleMoveTodoToDate,
   };
 }

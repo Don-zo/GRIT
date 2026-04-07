@@ -21,6 +21,14 @@ export interface UpdateTodoBody {
   categoryId?: number;
 }
 
+export interface PatchTodoDoneBody {
+  isDone: boolean;
+}
+
+export interface PatchTodoDueDateBody {
+  dueDate: string;
+}
+
 export interface TodoApiItem {
   id: number;
   ownerId: number;

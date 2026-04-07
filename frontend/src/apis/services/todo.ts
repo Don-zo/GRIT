@@ -3,6 +3,8 @@ import { ENDPOINTS } from "@/apis/constants/endpoints";
 import type {
   CreateTodoBody,
   CreateTodoCategoryBody,
+  PatchTodoDoneBody,
+  PatchTodoDueDateBody,
   TodoApiItem,
   TodoCategoryApiItem,
   UpdateTodoBody,
@@ -42,6 +44,28 @@ export const todoApi = {
   ): Promise<TodoApiItem> => {
     const response = await apiClient.put<TodoApiItem>(
       ENDPOINTS.TODO.BY_ID(todoId),
+      body,
+    );
+    return response.data;
+  },
+
+  patchTodoDone: async (
+    todoId: number,
+    body: PatchTodoDoneBody,
+  ): Promise<TodoApiItem> => {
+    const response = await apiClient.patch<TodoApiItem>(
+      ENDPOINTS.TODO.DONE(todoId),
+      body,
+    );
+    return response.data;
+  },
+
+  patchTodoDueDate: async (
+    todoId: number,
+    body: PatchTodoDueDateBody,
+  ): Promise<TodoApiItem> => {
+    const response = await apiClient.patch<TodoApiItem>(
+      ENDPOINTS.TODO.DUE_DATE(todoId),
       body,
     );
     return response.data;
