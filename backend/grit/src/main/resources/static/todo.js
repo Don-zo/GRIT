@@ -94,6 +94,22 @@ async function deleteTodoCategory(categoryId) {
     }
 }
 
+/** @param {number[]} categoryIds 본인 카테고리 ID 전체를 원하는 순서대로 */
+async function reorderTodoCategories(categoryIds) {
+    const userId = getMemberId();
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todo-categories/reorder`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryIds })
+    });
+    if (response.status === 403) throw new Error('본인 카테고리만 순서를 바꿀 수 있습니다.');
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || '순서 변경에 실패했습니다.');
+    }
+    return response.json();
+}
+
 /**
  * 그룹 투두 목록. 멤버만 호출 가능.
  * @param {string} groupCode
@@ -185,6 +201,8 @@ async function deleteTodo(todoId) {
 
 let allTodos = [];
 let todoCategories = [];
+/** @type {number|null} */
+let categoryDragId = null;
 let activeFilter = 'all';
 let activeCategoryFilter = '';
 
@@ -468,7 +486,7 @@ function renderCategoryManageList() {
         return;
     }
     ul.innerHTML = todoCategories.map(c => `
-        <li style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(99,102,241,0.12);font-size:13px;">
+        <li draggable="true" data-cat-id="${c.id}" class="todo-category-chip" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(99,102,241,0.12);font-size:13px;">
             <span>${escapeHtml(c.name)}</span>
             <button type="button" class="icon-btn danger" data-del-cat="${c.id}" title="삭제" style="padding:2px;width:24px;height:24px;">×</button>
         </li>`).join('');
@@ -488,7 +506,9 @@ async function loadCategories() {
 document.addEventListener('DOMContentLoaded', () => {
     if (!checkAuth()) return;
 
-    document.getElementById('category-manage-list').addEventListener('click', async e => {
+    const categoryManageList = document.getElementById('category-manage-list');
+
+    categoryManageList.addEventListener('click', async e => {
         const del = e.target.closest('[data-del-cat]');
         if (!del) return;
         const id = Number(del.getAttribute('data-del-cat'));
@@ -498,6 +518,64 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadCategories();
             await loadTodos();
             toast.info('카테고리를 삭제했습니다.');
+        } catch (err) {
+            toast.error(err.message);
+        }
+    });
+
+    categoryManageList.addEventListener('dragstart', e => {
+        if (e.target.closest('button')) {
+            e.preventDefault();
+            return;
+        }
+        const li = e.target.closest('[data-cat-id]');
+        if (!li) return;
+        categoryDragId = Number(li.getAttribute('data-cat-id'));
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(categoryDragId));
+        li.classList.add('dragging');
+    });
+
+    categoryManageList.addEventListener('dragend', e => {
+        const li = e.target.closest('[data-cat-id]');
+        if (li) li.classList.remove('dragging');
+        categoryManageList.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        categoryDragId = null;
+    });
+
+    categoryManageList.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const li = e.target.closest('[data-cat-id]');
+        if (!li || categoryDragId == null) return;
+        categoryManageList.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        li.classList.add('drag-over');
+    });
+
+    categoryManageList.addEventListener('dragleave', e => {
+        const li = e.target.closest('[data-cat-id]');
+        if (li && !li.contains(e.relatedTarget)) li.classList.remove('drag-over');
+    });
+
+    categoryManageList.addEventListener('drop', async e => {
+        e.preventDefault();
+        const dropLi = e.target.closest('[data-cat-id]');
+        if (!dropLi || categoryDragId == null) return;
+        const dropId = Number(dropLi.getAttribute('data-cat-id'));
+        const dragId = categoryDragId;
+        dropLi.classList.remove('drag-over');
+        if (dragId === dropId) return;
+        const ids = todoCategories.map(c => c.id);
+        const from = ids.indexOf(dragId);
+        const to = ids.indexOf(dropId);
+        if (from < 0 || to < 0) return;
+        const next = [...ids];
+        next.splice(from, 1);
+        next.splice(to, 0, dragId);
+        try {
+            await reorderTodoCategories(next);
+            await loadCategories();
+            toast.success('카테고리 순서를 변경했습니다.');
         } catch (err) {
             toast.error(err.message);
         }
