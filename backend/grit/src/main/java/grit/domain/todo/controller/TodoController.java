@@ -3,6 +3,8 @@ package grit.domain.todo.controller;
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.todo.dto.CreateTodoRequestDTO;
 import grit.domain.todo.dto.DailyAchievementDTO;
+import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
+import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
 import grit.domain.todo.entity.Todo;
@@ -94,6 +96,38 @@ public class TodoController {
             @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
             @RequestBody UpdateTodoRequestDTO request) {
         Todo todo = todoService.update(todoId, principal.id(), request);
+        return ResponseEntity.ok(TodoResponseDTO.from(todo));
+    }
+
+    @Operation(summary = "투두 마감일만 변경", description = "드래그앤드롭 등으로 날짜만 옮길 때 사용합니다. 내용·완료·카테고리는 변경하지 않습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "변경 성공"),
+            @ApiResponse(responseCode = "400", description = "입력 검증 실패", content = @Content),
+            @ApiResponse(responseCode = "403", description = "본인의 투두만 수정할 수 있음", content = @Content),
+            @ApiResponse(responseCode = "404", description = "투두를 찾을 수 없음", content = @Content)
+    })
+    @PatchMapping("/api/todos/{todoId}/due-date")
+    public ResponseEntity<TodoResponseDTO> moveDueDate(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
+            @Valid @RequestBody MoveTodoDueDateRequestDTO request) {
+        Todo todo = todoService.moveDueDate(todoId, principal.id(), request);
+        return ResponseEntity.ok(TodoResponseDTO.from(todo));
+    }
+
+    @Operation(summary = "투두 완료 체크/해제", description = "완료 여부만 변경합니다. 다른 필드는 건드리지 않습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "변경 성공"),
+            @ApiResponse(responseCode = "400", description = "입력 검증 실패", content = @Content),
+            @ApiResponse(responseCode = "403", description = "본인의 투두만 수정할 수 있음", content = @Content),
+            @ApiResponse(responseCode = "404", description = "투두를 찾을 수 없음", content = @Content)
+    })
+    @PatchMapping("/api/todos/{todoId}/done")
+    public ResponseEntity<TodoResponseDTO> setDone(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
+            @Valid @RequestBody SetTodoDoneRequestDTO request) {
+        Todo todo = todoService.setDone(todoId, principal.id(), request);
         return ResponseEntity.ok(TodoResponseDTO.from(todo));
     }
 
