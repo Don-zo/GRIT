@@ -45,7 +45,9 @@ const GoogleOAuthRedirectPage = () => {
         console.log("로그인 성공", member.nickname);
 
         if (firstTimeUser) {
-          navigate(PATHS.HOME); //추후 프로필 설정 모달로 이동 구현
+          navigate(PATHS.HOME, {
+            state: { openProfileSetupModal: true, firstTimeUser: true },
+          });
         } else {
           navigate(PATHS.HOME);
         }

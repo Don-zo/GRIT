@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/services/group";
+import { fileApi } from "@/apis/services/file";
 import { ImageUploader } from "@/components/ImageUploader";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
@@ -53,8 +54,10 @@ export default function GroupSettingsModal({
       mutationFn: async () => {
         const trimmedGroupName = groupName.trim();
         if (imageFile) {
-          const imageName = await groupApi.uploadImage(imageFile);
-
+          const imageName = await fileApi.uploadFileWithPresignedInfo(
+            imageFile,
+            groupApi.getPresignedInfo,
+          );
           return groupApi.update(groupCode, {
             name: trimmedGroupName,
             imageName,
@@ -82,10 +85,33 @@ export default function GroupSettingsModal({
 
   const handleSave = async () => {
     if (!groupName.trim()) {
-      alert("그룹 이름을 입력해주세요.");
+      alert("그룹 이름을 입력해주세요."); //TODO: 확인 모달로 변경
       return;
     }
     await updateGroup();
+  };
+
+  const { mutateAsync: signoutGroup, isPending: isGroupSignoutPending } =
+    useMutation({
+      mutationFn: async () => {
+        await groupApi.signout(groupCode);
+      },
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups.my });
+        await queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.groups.detail(groupCode),
+        });
+        handleClose();
+      },
+      onError: (error) => {
+        console.error("그룹 탈퇴 실패:", error);
+      },
+    });
+
+  const handleSignoutGroup = async () => {
+    const ok = window.confirm("정말 이 그룹에서 탈퇴하시겠어요?");
+    if (!ok) return;
+    await signoutGroup();
   };
 
   return (
@@ -118,14 +144,24 @@ export default function GroupSettingsModal({
               placeholder="그룹 이름을 입력하세요"
             />
 
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isGroupInfoSaving}
-              className="mt-4 h-14 w-full rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
-            >
-              {isGroupInfoSaving ? "저장 중..." : "그룹 정보 저장하기"}
-            </button>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isGroupInfoSaving || isGroupSignoutPending}
+                className="h-14 w-full rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
+              >
+                {isGroupInfoSaving ? "저장 중..." : "그룹 정보 저장하기"}
+              </button>
+              <button
+                type="button"
+                onClick={handleSignoutGroup}
+                disabled={isGroupInfoSaving || isGroupSignoutPending}
+                className="h-14 w-full rounded-lg bg-red-600 text-lg font-semibold text-white hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {isGroupSignoutPending ? "탈퇴 중..." : "탈퇴하기"}
+              </button>
+            </div>
 
             <p className="mt-6 text-center text-xs text-[#D6FDE5]">
               그룹에 참여 가능한 인원은 최대 8명입니다.

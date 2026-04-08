@@ -23,13 +23,11 @@ export const loginGoogle = async (
   const authStorage = {
     state: {
       accessToken,
-      member,
     },
   };
   localStorage.setItem("auth-storage", JSON.stringify(authStorage));
   console.log({
-    memberId: member.id,
-    nickname: member.nickname,
+    member,
     firstTimeUser,
   });
 

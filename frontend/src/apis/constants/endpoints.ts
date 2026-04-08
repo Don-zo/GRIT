@@ -9,6 +9,8 @@ export const ENDPOINTS = {
   },
   MY: {
     INFO: "/api/members/me",
+    PROFILE: "/api/members/me/profile",
+    NICKNAME_CHECK: "/api/members/nickname-availability",
     IMAGE_UPLOAD: `/api/members/me/profile-image/upload-url`,
   },
   GROUP: {
@@ -17,6 +19,10 @@ export const ENDPOINTS = {
     INFO: (groupCode: string) => `/api/groups/${groupCode}`,
     JOIN: (groupCode: string) => `/api/groups/${groupCode}/join`,
     IMAGE_UPLOAD: "/api/groups/image-upload-url",
+  },
+  FRIEND: {
+    LIST: "/api/friends",
+    DETAIL: (nickname: string) => `/api/friends/${nickname}`,
   },
   LIVEKIT: {
     TOKEN: "/livekit/token",
