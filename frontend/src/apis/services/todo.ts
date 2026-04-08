@@ -5,6 +5,7 @@ import type {
   CreateTodoCategoryBody,
   PatchTodoDoneBody,
   PatchTodoDueDateBody,
+  ReorderTodoCategoriesBody,
   TodoApiItem,
   TodoCategoryApiItem,
   UpdateTodoBody,
@@ -93,5 +94,16 @@ export const todoApi = {
     await apiClient.delete(
       ENDPOINTS.TODO.CATEGORIES_BY_USER_CATEGORY(userId, categoryId),
     );
+  },
+
+  reorderCategories: async (
+    userId: number,
+    body: ReorderTodoCategoriesBody,
+  ): Promise<TodoCategoryApiItem[]> => {
+    const response = await apiClient.patch<TodoCategoryApiItem[]>(
+      ENDPOINTS.TODO.CATEGORIES_REORDER(userId),
+      body,
+    );
+    return response.data;
   },
 };

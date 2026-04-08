@@ -31,6 +31,8 @@ type EditCardProps = {
     item: { title: string; dueDate: string; categoryId: string },
   ) => void;
   onDeleteTodo: (id: string) => void;
+  onReorderCategories?: (orderedIds: string[]) => void;
+  reorderDisabled?: boolean;
 };
 
 const EditCard = ({
@@ -47,6 +49,8 @@ const EditCard = ({
   onAddTodo,
   onUpdateTodo,
   onDeleteTodo,
+  onReorderCategories,
+  reorderDisabled,
 }: EditCardProps) => {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState(() => localDateKey());
@@ -199,6 +203,8 @@ const EditCard = ({
             canDeleteCategory={canDeleteCategory}
             onRemoveCategory={handleRemoveCategory}
             onCreateCategory={onCreateCategory}
+            onReorderCategories={onReorderCategories}
+            reorderDisabled={reorderDisabled}
           />
         </section>
       </div>

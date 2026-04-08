@@ -49,6 +49,7 @@ export function useTodo() {
     moveTodoDueDateMutation,
     deleteTodoMutation,
     deleteCategoryMutation,
+    reorderCategoriesMutation,
   } = useTodoMutations({
     userId,
     queryClient,
@@ -85,6 +86,34 @@ export function useTodo() {
       deleteCategoryMutation.mutate({ categoryId: numId, categoryIdStr: id });
     },
     [userId, queryClient, deleteCategoryMutation, setGuestCategories],
+  );
+
+  const reorderDisabled =
+    userId != null && categories.some((c) => c.id.startsWith("opt-"));
+
+  const handleReorderCategories = useCallback(
+    (orderedIds: string[]) => {
+      if (orderedIds.length === 0) return;
+      if (userId == null) {
+        setCategories((prev) => {
+          const map = new Map(prev.map((c) => [c.id, c]));
+          return orderedIds
+            .map((id) => map.get(id))
+            .filter((c): c is Category => c != null);
+        });
+        return;
+      }
+      if (orderedIds.some((id) => id.startsWith("opt-"))) return;
+      const categoryIds = orderedIds.map((id) => Number(id));
+      if (
+        categoryIds.length !== orderedIds.length ||
+        categoryIds.some((n) => !Number.isFinite(n) || n <= 0)
+      ) {
+        return;
+      }
+      reorderCategoriesMutation.mutate({ categoryIds });
+    },
+    [userId, setCategories, reorderCategoriesMutation],
   );
 
   const editingTodo = useMemo(
@@ -245,5 +274,7 @@ export function useTodo() {
     handleDeleteTodo,
     handleToggleComplete,
     handleMoveTodoToDate,
+    handleReorderCategories,
+    reorderDisabled,
   };
 }

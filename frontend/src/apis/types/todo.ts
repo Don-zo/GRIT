@@ -1,6 +1,12 @@
 export interface TodoCategoryApiItem {
   id: number;
   name: string;
+  /** 작을수록 앞 순서. 목록 조회·재정렬 응답에 포함될 수 있음 */
+  sortOrder?: number;
+}
+
+export interface ReorderTodoCategoriesBody {
+  categoryIds: number[];
 }
 
 export interface CreateTodoCategoryBody {

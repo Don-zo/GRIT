@@ -30,5 +30,7 @@ export const ENDPOINTS = {
       `/api/users/${userId}/todo-categories`,
     CATEGORIES_BY_USER_CATEGORY: (userId: number, categoryId: number) =>
       `/api/users/${userId}/todo-categories/${categoryId}`,
+    CATEGORIES_REORDER: (userId: number) =>
+      `/api/users/${userId}/todo-categories/reorder`,
   },
 } as const;

@@ -44,7 +44,12 @@ export function useTodoData() {
         : (["todoCategories", "guest"] as const),
     queryFn: async () => {
       const rows = await todoApi.getCategoriesByUserId(userId!);
-      return rows.map(mapTodoCategoryApiToCategory);
+      const sorted = [...rows].sort((a, b) => {
+        const ao = a.sortOrder ?? 0;
+        const bo = b.sortOrder ?? 0;
+        return ao - bo;
+      });
+      return sorted.map(mapTodoCategoryApiToCategory);
     },
     enabled: userId != null,
   });

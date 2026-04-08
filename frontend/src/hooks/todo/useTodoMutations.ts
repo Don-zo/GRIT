@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useRef, type Dispatch, type SetStateAction } from "react";
 import { isAxiosError } from "axios";
 import { useMutation, type QueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
@@ -33,6 +33,8 @@ export function useTodoMutations(options: {
     setCategoryCreateFailedTempId,
     setEditingId,
   } = options;
+
+  const reorderRequestIdRef = useRef(0);
 
   const createCategoryMutation = useMutation({
     mutationFn: ({
@@ -446,6 +448,77 @@ export function useTodoMutations(options: {
         notify("카테고리 삭제에 실패했어요.", "error");
       }
     },
+    onSuccess: async () => {
+      if (userId == null) return;
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.todoCategories.byUser(userId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.todos.byUser(userId),
+      });
+    },
+  });
+
+  const reorderCategoriesMutation = useMutation({
+    mutationFn: async ({ categoryIds }: { categoryIds: number[] }) => {
+      const requestId = ++reorderRequestIdRef.current;
+      const data = await todoApi.reorderCategories(userId!, { categoryIds });
+      return { data, requestId };
+    },
+    onMutate: async ({ categoryIds }) => {
+      if (userId == null) return {};
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.todoCategories.byUser(userId),
+      });
+      const previous = queryClient.getQueryData<Category[]>(
+        QUERY_KEYS.todoCategories.byUser(userId),
+      );
+      const map = new Map((previous ?? []).map((c) => [c.id, c]));
+      const next = categoryIds
+        .map((id) => map.get(String(id)))
+        .filter((c): c is Category => c != null);
+      queryClient.setQueryData<Category[]>(
+        QUERY_KEYS.todoCategories.byUser(userId),
+        next,
+      );
+      return { previous };
+    },
+    onError: (err, _vars, context) => {
+      if (userId == null) return;
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          QUERY_KEYS.todoCategories.byUser(userId),
+          context.previous,
+        );
+      }
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 400) {
+          notify("카테고리 순서를 바꿀 수 없어요. 목록을 새로고침해 보세요.", "error");
+        } else if (status === 403) {
+          notify("권한이 없어요.", "error");
+        } else if (status === 404) {
+          notify("사용자를 찾을 수 없어요.", "error");
+        } else {
+          notify("카테고리 순서 변경에 실패했어요.", "error");
+        }
+      } else {
+        notify("카테고리 순서 변경에 실패했어요.", "error");
+      }
+    },
+    onSuccess: (result) => {
+      if (userId == null || result == null) return;
+      if (result.requestId !== reorderRequestIdRef.current) return;
+      const sorted = [...result.data].sort((a, b) => {
+        const ao = a.sortOrder ?? 0;
+        const bo = b.sortOrder ?? 0;
+        return ao - bo;
+      });
+      queryClient.setQueryData<Category[]>(
+        QUERY_KEYS.todoCategories.byUser(userId),
+        sorted.map(mapTodoCategoryApiToCategory),
+      );
+    },
   });
 
   return {
@@ -456,5 +529,6 @@ export function useTodoMutations(options: {
     moveTodoDueDateMutation,
     deleteTodoMutation,
     deleteCategoryMutation,
+    reorderCategoriesMutation,
   };
 }

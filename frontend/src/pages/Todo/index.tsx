@@ -49,6 +49,8 @@ const TodoPage = () => {
               onAddTodo={b.handleAddTodo}
               onUpdateTodo={b.handleUpdateTodo}
               onDeleteTodo={b.handleDeleteTodo}
+              onReorderCategories={b.handleReorderCategories}
+              reorderDisabled={b.reorderDisabled}
             />
           </div>
         </div>
