@@ -1,6 +1,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import CategoryTagInput from "@/pages/Todo/Edit/CategoryTagInput";
-import type { Category, TodoItem } from "@/pages/Todo/types";
+import { ChevronLeft } from "lucide-react";
+import CategoryTagInput from "./CategoryTagInput";
+import type { Category, TodoItem } from "@/pages/Todo/components/types";
 
 function localDateKey(d = new Date()) {
   const y = d.getFullYear();
@@ -12,7 +13,14 @@ function localDateKey(d = new Date()) {
 type EditCardProps = {
   categories: Category[];
   setCategories: Dispatch<SetStateAction<Category[]>>;
+  onRemoveCategory: (id: string) => void;
+  onCreateCategory?: (name: string) => { tempId: string };
+  categoryRemap: { tempId: string; realId: string } | null;
+  onCategoryRemapConsumed: () => void;
+  categoryCreateFailedTempId: string | null;
+  onCategoryCreateFailedConsumed: () => void;
   editingTodo: TodoItem | null;
+  onCancelEdit: () => void;
   onAddTodo: (item: {
     title: string;
     dueDate: string;
@@ -23,15 +31,26 @@ type EditCardProps = {
     item: { title: string; dueDate: string; categoryId: string },
   ) => void;
   onDeleteTodo: (id: string) => void;
+  onReorderCategories?: (orderedIds: string[]) => void;
+  reorderDisabled?: boolean;
 };
 
 const EditCard = ({
   categories,
   setCategories,
+  onRemoveCategory: onRemoveCategoryFromPage,
+  onCreateCategory,
+  categoryRemap,
+  onCategoryRemapConsumed,
+  categoryCreateFailedTempId,
+  onCategoryCreateFailedConsumed,
   editingTodo,
+  onCancelEdit,
   onAddTodo,
   onUpdateTodo,
   onDeleteTodo,
+  onReorderCategories,
+  reorderDisabled,
 }: EditCardProps) => {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState(() => localDateKey());
@@ -49,6 +68,22 @@ const EditCard = ({
     }
   }, [editingTodo]);
 
+  useEffect(() => {
+    if (!categoryRemap) return;
+    setCategoryId((prev) =>
+      prev === categoryRemap.tempId ? categoryRemap.realId : prev,
+    );
+    onCategoryRemapConsumed();
+  }, [categoryRemap, onCategoryRemapConsumed]);
+
+  useEffect(() => {
+    if (!categoryCreateFailedTempId) return;
+    setCategoryId((id) =>
+      id === categoryCreateFailedTempId ? "" : id,
+    );
+    onCategoryCreateFailedConsumed();
+  }, [categoryCreateFailedTempId, onCategoryCreateFailedConsumed]);
+
   const isEditing = editingTodo !== null;
 
   const canSubmit =
@@ -57,7 +92,7 @@ const EditCard = ({
 
   const handleRemoveCategory = (id: string) => {
     if (!canDeleteCategory) return;
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    onRemoveCategoryFromPage(id);
     if (categoryId === id) setCategoryId("");
   };
 
@@ -90,9 +125,23 @@ const EditCard = ({
   return (
     <aside className="relative mx-6 my-20 flex min-h-0 min-w-0 flex-[1] flex-col overflow-hidden rounded-3xl bg-[#2B2F36] p-8 shadow-2xl">
       <div className="shrink-0">
-        <h2 className="text-h3 font-semibold text-white">
-          {isEditing ? "할 일 수정" : "새 할 일"}
-        </h2>
+        {isEditing ? (
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={onCancelEdit}
+              className="-ml-0.5 shrink-0 rounded-md p-1 text-[#D6FDE5]/70 transition hover:bg-white/10 hover:text-[#D6FDE5]"
+              aria-label="수정 취소"
+            >
+              <ChevronLeft className="h-4 w-4" strokeWidth={2.25} />
+            </button>
+            <h2 className="min-w-0 text-h3 font-semibold text-white">
+              할 일 수정
+            </h2>
+          </div>
+        ) : (
+          <h2 className="text-h3 font-semibold text-white">새 할 일</h2>
+        )}
         <div className="my-4 border-b border-gray-semidark" />
       </div>
 
@@ -153,6 +202,9 @@ const EditCard = ({
             setCategories={setCategories}
             canDeleteCategory={canDeleteCategory}
             onRemoveCategory={handleRemoveCategory}
+            onCreateCategory={onCreateCategory}
+            onReorderCategories={onReorderCategories}
+            reorderDisabled={reorderDisabled}
           />
         </section>
       </div>

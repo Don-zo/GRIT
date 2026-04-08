@@ -1,86 +1,59 @@
-import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
-import EditCard from "@/pages/Todo/Edit/EditCard";
-import TodoList from "@/pages/Todo/TodoList/TodoList";
-import {
-  DEFAULT_CATEGORIES,
-  type Category,
-  type TodoItem,
-} from "@/pages/Todo/types";
+import EditCard from "@/pages/Todo/components/Edit/EditCard";
+import TodoList from "@/pages/Todo/components/TodoList";
+import Toast from "@/components/Toast";
+import { useTodo } from "@/hooks/todo/useTodo";
 
 const TodoPage = () => {
-  const [todos, setTodos] = useState<TodoItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  const editingTodo = useMemo(
-    () =>
-      editingId ? (todos.find((t) => t.id === editingId) ?? null) : null,
-    [editingId, todos],
-  );
-
-  useEffect(() => {
-    if (editingId && !todos.some((t) => t.id === editingId)) {
-      setEditingId(null);
-    }
-  }, [editingId, todos]);
-
-  const handleAddTodo = (item: {
-    title: string;
-    dueDate: string;
-    categoryId: string;
-  }) => {
-    setTodos((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), ...item, completed: false },
-    ]);
-  };
-
-  const handleUpdateTodo = (
-    id: string,
-    item: { title: string; dueDate: string; categoryId: string },
-  ) => {
-    setTodos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...item } : t)),
-    );
-    setEditingId(null);
-  };
-
-  const handleDeleteTodo = (id: string) => {
-    setTodos((prev) => prev.filter((t) => t.id !== id));
-    setEditingId(null);
-  };
+  const b = useTodo();
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-gray-darkest pt-[65px]">
+    <div className="relative flex h-screen w-full flex-col overflow-hidden bg-gray-darkest pt-[65px]">
       <Header variant="dark" alwaysVisible />
-      <div className="flex min-h-0 flex-1 flex-row gap-3 px-8 pb-8 pt-4">
-        <TodoList
-          todos={todos}
-          categories={categories}
-          onEditTodo={(todo) => setEditingId(todo.id)}
-          onToggleComplete={(id) =>
-            setTodos((prev) =>
-              prev.map((t) =>
-                t.id === id ? { ...t, completed: !t.completed } : t,
-              ),
-            )
-          }
-          onMoveTodoToDate={(id, dueDate) =>
-            setTodos((prev) =>
-              prev.map((t) => (t.id === id ? { ...t, dueDate } : t)),
-            )
-          }
-        />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <Toast toast={b.toast} onClear={b.clearToast} />
+        <div className="flex min-h-0 flex-1 flex-col gap-2 px-8 pb-8 pt-4">
+          {b.userId != null && b.isCategoriesError ? (
+            <p className="shrink-0 text-sm text-red-400/90">
+              카테고리 목록을 불러오지 못했습니다.
+            </p>
+          ) : null}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-row gap-3">
+            <TodoList
+              todos={b.todos}
+              categories={b.categories}
+              isLoading={
+                Boolean(b.userId) &&
+                (b.isTodosLoading || b.isCategoriesLoading)
+              }
+              isError={b.isTodosError}
+              onEditTodo={(todo) => b.setEditingId(todo.id)}
+              onDeleteTodo={b.handleDeleteTodo}
+              onToggleComplete={b.handleToggleComplete}
+              onMoveTodoToDate={b.handleMoveTodoToDate}
+            />
 
-        <EditCard
-          categories={categories}
-          setCategories={setCategories}
-          editingTodo={editingTodo}
-          onAddTodo={handleAddTodo}
-          onUpdateTodo={handleUpdateTodo}
-          onDeleteTodo={handleDeleteTodo}
-        />
+            <EditCard
+              categories={b.categories}
+              setCategories={b.setCategories}
+              onRemoveCategory={b.handleRemoveCategory}
+              onCreateCategory={
+                b.userId != null ? b.handleCreateCategory : undefined
+              }
+              categoryRemap={b.categoryRemap}
+              onCategoryRemapConsumed={b.onCategoryRemapConsumed}
+              categoryCreateFailedTempId={b.categoryCreateFailedTempId}
+              onCategoryCreateFailedConsumed={b.onCategoryCreateFailedConsumed}
+              editingTodo={b.editingTodo}
+              onCancelEdit={() => b.setEditingId(null)}
+              onAddTodo={b.handleAddTodo}
+              onUpdateTodo={b.handleUpdateTodo}
+              onDeleteTodo={b.handleDeleteTodo}
+              onReorderCategories={b.handleReorderCategories}
+              reorderDisabled={b.reorderDisabled}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

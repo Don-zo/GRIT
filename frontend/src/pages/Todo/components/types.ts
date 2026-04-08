@@ -8,6 +8,7 @@ export type TodoItem = {
   title: string;
   dueDate: string;
   categoryId: string;
+  categoryName?: string | null;
   completed: boolean;
 };
 
