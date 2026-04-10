@@ -1,11 +1,11 @@
-import apiClient from "@/apis/client/apiClient";
+import apiClient, { refreshClient } from "@/apis/client/apiClient";
 import type {
   GoogleLoginRequest,
   GoogleLoginResponse,
 } from "@/apis/types/auth";
 import { OAUTH_CONFIG } from "@/apis/constants/oauth";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
-import type { Member, RefreshTokenResponse } from "@/apis/types/auth";
+import type { MemberResponse, RefreshTokenResponse } from "@/apis/types/auth";
 
 export const loginGoogle = async (
   code: string,
@@ -35,26 +35,24 @@ export const loginGoogle = async (
 };
 
 export const refreshAccessToken = async (): Promise<string> => {
-  const response = await apiClient.post<RefreshTokenResponse>(
+  const response = await refreshClient.post<RefreshTokenResponse>(
     ENDPOINTS.AUTH.REFRESH,
     {},
-    { withCredentials: true },
   );
   const { accessToken } = response.data;
+  const storedAuth = localStorage.getItem("auth-storage");
 
-  const authStorage = localStorage.getItem("auth-storage");
-  if (authStorage) {
-    const parsed = JSON.parse(authStorage);
+  if (storedAuth) {
+    const parsed = JSON.parse(storedAuth);
     parsed.state.accessToken = accessToken;
     localStorage.setItem("auth-storage", JSON.stringify(parsed));
   }
+
   return accessToken;
 };
 
 export const logout = async (): Promise<void> => {
-  await apiClient.post(ENDPOINTS.AUTH.LOGOUT, {
-    withCredentials: true,
-  });
+  await apiClient.post(ENDPOINTS.AUTH.LOGOUT, {});
   localStorage.removeItem("auth-storage");
 };
 
@@ -63,12 +61,11 @@ export const signout = async (): Promise<void> => {
   localStorage.removeItem("auth-storage");
 };
 
-/** 로컬에 저장된 로그인 회원 정보 (없으면 null) */
-export function getStoredMember(): Member | null {
+export function getStoredMember(): MemberResponse | null {
   try {
     const raw = localStorage.getItem("auth-storage");
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { state?: { member?: Member } };
+    const parsed = JSON.parse(raw) as { state?: { member?: MemberResponse } };
     return parsed.state?.member ?? null;
   } catch {
     return null;
