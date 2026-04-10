@@ -3,7 +3,7 @@ import { API_BASE_URL } from "@/apis/constants/endpoints";
 import { PATHS } from "@/routes/path";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
 
-const refreshClient = axios.create({
+export const refreshClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
   withCredentials: true,
