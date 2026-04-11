@@ -51,14 +51,6 @@ export default function LeftSidebar({
       >
         <UserCog size={21} />
       </button>
-      <button
-        type="button"
-        onClick={handleAddFriend}
-        aria-label="친구 추가"
-        className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-[#3E7358] text-white hover:brightness-110 transition"
-      >
-        <Plus size={24} />
-      </button>
 
       <AddFriendModal
         open={isModalOpen}
@@ -118,6 +110,14 @@ export default function LeftSidebar({
               </div>
             );
           })}
+        <button
+          type="button"
+          onClick={handleAddFriend}
+          aria-label="친구 추가"
+          className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-white hover:bg-[#3E7358] transition"
+        >
+          <Plus size={24} />
+        </button>
       </nav>
     </aside>
   );
