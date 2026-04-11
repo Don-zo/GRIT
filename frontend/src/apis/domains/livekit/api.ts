@@ -1,5 +1,5 @@
 import apiClient from "@/apis/client/apiClient";
-import type { TokenResponse } from "@/apis/types/livekit";
+import type { TokenResponse } from "@/apis/domains/livekit/type";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
 
 export const getLiveKitToken = async (

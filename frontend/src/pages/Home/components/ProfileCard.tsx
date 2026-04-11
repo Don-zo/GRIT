@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Settings, MessageCircle } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import SettingsModal from "@/pages/Home/components/Modals/ProfileSettingsModal";
-import { userApi } from "@/apis/services/user";
+import { userApi } from "@/apis/domains/user/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { formatDisplayDate, getDaysUntilDDay } from "@/utils/date";
 

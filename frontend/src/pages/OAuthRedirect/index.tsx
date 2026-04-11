@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PATHS } from "@/routes/path";
-import { loginGoogle } from "@/apis/services/auth";
+import { loginGoogle } from "@/apis/domains/auth/api";
 
 const GoogleOAuthRedirectPage = () => {
   const [searchParams] = useSearchParams();

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Modal from "@/components/Modal";
-import { groupApi } from "@/apis/services/group";
+import { groupApi } from "@/apis/domains/group/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type JoinGroupModalProps = {

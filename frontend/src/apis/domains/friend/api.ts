@@ -1,6 +1,6 @@
 import apiClient from "@/apis/client/apiClient";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
-import type { FriendDetail } from "@/apis/types/friend";
+import type { FriendDetail } from "@/apis/domains/friend/type";
 
 export const friendApi = {
   getList: async (): Promise<FriendDetail[]> => {

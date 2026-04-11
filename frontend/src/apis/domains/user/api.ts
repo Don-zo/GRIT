@@ -4,8 +4,8 @@ import type {
   CreateMemberRequest,
   UpdateMemberRequest,
   NicknameAvailabilityResponse,
-  S3uploadResponse,
-} from "@/apis/types";
+} from "../auth/type";
+import type { S3uploadResponse } from "../file/type";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
 
 export const userApi = {

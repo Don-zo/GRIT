@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { userApi } from "@/apis/services/user";
-import { fileApi } from "@/apis/services/file";
+import { userApi } from "@/apis/domains/user/api";
+import { fileApi } from "@/apis/domains/file/api";
 import Modal from "@/components/Modal";
 import { Divider } from "@/components/Divider";
 import { FormInput } from "@/components/FormInput";

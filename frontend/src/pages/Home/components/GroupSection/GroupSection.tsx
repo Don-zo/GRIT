@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import Button from "./Button";
 import GroupCard from "./GroupCard";
-import { groupApi } from "@/apis/services/group";
+import { groupApi } from "@/apis/domains/group/api";
 import CreateGroupModal from "@/pages/Home/components/Modals/CreateGroupModal";
 import JoinGroupModal from "@/pages/Home/components/Modals/JoinGroupModal";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";

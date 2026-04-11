@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Modal from "@/components/Modal";
-import { friendApi } from "@/apis/services/friend";
+import { friendApi } from "@/apis/domains/friend/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type FriendManageModalProps = {

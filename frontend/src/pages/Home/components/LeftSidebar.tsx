@@ -3,8 +3,8 @@ import { Plus, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import AddFriendModal from "@/pages/Home/components/Modals/AddFriendModal";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
-import { friendApi } from "@/apis/services/friend";
-import type { FriendDetail } from "@/apis/types/friend";
+import { friendApi } from "@/apis/domains/friend/api";
+import type { FriendDetail } from "@/apis/domains/friend/type";
 import FriendTooltip from "./FriendTooltip";
 
 type LeftSidebarProps = {

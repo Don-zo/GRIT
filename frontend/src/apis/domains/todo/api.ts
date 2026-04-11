@@ -9,7 +9,7 @@ import type {
   TodoApiItem,
   TodoCategoryApiItem,
   UpdateTodoBody,
-} from "@/apis/types/todo";
+} from "@/apis/domains/todo/type";
 
 export const todoApi = {
   getListByUserId: async (userId: number): Promise<TodoApiItem[]> => {
@@ -87,10 +87,7 @@ export const todoApi = {
     return response.data;
   },
 
-  deleteCategory: async (
-    userId: number,
-    categoryId: number,
-  ): Promise<void> => {
+  deleteCategory: async (userId: number, categoryId: number): Promise<void> => {
     await apiClient.delete(
       ENDPOINTS.TODO.CATEGORIES_BY_USER_CATEGORY(userId, categoryId),
     );

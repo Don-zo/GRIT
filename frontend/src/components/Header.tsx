@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { PATHS } from "@/routes/path";
-import { logout, signout } from "@/apis/services/auth";
-import { userApi } from "@/apis/services/user";
+import { logout, signout } from "@/apis/domains/auth/api";
+import { userApi } from "@/apis/domains/user/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type HeaderProps = {

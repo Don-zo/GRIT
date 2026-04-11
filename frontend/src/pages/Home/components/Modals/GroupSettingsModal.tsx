@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import Modal from "@/components/Modal";
-import { groupApi } from "@/apis/services/group";
-import { fileApi } from "@/apis/services/file";
+import { groupApi } from "@/apis/domains/group/api";
+import { fileApi } from "@/apis/domains/file/api";
 import { ImageUploader } from "@/components/ImageUploader";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 

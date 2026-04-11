@@ -2,8 +2,8 @@ import { useRef, type Dispatch, type SetStateAction } from "react";
 import { isAxiosError } from "axios";
 import { useMutation, type QueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
-import { todoApi } from "@/apis/services/todo";
-import type { UpdateTodoBody } from "@/apis/types/todo";
+import { todoApi } from "@/apis/domains/todo/api";
+import type { UpdateTodoBody } from "@/apis/domains/todo/type";
 import type { Category, TodoItem } from "@/pages/Todo/components/types";
 import {
   applyTodoUpdateOptimistic,
@@ -37,13 +37,8 @@ export function useTodoMutations(options: {
   const reorderRequestIdRef = useRef(0);
 
   const createCategoryMutation = useMutation({
-    mutationFn: ({
-      name,
-      tempId: _tempId,
-    }: {
-      name: string;
-      tempId: string;
-    }) => todoApi.createCategory(userId!, { name }),
+    mutationFn: ({ name, tempId: _tempId }: { name: string; tempId: string }) =>
+      todoApi.createCategory(userId!, { name }),
     onMutate: async ({ name, tempId }) => {
       if (userId == null) return {};
       await queryClient.cancelQueries({
@@ -192,8 +187,7 @@ export function useTodoMutations(options: {
       const next = applyTodoUpdateOptimistic(prevTodo, body, cats);
       queryClient.setQueryData<TodoItem[]>(
         QUERY_KEYS.todos.byUser(userId),
-        (prev) =>
-          (prev ?? []).map((t) => (t.id === todoIdStr ? next : t)),
+        (prev) => (prev ?? []).map((t) => (t.id === todoIdStr ? next : t)),
       );
       setEditingId(null);
       return { previous };
@@ -316,9 +310,7 @@ export function useTodoMutations(options: {
       queryClient.setQueryData<TodoItem[]>(
         QUERY_KEYS.todos.byUser(userId),
         (prev) =>
-          (prev ?? []).map((t) =>
-            t.id === todoIdStr ? { ...t, dueDate } : t,
-          ),
+          (prev ?? []).map((t) => (t.id === todoIdStr ? { ...t, dueDate } : t)),
       );
       return { previous };
     },
@@ -359,12 +351,7 @@ export function useTodoMutations(options: {
   });
 
   const deleteTodoMutation = useMutation({
-    mutationFn: async ({
-      todoId,
-    }: {
-      todoId: number;
-      todoIdStr: string;
-    }) => {
+    mutationFn: async ({ todoId }: { todoId: number; todoIdStr: string }) => {
       await todoApi.deleteTodo(todoId);
     },
     onMutate: async ({ todoIdStr }) => {
@@ -494,7 +481,10 @@ export function useTodoMutations(options: {
       if (isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 400) {
-          notify("카테고리 순서를 바꿀 수 없어요. 목록을 새로고침해 보세요.", "error");
+          notify(
+            "카테고리 순서를 바꿀 수 없어요. 목록을 새로고침해 보세요.",
+            "error",
+          );
         } else if (status === 403) {
           notify("권한이 없어요.", "error");
         } else if (status === 404) {

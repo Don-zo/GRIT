@@ -2,10 +2,14 @@ import apiClient, { refreshClient } from "@/apis/client/apiClient";
 import type {
   GoogleLoginRequest,
   GoogleLoginResponse,
-} from "@/apis/types/auth";
+} from "@/apis/domains/auth/type";
 import { OAUTH_CONFIG } from "@/apis/constants/oauth";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
-import type { MemberResponse, RefreshTokenResponse } from "@/apis/types/auth";
+import type {
+  MemberResponse,
+  RefreshTokenResponse,
+} from "@/apis/domains/auth/type";
+import { setAccessToken, removeAccessToken } from "@/utils/tokenStorage";
 
 export const loginGoogle = async (
   code: string,
@@ -17,15 +21,9 @@ export const loginGoogle = async (
   const response = await apiClient.post<GoogleLoginResponse>(
     ENDPOINTS.AUTH.GOOGLE,
     requestBody,
-    { withCredentials: true },
   );
   const { member, accessToken, firstTimeUser } = response.data;
-  const authStorage = {
-    state: {
-      accessToken,
-    },
-  };
-  localStorage.setItem("auth-storage", JSON.stringify(authStorage));
+  setAccessToken(accessToken);
   console.log({
     member,
     firstTimeUser,
@@ -40,25 +38,18 @@ export const refreshAccessToken = async (): Promise<string> => {
     {},
   );
   const { accessToken } = response.data;
-  const storedAuth = localStorage.getItem("auth-storage");
-
-  if (storedAuth) {
-    const parsed = JSON.parse(storedAuth);
-    parsed.state.accessToken = accessToken;
-    localStorage.setItem("auth-storage", JSON.stringify(parsed));
-  }
-
+  setAccessToken(accessToken);
   return accessToken;
 };
 
 export const logout = async (): Promise<void> => {
   await apiClient.post(ENDPOINTS.AUTH.LOGOUT, {});
-  localStorage.removeItem("auth-storage");
+  removeAccessToken();
 };
 
 export const signout = async (): Promise<void> => {
   await apiClient.delete(ENDPOINTS.MY.INFO);
-  localStorage.removeItem("auth-storage");
+  removeAccessToken();
 };
 
 export function getStoredMember(): MemberResponse | null {

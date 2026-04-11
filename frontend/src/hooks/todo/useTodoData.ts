@@ -1,8 +1,13 @@
-import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useCallback,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
-import { getStoredMember } from "@/apis/services/auth";
-import { todoApi } from "@/apis/services/todo";
+import { getStoredMember } from "@/apis/domains/auth/api";
+import { todoApi } from "@/apis/domains/todo/api";
 import {
   DEFAULT_CATEGORIES,
   type Category,
@@ -54,9 +59,8 @@ export function useTodoData() {
     enabled: userId != null,
   });
 
-  const [guestCategories, setGuestCategories] = useState<Category[]>(
-    DEFAULT_CATEGORIES,
-  );
+  const [guestCategories, setGuestCategories] =
+    useState<Category[]>(DEFAULT_CATEGORIES);
 
   const categories = userId != null ? serverCategories : guestCategories;
 
