@@ -2,6 +2,11 @@ import axios from "axios";
 import { API_BASE_URL } from "@/apis/constants/endpoints";
 import { PATHS } from "@/routes/path";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
+import {
+  getAccessToken,
+  setAccessToken,
+  removeAccessToken,
+} from "@/utils/tokenStorage";
 
 export const refreshClient = axios.create({
   baseURL: API_BASE_URL,
@@ -23,16 +28,9 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const authStorage = localStorage.getItem("auth-storage");
-    if (authStorage) {
-      try {
-        const { state } = JSON.parse(authStorage);
-        if (state?.accessToken) {
-          config.headers.Authorization = `Bearer ${state.accessToken}`;
-        }
-      } catch (err) {
-        console.error("토큰 파싱 에러:", err);
-      }
+    const accessToken = getAccessToken();
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
@@ -55,7 +53,6 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -78,24 +75,22 @@ apiClient.interceptors.response.use(
           ENDPOINTS.AUTH.REFRESH,
         );
 
-        const newAccessToken = refreshResponse.data.accessToken;
+        const newAccessToken = refreshResponse.data?.accessToken;
 
-        const storedAuth = localStorage.getItem("auth-storage");
-        if (storedAuth) {
-          const parsedAuth = JSON.parse(storedAuth);
-          parsedAuth.state.accessToken = newAccessToken;
-          localStorage.setItem("auth-storage", JSON.stringify(parsedAuth));
+        if (!newAccessToken) {
+          throw new Error("refresh 응답에 accessToken이 없습니다.");
         }
-
+        setAccessToken(newAccessToken);
         runPendingRequests(newAccessToken);
 
         originalRequest.headers = originalRequest.headers ?? {};
+
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         return apiClient(originalRequest);
       } catch (refreshError) {
         console.error("토큰 재발급 실패:", refreshError);
-        localStorage.removeItem("auth-storage");
+        removeAccessToken();
         window.location.href = PATHS.SIGNUP;
         return Promise.reject(refreshError);
       } finally {

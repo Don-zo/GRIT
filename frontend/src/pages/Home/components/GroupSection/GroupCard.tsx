@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Settings } from "lucide-react";
 import LiveBadge from "./LiveBadge";
 import GroupSettingsModal from "@/pages/Home/components/Modals/GroupSettingsModal";
-import type { Group } from "@/apis/types/group";
+import type { Group } from "@/apis/domains/group/type";
 
 type GroupCardProps = Group & {
   isLive?: boolean;

@@ -7,8 +7,8 @@ import Pomodoro from "@/pages/Room/components/Cam/Pomodoro";
 import CamLayout from "@/pages/Room/components/Cam/CamLayout";
 import TodoCamCard from "@/pages/Room/components/todo/TodoCamCard";
 import VideoTile from "@/pages/Room/components/Cam/VideoTile";
-//livekit api 연동
-import { getLiveKitToken } from "@/apis/services/livekit";
+
+import { getLiveKitToken } from "@/apis/domains/livekit/api";
 import { useLiveKit } from "@/hooks/useLiveKit";
 import { LIVEKIT_URL } from "@/apis/constants/endpoints";
 

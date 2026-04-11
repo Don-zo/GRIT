@@ -3,7 +3,7 @@ import type {
   TodoApiItem,
   TodoCategoryApiItem,
   UpdateTodoBody,
-} from "@/apis/types/todo";
+} from "@/apis/domains/todo/type";
 import type { Category, TodoItem } from "@/pages/Todo/components/types";
 
 export function mapTodoCategoryApiToCategory(

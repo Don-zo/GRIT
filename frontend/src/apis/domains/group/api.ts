@@ -1,11 +1,7 @@
 import apiClient from "@/apis/client/apiClient";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
-import type {
-  CreateGroupRequest,
-  UpdateGroupRequest,
-  Group,
-  S3uploadResponse,
-} from "@/apis/types";
+import type { CreateGroupRequest, UpdateGroupRequest, Group } from "./type";
+import type { S3uploadResponse } from "../file/type";
 
 export const groupApi = {
   create: async (data: CreateGroupRequest): Promise<Group> => {
