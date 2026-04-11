@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, User } from "lucide-react";
+import { Plus, User, UserCog } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import AddFriendModal from "@/pages/Home/components/Modals/AddFriendModal";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
@@ -8,6 +8,7 @@ import type { FriendDetail } from "@/apis/domains/friend/type";
 import FriendTooltip from "./FriendTooltip";
 
 type LeftSidebarProps = {
+  onOpenFriendManage?: () => void;
   onAddFriend?: () => void;
   onSelectFriend?: (nickname: string) => void;
   selectedFriendId?: string;
@@ -17,6 +18,7 @@ export default function LeftSidebar({
   onAddFriend,
   onSelectFriend,
   selectedFriendId,
+  onOpenFriendManage,
 }: LeftSidebarProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hovered, setHovered] = useState<FriendDetail | null>(null);
@@ -30,6 +32,10 @@ export default function LeftSidebar({
     queryFn: friendApi.getList,
   });
 
+  const handleFriendManageModalOpen = () => {
+    onOpenFriendManage?.();
+  };
+
   const handleAddFriend = () => {
     setIsModalOpen(true);
     onAddFriend?.();
@@ -39,9 +45,17 @@ export default function LeftSidebar({
     <aside className="relative flex w-17 flex-col items-center bg-[#2E323A] py-5">
       <button
         type="button"
+        onClick={handleFriendManageModalOpen}
+        aria-label="친구 관리"
+        className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-[#3E7358] border-none text-white hover:brightness-110 transition"
+      >
+        <UserCog size={21} />
+      </button>
+      <button
+        type="button"
         onClick={handleAddFriend}
         aria-label="친구 추가"
-        className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#3E7358] text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)] hover:brightness-110 transition"
+        className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-[#3E7358] text-white hover:brightness-110 transition"
       >
         <Plus size={24} />
       </button>

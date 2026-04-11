@@ -22,14 +22,10 @@ const HomePage = () => {
 
   return (
     <div className="flex flex-col pt-[65px] w-full h-auto bg-gray-darkest">
-      <Header
-        variant="dark"
-        alwaysVisible
-        onOpenFriendManage={() => setIsFriendManageOpen(true)}
-      />
+      <Header variant="dark" alwaysVisible />
 
       <div className="flex">
-        <LeftSidebar />
+        <LeftSidebar onOpenFriendManage={() => setIsFriendManageOpen(true)} />
 
         <div className="flex-1 ">
           <div className="flex items-center justify-center flex-1 mx-20 mt-10 gap-6">

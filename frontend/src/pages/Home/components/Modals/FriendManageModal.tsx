@@ -92,11 +92,17 @@ export default function FriendManageModal({
                 return (
                   <li
                     key={friend.nickname}
-                    className="flex items-center justify-between gap-4 py-3"
+                    className="flex items-center justify-between py-3"
                   >
-                    <span className="text-sm font-medium text-[#D6FDE5]">
-                      {friend.nickname}
-                    </span>
+                    <div className="flex flex-row items-center gap-5">
+                      <img
+                        src={friend.imageUrl}
+                        className="h-12 w-12 place-items-center overflow-hidden rounded-2xl"
+                      />
+                      <span className="text-sm font-medium text-[#D6FDE5]">
+                        {friend.nickname}
+                      </span>
+                    </div>
                     <button
                       type="button"
                       onClick={() => handleRemove(friend.nickname)}
