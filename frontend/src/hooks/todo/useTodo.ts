@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type SetStateAction,
+} from "react";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { useToast } from "@/hooks/useToast";
 import type { Category } from "@/pages/Todo/components/types";
@@ -39,7 +45,20 @@ export function useTodo() {
     setCategoryCreateFailedTempId(null);
   }, []);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingIdState] = useState<string | null>(null);
+  /** 추가 모달 등에서 초기 마감일로 사용 (요일 열 + 버튼) */
+  const [pendingAddTodoDueDate, setPendingAddTodoDueDate] = useState<
+    string | null
+  >(null);
+
+  /** 수정 열기와 동시에 등록(퀵애드)은 닫음 — 둘 동시에 켜지지 않게 */
+  const setEditingId = useCallback((action: SetStateAction<string | null>) => {
+    setEditingIdState((prev) => {
+      const next = typeof action === "function" ? action(prev) : action;
+      if (next != null) setPendingAddTodoDueDate(null);
+      return next;
+    });
+  }, []);
 
   const {
     createCategoryMutation,
@@ -124,7 +143,7 @@ export function useTodo() {
 
   useEffect(() => {
     if (editingId && !todos.some((t) => t.id === editingId)) {
-      setEditingId(null);
+      setEditingIdState(null);
     }
   }, [editingId, todos]);
 
@@ -153,7 +172,7 @@ export function useTodo() {
       patchTodos((prev) =>
         prev.map((t) => (t.id === id ? { ...t, ...item } : t)),
       );
-      setEditingId(null);
+      setEditingIdState(null);
       notify("수정됐어요");
       return;
     }
@@ -164,7 +183,7 @@ export function useTodo() {
       patchTodos((prev) =>
         prev.map((t) => (t.id === id ? { ...t, ...item } : t)),
       );
-      setEditingId(null);
+      setEditingIdState(null);
       notify("수정됐어요");
       return;
     }
@@ -178,14 +197,14 @@ export function useTodo() {
   const handleDeleteTodo = (id: string) => {
     if (userId == null) {
       patchTodos((prev) => prev.filter((t) => t.id !== id));
-      setEditingId(null);
+      setEditingIdState(null);
       notify("삭제됐어요");
       return;
     }
     const num = Number(id);
     if (!Number.isFinite(num) || num <= 0) {
       patchTodos((prev) => prev.filter((t) => t.id !== id));
-      setEditingId(null);
+      setEditingIdState(null);
       notify("삭제됐어요");
       return;
     }
@@ -249,6 +268,15 @@ export function useTodo() {
     });
   };
 
+  const requestAddTodoForDate = useCallback((dueDate: string) => {
+    setEditingIdState(null);
+    setPendingAddTodoDueDate(dueDate);
+  }, []);
+
+  const clearPendingAddTodoDueDate = useCallback(() => {
+    setPendingAddTodoDueDate(null);
+  }, []);
+
   return {
     userId,
     todos,
@@ -259,6 +287,7 @@ export function useTodo() {
     isCategoriesError,
     toast,
     clearToast,
+    notify,
     setCategories,
     patchTodos,
     setEditingId,
@@ -276,5 +305,8 @@ export function useTodo() {
     handleMoveTodoToDate,
     handleReorderCategories,
     reorderDisabled,
+    pendingAddTodoDueDate,
+    requestAddTodoForDate,
+    clearPendingAddTodoDueDate,
   };
 }
