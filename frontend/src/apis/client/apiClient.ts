@@ -71,16 +71,8 @@ apiClient.interceptors.response.use(
       isRefreshingToken = true;
 
       try {
-        console.log("[refresh] start");
-
         const refreshResponse = await refreshClient.post(
           ENDPOINTS.AUTH.REFRESH,
-        );
-
-        console.log(
-          "[refresh] success",
-          refreshResponse.status,
-          refreshResponse.data,
         );
 
         const newAccessToken = refreshResponse.data?.accessToken;
