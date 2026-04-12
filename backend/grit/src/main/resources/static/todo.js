@@ -264,15 +264,13 @@ function renderTodoList() {
         return;
     }
 
-    // Sort: 미완료 먼저 → 카테고리 표시 순서 → 내용(가나다) → id
+    // Sort: 미완료 먼저, 마감일 오름차순
     const sorted = [...filtered].sort((a, b) => {
         if (a.isDone !== b.isDone) return a.isDone ? 1 : -1;
-        const orderA = a.categorySortOrder != null ? a.categorySortOrder : Number.POSITIVE_INFINITY;
-        const orderB = b.categorySortOrder != null ? b.categorySortOrder : Number.POSITIVE_INFINITY;
-        if (orderA !== orderB) return orderA - orderB;
-        const cmp = (a.content || '').localeCompare(b.content || '', 'ko');
-        if (cmp !== 0) return cmp;
-        return (a.id ?? 0) - (b.id ?? 0);
+        if (a.dueDate && b.dueDate) return a.dueDate < b.dueDate ? -1 : 1;
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        return 0;
     });
 
     container.innerHTML = sorted.map(todo => {
