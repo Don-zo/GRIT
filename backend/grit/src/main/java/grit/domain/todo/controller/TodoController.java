@@ -31,7 +31,7 @@ import java.util.List;
 public class TodoController {
     private final TodoService todoService;
 
-    @Operation(summary = "내 투두 목록", description = "로그인한 사용자 본인의 투두만 조회합니다.")
+    @Operation(summary = "내 투두 목록", description = "로그인한 사용자 본인의 투두만 조회합니다. 미완료가 먼저이고, 카테고리 표시 순서·내용(가나다)·id 순으로 정렬되며 완료 항목은 아래쪽에 둡니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "403", description = "다른 사용자 ID로 조회 시도", content = @Content)
@@ -48,7 +48,7 @@ public class TodoController {
         return ResponseEntity.ok(responses);
     }
 
-    @Operation(summary = "그룹 투두 목록 (조회 전용)", description = "해당 그룹 멤버가 작성한 투두 전체를 반환하며, query userId(그룹 멤버 PK)에 해당하는 작성자의 투두가 목록 최상단에 오도록 정렬합니다. userId는 필수. 요청자는 그룹 멤버여야 합니다.")
+    @Operation(summary = "그룹 투두 목록 (조회 전용)", description = "해당 그룹 멤버가 작성한 투두 전체를 반환합니다. query userId(그룹 멤버 PK) 작성자의 투두가 먼저 오고, 이후 미완료→카테고리 순서→내용(가나다)→id 순으로 정렬됩니다. 완료된 항목은 같은 그룹 내에서 아래쪽에 둡니다. userId는 필수. 요청자는 그룹 멤버여야 합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "400", description = "userId가 그룹 멤버가 아님", content = @Content),
