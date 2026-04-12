@@ -36,6 +36,9 @@ public class TodoResponseDTO {
     @Schema(description = "카테고리 이름 (없으면 null)", example = "학교 과제")
     private String categoryName;
 
+    @Schema(description = "카테고리 표시 순서 (없으면 null)", example = "0")
+    private Integer categorySortOrder;
+
     @Schema(description = "마감일", example = "2025-01-25")
     private LocalDate dueDate;
 
@@ -54,6 +57,7 @@ public class TodoResponseDTO {
                 todo.isDone(),
                 todo.getCategory() != null ? todo.getCategory().getId() : null,
                 todo.getCategory() != null ? todo.getCategory().getName() : null,
+                todo.getCategory() != null ? todo.getCategory().getSortOrder() : null,
                 todo.getDueDate(),
                 todo.getCreatedAt(),
                 todo.getUpdatedAt()

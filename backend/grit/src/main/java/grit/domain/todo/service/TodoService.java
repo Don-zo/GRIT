@@ -20,11 +20,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.text.Collator;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TodoService {
+    /** {@link Collator}는 스레드 세이프가 아니므로 스레드 로컬로 둡니다. */
+    private static final ThreadLocal<Collator> KOREAN_TEXT_ORDER =
+            ThreadLocal.withInitial(() -> Collator.getInstance(Locale.KOREA));
+
     private final TodoRepository todoRepository;
     private final TodoCategoryRepository todoCategoryRepository;
     private final MemberRepository memberRepository;
@@ -39,7 +45,9 @@ public class TodoService {
     private final MemberGroupRepository memberGroupRepository;
 
     public List<Todo> findByUserId(Long userId) {
-        return todoRepository.findByOwnerIdWithRelations(userId);
+        return todoRepository.findByOwnerIdWithRelations(userId).stream()
+                .sorted(todoDisplayComparator())
+                .toList();
     }
 
     public List<Todo> findForGroup(String groupCode, Long requesterUserId, Long focusUserId) {
@@ -57,14 +65,19 @@ public class TodoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 그룹에 속하지 않은 사용자입니다.");
         }
 
-        List<Todo> todos = new ArrayList<>(todoRepository.findByGroupMembersTodosWithRelations(group.getId()));
-        Comparator<Todo> comparator = Comparator
-                .comparing((Todo t) -> !t.getOwner().getId().equals(focusUserId))
-                .thenComparing((a, b) -> Boolean.compare(a.isDone(), b.isDone()))
-                .thenComparing(Todo::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()))
+        return todoRepository.findByGroupMembersTodosWithRelations(group.getId()).stream()
+                .sorted(Comparator.comparing((Todo t) -> !t.getOwner().getId().equals(focusUserId))
+                        .thenComparing(todoDisplayComparator()))
+                .toList();
+    }
+
+    private Comparator<Todo> todoDisplayComparator() {
+        return Comparator.comparing(Todo::isDone)
+                .thenComparing(
+                        t -> t.getCategory() == null ? null : t.getCategory().getSortOrder(),
+                        Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(Todo::getContent, KOREAN_TEXT_ORDER.get())
                 .thenComparing(Todo::getId);
-        todos.sort(comparator);
-        return todos;
     }
 
     @Transactional
