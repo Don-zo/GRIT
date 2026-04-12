@@ -20,11 +20,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.text.Collator;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TodoService {
+    private static final Collator KOREAN_TEXT_ORDER = Collator.getInstance(Locale.KOREA);
+
     private final TodoRepository todoRepository;
     private final TodoCategoryRepository todoCategoryRepository;
     private final MemberRepository memberRepository;
@@ -39,7 +43,9 @@ public class TodoService {
     private final MemberGroupRepository memberGroupRepository;
 
     public List<Todo> findByUserId(Long userId) {
-        return todoRepository.findByOwnerIdWithRelations(userId);
+        List<Todo> todos = new ArrayList<>(todoRepository.findByOwnerIdWithRelations(userId));
+        todos.sort(todoDisplayComparator());
+        return todos;
     }
 
     public List<Todo> findForGroup(String groupCode, Long requesterUserId, Long focusUserId) {
@@ -60,11 +66,18 @@ public class TodoService {
         List<Todo> todos = new ArrayList<>(todoRepository.findByGroupMembersTodosWithRelations(group.getId()));
         Comparator<Todo> comparator = Comparator
                 .comparing((Todo t) -> !t.getOwner().getId().equals(focusUserId))
-                .thenComparing((a, b) -> Boolean.compare(a.isDone(), b.isDone()))
-                .thenComparing(Todo::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(Todo::getId);
+                .thenComparing(todoDisplayComparator());
         todos.sort(comparator);
         return todos;
+    }
+
+    private Comparator<Todo> todoDisplayComparator() {
+        return Comparator.comparing(Todo::isDone)
+                .thenComparing(
+                        t -> t.getCategory() == null ? null : t.getCategory().getSortOrder(),
+                        Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(Todo::getContent, KOREAN_TEXT_ORDER)
+                .thenComparing(Todo::getId);
     }
 
     @Transactional
