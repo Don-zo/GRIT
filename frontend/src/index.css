@@ -10,6 +10,7 @@ html {
 html,
 body {
   overflow-x: hidden;
+  background-color: var(--color-gray-darkest);
 }
 
 .hero-bg-enter {

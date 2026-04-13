@@ -20,9 +20,9 @@ export default function GroupCard({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
-    <div className="w-full h-fit bg-gray-dark rounded-3xl shadow-xl/20">
+    <div className="w-full h-fit bg-gray-dark rounded-2xl shadow-xl/20">
       {/* 그룹 사진 (없으면 회색 배경) */}
-      <div className="flex flex-col overflow-hidden relative aspect-square rounded-3xl w-full bg-gray-semidark">
+      <div className="flex flex-col overflow-hidden relative aspect-square rounded-2xl w-full bg-gray-semidark">
         {imageUrl && (
           <img
             src={imageUrl}
@@ -33,7 +33,7 @@ export default function GroupCard({
 
         <div className="relative z-10 flex flex-col h-full pointer-events-none">
           {/* 라이브 뱃지 & 설정 아이콘 */}
-          <div className="flex justify-between p-4">
+          <div className="flex justify-between p-3">
             {isLive ? <LiveBadge /> : <div />}
             <button
               onClick={() => setIsSettingsOpen(true)}
