@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { User } from "lucide-react";
 import Modal from "@/components/Modal";
 import { friendApi } from "@/apis/domains/friend/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
@@ -95,10 +96,17 @@ export default function FriendManageModal({
                     className="flex items-center justify-between py-3"
                   >
                     <div className="flex flex-row items-center gap-5">
-                      <img
-                        src={friend.imageUrl}
-                        className="h-12 w-12 place-items-center overflow-hidden rounded-2xl"
-                      />
+                      <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#3E7358]">
+                        {friend.imageUrl ? (
+                          <img
+                            src={friend.imageUrl}
+                            alt={friend.nickname}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <User size={22} className="text-white" />
+                        )}
+                      </div>
                       <span className="text-sm font-medium text-[#D6FDE5]">
                         {friend.nickname}
                       </span>
