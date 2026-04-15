@@ -24,10 +24,12 @@ const HomePage = () => {
     <div className="flex flex-col pt-[65px] w-full h-auto bg-gray-darkest">
       <Header variant="dark" alwaysVisible />
 
-      <div className="flex">
-        <LeftSidebar onOpenFriendManage={() => setIsFriendManageOpen(true)} />
+      <div className="flex h-screen overflow-hidden overscroll-contain">
+        <aside className="w-17 shrink-0 overflow-y-auto bg-[#2E323A] py-5">
+          <LeftSidebar onOpenFriendManage={() => setIsFriendManageOpen(true)} />
+        </aside>
 
-        <div className="flex-1 ">
+        <div className="flex-1 overflow-y-auto overscroll-contain">
           <div className="flex items-center justify-center flex-1 mx-20 mt-10 gap-6">
             <Achievement />
             <ProfileCard
@@ -36,7 +38,7 @@ const HomePage = () => {
             />
           </div>
 
-          <div className="m-20">
+          <div className="mt-10 mb-30 mx-20">
             <GroupSection />
           </div>
         </div>
