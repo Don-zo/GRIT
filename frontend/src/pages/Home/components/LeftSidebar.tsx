@@ -42,7 +42,7 @@ export default function LeftSidebar({
   };
 
   return (
-    <aside className="relative flex w-17 flex-col items-center bg-[#2E323A] py-5">
+    <aside className="flex w-17 flex-col items-center bg-[#2E323A] py-5">
       <button
         type="button"
         onClick={handleFriendManageModalOpen}
