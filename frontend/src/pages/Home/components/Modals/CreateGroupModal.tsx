@@ -6,6 +6,7 @@ import { groupApi } from "@/apis/domains/group/api";
 import { fileApi } from "@/apis/domains/file/api";
 import { ImageUploader } from "@/components/ImageUploader";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
+import { useToastContext } from "@/contexts/ToastContext";
 
 type CreateGroupModalProps = {
   open: boolean;
@@ -21,6 +22,7 @@ export default function CreateGroupModal({
   const [inviteCode, setInviteCode] = useState("");
   const [_, setCopied] = useState(false);
 
+  const { notify } = useToastContext();
   const queryClient = useQueryClient();
 
   const { mutateAsync: createNewGroup, isPending } = useMutation({
@@ -46,9 +48,11 @@ export default function CreateGroupModal({
     onSuccess: async (newGroup) => {
       setInviteCode(newGroup.groupCode);
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups.my });
+      notify("새로운 그룹이 생성되었습니다.", "success");
     },
     onError: (error) => {
       console.error("그룹 생성 실패", error);
+      notify("그룹 생성에 실패했습니다. 다시 시도해주세요.", "error");
     },
   });
 
