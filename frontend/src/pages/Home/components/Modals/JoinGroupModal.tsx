@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToastContext } from "@/contexts/ToastContext";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/domains/group/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
@@ -11,6 +12,8 @@ type JoinGroupModalProps = {
 
 export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
   const [inviteCode, setInviteCode] = useState("");
+
+  const { notify } = useToastContext();
   const queryClient = useQueryClient();
 
   const { mutateAsync: joinGroup, isPending } = useMutation({
@@ -19,9 +22,11 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups.my });
       setInviteCode("");
       onClose();
+      notify("그룹 참여가 완료되었습니다", "success");
     },
     onError: (error) => {
       console.log("그룹 참여 실패", error);
+      notify("그룹 참여에 실패했습니다. 다시 시도해주세요.", "success");
     },
   });
 

@@ -35,6 +35,7 @@ export default function FriendManageModal({
     mutationFn: (nickname: string) => friendApi.removeFriend(nickname),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.friend.all });
+      notify("친구가 해제되었습니다.", "success");
     },
     onError: (error) => {
       console.log("친구 해제 실패", error);

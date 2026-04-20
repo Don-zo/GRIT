@@ -30,7 +30,8 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.friend.all });
       notify("친구 추가가 완료되었습니다.", "success");
     },
-    onError: () => {
+    onError: (error) => {
+      console.log("친구 추가 실패", error);
       notify("친구 추가에 실패했습니다. 다시 시도해주세요.", "error");
     },
   });
