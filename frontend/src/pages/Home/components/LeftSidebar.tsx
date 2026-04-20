@@ -41,6 +41,28 @@ export default function LeftSidebar({
     onAddFriend?.();
   };
 
+  const [tooltipPosition, setTooltipPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+
+  const handleMouseEnter = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    friend: FriendDetail,
+  ) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHovered(friend);
+    setTooltipPosition({
+      top: rect.top + rect.height / 2,
+      left: rect.right + 12,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setHovered(null);
+    setTooltipPosition(null);
+  };
+
   return (
     <aside className="flex w-17 flex-col items-center bg-[#2E323A] py-5">
       <button
@@ -72,12 +94,12 @@ export default function LeftSidebar({
               <div
                 key={f.nickname}
                 className="relative flex w-full flex-col items-center"
-                onMouseEnter={() => setHovered(f)}
-                onMouseLeave={() => setHovered(null)}
               >
                 <button
                   type="button"
                   onClick={() => onSelectFriend?.(f.nickname)}
+                  onMouseEnter={(e) => handleMouseEnter(e, f)}
+                  onMouseLeave={handleMouseLeave}
                   className="flex w-full flex-col items-center"
                   aria-label={`${f.nickname} 프로필`}
                 >
@@ -101,10 +123,12 @@ export default function LeftSidebar({
                   </div>
                 </button>
 
-                {hovered?.nickname === f.nickname && (
+                {hovered?.nickname === f.nickname && tooltipPosition && (
                   <FriendTooltip
                     nickname={f.nickname}
                     introduction={f.introduction}
+                    top={tooltipPosition.top}
+                    left={tooltipPosition.left}
                   />
                 )}
               </div>
