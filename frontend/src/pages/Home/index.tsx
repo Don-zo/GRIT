@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
+import Toast from "@/components/Toast";
+import { useToast } from "@/hooks/useToast";
 import { Header } from "@/components/Header";
 import GroupSection from "@/pages/Home/components/GroupSection/GroupSection";
 import Achievement from "@/pages/Home/components/AchievementCard";
@@ -13,6 +15,7 @@ type HomeLocationState = {
 };
 
 const HomePage = () => {
+  const { toast, clearToast } = useToast();
   const [isFriendManageOpen, setIsFriendManageOpen] = useState(false);
   const location = useLocation();
   const state = location.state as HomeLocationState;
@@ -25,7 +28,7 @@ const HomePage = () => {
       <Header variant="dark" alwaysVisible />
 
       <div className="flex h-screen overflow-hidden overscroll-contain">
-        <aside className="w-17 shrink-0 overflow-y-auto bg-[#2E323A] py-5">
+        <aside className="w-17 shrink-0 bg-[#2E323A] py-5">
           <LeftSidebar onOpenFriendManage={() => setIsFriendManageOpen(true)} />
         </aside>
 
@@ -47,6 +50,7 @@ const HomePage = () => {
         open={isFriendManageOpen}
         onClose={() => setIsFriendManageOpen(false)}
       />
+      <Toast toast={toast} onClear={clearToast} />
     </div>
   );
 };

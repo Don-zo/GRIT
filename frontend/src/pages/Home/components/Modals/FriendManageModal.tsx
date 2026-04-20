@@ -1,6 +1,7 @@
+import { User } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { User } from "lucide-react";
+import { useToastContext } from "@/contexts/ToastContext";
 import Modal from "@/components/Modal";
 import { friendApi } from "@/apis/domains/friend/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
@@ -14,7 +15,9 @@ export default function FriendManageModal({
   open,
   onClose,
 }: FriendManageModalProps) {
+  const { notify } = useToastContext();
   const queryClient = useQueryClient();
+
   const [removingNickname, setRemovingNickname] = useState<string | null>(null);
 
   const {
@@ -34,7 +37,8 @@ export default function FriendManageModal({
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.friend.all });
     },
     onError: (error) => {
-      console.error("친구 해제 실패", error); //TODO: 토스트
+      console.log("친구 해제 실패", error);
+      notify("친구 해제에 실패했습니다.", "error");
     },
   });
 
