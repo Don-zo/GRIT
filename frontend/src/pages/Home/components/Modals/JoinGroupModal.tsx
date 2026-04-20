@@ -26,7 +26,7 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
     },
     onError: (error) => {
       console.log("그룹 참여 실패", error);
-      notify("그룹 참여에 실패했습니다. 다시 시도해주세요.", "success");
+      notify("그룹 참여에 실패했습니다. 다시 시도해주세요.", "error");
     },
   });
 
