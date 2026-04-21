@@ -26,15 +26,15 @@ const AchievementCard: React.FC<AchievementCardProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="w-1/2 h-70 bg-[#2E3039] rounded-2xl p-6 select-none">
+    <div className="w-1/2 h-64 bg-[#2E3039] rounded-2xl p-6 select-none">
       {/* 오늘의 달성도 섹션 */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-3">
+      <div className="mb-6">
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="w-6 h-6 text-green-normal" strokeWidth={2} />
             <span className="text-white text-bodyLg">오늘의 달성도</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-white text-bodyLg">{todayProgress}%</span>
             <button
               type="button"
@@ -59,11 +59,11 @@ const AchievementCard: React.FC<AchievementCardProps> = ({
 
       {/* 이번 주 기록 섹션 */}
       <div>
-        <h3 className="text-white text-bodyMd mb-4">이번 주 기록</h3>
-        <div className="flex items-end gap-3">
+        <h3 className="mb-4 text-white text-bodyMd">이번 주 기록</h3>
+        <div className="flex items-end gap-2">
           {weeklyData.map((item, index) => (
             <div key={index} className="flex-1 flex flex-col items-center gap-2">
-              <div className="w-6 h-20 bg-gray-semidark rounded-full overflow-hidden relative flex flex-col justify-end">
+              <div className="w-5 h-16 bg-gray-semidark rounded-full overflow-hidden relative flex flex-col justify-end">
                 <div
                   className="w-full bg-green-normal rounded-full transition-all duration-300"
                   style={{ height: `${item.progress}%` }}

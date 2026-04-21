@@ -120,18 +120,18 @@ export default function GroupSettingsModal({
       <Modal.Content>
         <Modal.CloseButton />
 
-        <Modal.Header className="px-8 pt-8 flex flex-col items-center">
+        <Modal.Header className="flex flex-col items-center">
           <Modal.Title />
         </Modal.Header>
 
-        <Modal.Body className="px-8 flex flex-col items-center pb-8">
+        <Modal.Body className="flex flex-col items-center pb-6">
           <ImageUploader
-            size={160}
+            size={140}
             initialImage={baseGroupImage}
             onImageChange={(file) => setImageFile(file)}
           />
 
-          <div className="mx-auto mt-10 w-full max-w-[360px]">
+          <div className="mx-auto mt-6 w-full max-w-[320px]">
             <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
               그룹 이름
             </label>
@@ -140,16 +140,16 @@ export default function GroupSettingsModal({
               type="text"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="h-14 w-full rounded-lg bg-white px-4 text-gray-900 outline-none"
+              className="h-12 w-full rounded-lg bg-white px-4 text-sm text-gray-900 outline-none"
               placeholder="그룹 이름을 입력하세요"
             />
 
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={isGroupInfoSaving || isGroupSignoutPending}
-                className="h-14 w-full rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
+                className="h-12 w-full rounded-lg bg-[#3E7358] text-sm font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
               >
                 {isGroupInfoSaving ? "저장 중..." : "그룹 정보 저장하기"}
               </button>
@@ -157,13 +157,13 @@ export default function GroupSettingsModal({
                 type="button"
                 onClick={handleSignoutGroup}
                 disabled={isGroupInfoSaving || isGroupSignoutPending}
-                className="h-14 w-full rounded-lg bg-red-600 text-lg font-semibold text-white hover:bg-red-700 transition disabled:opacity-50"
+                className="h-12 w-full rounded-lg bg-red-600 text-sm font-semibold text-white hover:bg-red-700 transition disabled:opacity-50"
               >
                 {isGroupSignoutPending ? "탈퇴 중..." : "탈퇴하기"}
               </button>
             </div>
 
-            <p className="mt-6 text-center text-xs text-[#D6FDE5]">
+            <p className="mt-4 text-center text-xs text-[#D6FDE5]">
               그룹에 참여 가능한 인원은 최대 8명입니다.
             </p>
           </div>

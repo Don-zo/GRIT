@@ -61,7 +61,7 @@ export default function FriendManageModal({
           <p className="mt-2 text-sm font-medium text-[#D6FDE5]">친구 관리</p>
         </Modal.Header>
 
-        <Modal.Body className="max-h-[min(420px,60vh)] overflow-y-auto pb-15">
+        <Modal.Body className="max-h-[min(400px,56vh)] overflow-y-auto pb-10">
           {isLoading && (
             <p className="mt-6 text-center text-sm text-[#D6FDE5]/80">
               불러오는 중…
@@ -87,16 +87,16 @@ export default function FriendManageModal({
             </p>
           )}
           {!isLoading && !isError && friends.length > 0 && (
-            <ul className="mt-4 w-full max-w-sm mx-auto">
+            <ul className="mx-auto mt-3 w-full max-w-[320px]">
               {friends.map((friend) => {
                 const isRemoving = removingNickname === friend.nickname;
                 return (
                   <li
                     key={friend.nickname}
-                    className="flex items-center justify-between py-3"
+                    className="flex items-center justify-between py-2.5"
                   >
-                    <div className="flex flex-row items-center gap-5">
-                      <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#3E7358]">
+                    <div className="flex flex-row items-center gap-4">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#3E7358]">
                         {friend.imageUrl ? (
                           <img
                             src={friend.imageUrl}
@@ -104,7 +104,7 @@ export default function FriendManageModal({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <User size={22} className="text-white" />
+                          <User size={20} className="text-white" />
                         )}
                       </div>
                       <span className="text-sm font-medium text-[#D6FDE5]">

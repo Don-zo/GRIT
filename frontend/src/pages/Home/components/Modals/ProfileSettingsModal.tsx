@@ -144,29 +144,29 @@ export default function ProfileSettingsModal({
       <Modal.Content>
         <Modal.CloseButton />
 
-        <Modal.Header className="px-8 pt-8">
+        <Modal.Header className="px-6 pt-6">
           <Modal.Title />
         </Modal.Header>
 
-        <Modal.Body className="px-8 w-full">
+        <Modal.Body className="w-full px-6">
           {isError && (
             <p className="mb-4 text-sm text-red-400">
               내 정보를 불러오지 못했습니다.
             </p>
           )}
           <section className="w-full">
-            <h2 className="text-lg font-semibold text-[#D6FDE5]">
+            <h2 className="text-base font-semibold text-[#D6FDE5]">
               개인 정보 설정
             </h2>
 
-            <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">
+            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-[180px_1fr]">
               <ImageUploader
-                size={180}
+                size={144}
                 initialImage={member?.imageUrl}
                 className="shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
                 onImageChange={(file) => setImageFile(file)}
               />
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-4">
                 <div className="flex items-end gap-2">
                   <FormInput
                     label="닉네임"
@@ -179,7 +179,7 @@ export default function ProfileSettingsModal({
                     type="button"
                     onClick={handleCheckNicknameDuplicate}
                     disabled={isFormDisabled || isNicknameCheckPending}
-                    className="min-w-[88px] h-12 shrink-0 rounded-lg bg-[#3E7358] px-4 inline-flex items-center justify-center text-md text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
+                    className="inline-flex h-[49px] min-w-[84px] shrink-0 items-center justify-center rounded-lg bg-[#3E7358] px-3 text-sm text-[#EDFFF4] transition hover:bg-emerald-800 disabled:opacity-50"
                   >
                     {isNicknameCheckPending ? (
                       <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
@@ -201,9 +201,9 @@ export default function ProfileSettingsModal({
           <Divider />
 
           <section className="w-full">
-            <h3 className="text-lg font-semibold text-[#D6FDE5]">D-day 설정</h3>
+            <h3 className="text-base font-semibold text-[#D6FDE5]">D-day 설정</h3>
 
-            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
               <FormInput
                 label="D-day 날짜"
                 type="date"
@@ -223,7 +223,7 @@ export default function ProfileSettingsModal({
 
           <section className="w-full">
             <div className="flex items-end justify-between">
-              <h3 className="text-lg font-semibold text-[#D6FDE5]">
+              <h3 className="text-base font-semibold text-[#D6FDE5]">
                 이번주 목표 공부시간 설정
               </h3>
               <span className="text-sm font-medium text-[#D6FDE5]">
@@ -231,7 +231,7 @@ export default function ProfileSettingsModal({
               </span>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-3">
               <input
                 type="range"
                 min={0}
@@ -243,12 +243,12 @@ export default function ProfileSettingsModal({
           </section>
         </Modal.Body>
 
-        <Modal.Footer className="px-8 pb-8 flex justify-center">
+        <Modal.Footer className="flex justify-center px-6 pb-6">
           <button
             type="button"
             onClick={handleSave}
             disabled={isPending}
-            className="inline-flex h-14 w-full max-w-[360px] items-center justify-center rounded-lg bg-[#3E7358] text-lg font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
+            className="inline-flex h-12 w-full max-w-[320px] items-center justify-center rounded-lg bg-[#3E7358] text-base font-semibold text-[#EDFFF4] transition hover:bg-emerald-800 disabled:opacity-50"
           >
             {isPending ? (
               <Loader2 className="h-6 w-6 animate-spin" aria-hidden />

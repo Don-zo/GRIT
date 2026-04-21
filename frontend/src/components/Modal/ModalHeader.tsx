@@ -6,5 +6,5 @@ type ModalHeaderProps = {
 };
 
 export function ModalHeader({ children, className = "" }: ModalHeaderProps) {
-  return <div className={`px-8 pt-8 ${className}`}>{children}</div>;
+  return <div className={`px-6 pt-6 ${className}`}>{children}</div>;
 }

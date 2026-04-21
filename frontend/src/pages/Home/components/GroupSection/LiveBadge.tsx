@@ -1,8 +1,8 @@
 const LiveBadge = () => {
   return (
-    <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-dark/60 rounded-full">
-        <span className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
-        <span className="text-white text-[13px] font-medium tracking-wider">
+    <div className="inline-flex items-center gap-1.5 rounded-full bg-gray-dark/60 px-3 py-1.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-red-600 animate-pulse" />
+        <span className="text-[11px] font-medium tracking-wide text-white">
             LIVE
         </span>
     </div>

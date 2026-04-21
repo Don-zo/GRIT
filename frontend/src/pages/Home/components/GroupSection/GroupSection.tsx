@@ -22,11 +22,11 @@ export default function GroupSection() {
   });
 
   return (
-    <section className="w-auto h-auto bg-[#2E3039] rounded-3xl p-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4  gap-12">
+    <section className="w-auto h-auto bg-[#2E3039] rounded-3xl p-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
         <div className="flex flex-col gap-8">
           <Button
-            icon={<Plus size={40} />}
+            icon={<Plus size={32} />}
             label="그룹 생성하기"
             className="flex-1"
             onClick={() => setIsCreateGroupModalOpen(true)}
@@ -36,7 +36,7 @@ export default function GroupSection() {
               <img
                 src="/icons/group_join.svg"
                 alt="group_join"
-                style={{ width: "40px", height: "40px" }}
+                style={{ width: "32px", height: "32px" }}
               />
             }
             label="그룹 참여하기"
