@@ -183,7 +183,7 @@ export default function ProfileSettingsModal({
                     type="button"
                     onClick={handleCheckNicknameDuplicate}
                     disabled={isFormDisabled || isNicknameCheckPending}
-                    className="inline-flex h-[49px] min-w-[84px] shrink-0 items-center justify-center rounded-lg bg-[#3E7358] px-3 text-sm text-[#EDFFF4] transition hover:bg-emerald-800 disabled:opacity-50"
+                    className="inline-flex h-12 min-w-[84px] shrink-0 items-center justify-center rounded-lg bg-[#3E7358] px-3 text-sm text-[#EDFFF4] transition hover:bg-emerald-800 disabled:opacity-50"
                   >
                     {isNicknameCheckPending ? (
                       <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
