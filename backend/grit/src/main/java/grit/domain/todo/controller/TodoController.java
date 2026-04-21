@@ -43,7 +43,7 @@ public class TodoController {
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "사용자 ID (PK), 반드시 로그인 사용자와 동일", example = "1") @PathVariable Long userId,
             @Parameter(description = "조회 기준 날짜(해당 주 월~일 조회). 미입력 시 오늘 날짜 사용", example = "2026-04-21")
-            @RequestParam(required = false) LocalDate weekStartDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate weekStartDate,
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20")
