@@ -13,6 +13,12 @@ export const QUERY_KEYS = {
   todos: {
     all: ["todos"] as const,
     byUser: (userId: number) => ["todos", "user", userId] as const,
+    byUserWeek: (
+      userId: number,
+      weekStartDate: string,
+      page: number,
+      size: number,
+    ) => ["todos", "user", userId, weekStartDate, page, size] as const,
   },
   todoCategories: {
     all: ["todoCategories"] as const,

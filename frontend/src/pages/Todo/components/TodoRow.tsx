@@ -113,7 +113,7 @@ export default function TodoRow({
           />
         </div>
         <p
-          className={`w-full min-w-0 max-w-full break-words text-bodySm leading-snug pl-[calc(1rem+0.5rem)] ${
+          className={`w-full min-w-0 max-w-full whitespace-pre-wrap break-words text-bodySm leading-snug pl-[calc(1rem+0.5rem)] ${
             done
               ? "text-white/40 line-through decoration-white/30"
               : "text-white/90"

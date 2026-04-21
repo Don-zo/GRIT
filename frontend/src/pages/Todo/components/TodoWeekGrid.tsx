@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, LoaderCircle, Plus, XCircle } from "lucide-react";
 import TodoComposeBlock from "./TodoComposeBlock";
 import TodoRow from "./TodoRow";
 import type { Category, TodoItem, TodoQuickAddConfig } from "./types";
@@ -17,6 +17,7 @@ type TodoWeekHeaderProps = {
   onPrevWeek: () => void;
   onNextWeek: () => void;
   onGoToday: () => void;
+  fetchStatus?: "idle" | "loading" | "error";
 };
 
 export function TodoWeekHeader({
@@ -24,11 +25,23 @@ export function TodoWeekHeader({
   onPrevWeek,
   onNextWeek,
   onGoToday,
+  fetchStatus = "idle",
 }: TodoWeekHeaderProps) {
   return (
     <div className="sticky top-[65px] z-30 shrink-0 border-b border-white/10 bg-gray-darkest/95 py-2 pb-3 backdrop-blur-md supports-[backdrop-filter]:bg-gray-darkest/90">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-white text-h3">{monthHeading}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="font-semibold text-white text-h3">{monthHeading}</h2>
+          {fetchStatus === "loading" ? (
+            <LoaderCircle
+              className="h-5 w-5 animate-spin text-white/75"
+              aria-label="투두 로딩 중"
+            />
+          ) : null}
+          {fetchStatus === "error" ? (
+            <XCircle className="h-5 w-5 text-red-400" aria-label="투두 로딩 실패" />
+          ) : null}
+        </div>
         <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
@@ -82,6 +95,36 @@ type TodoWeekGridProps = {
   onCancelEdit: () => void;
 };
 
+function compareTodoDisplayOrder(a: TodoItem, b: TodoItem): number {
+  if (a.completed !== b.completed) {
+    return a.completed ? 1 : -1;
+  }
+
+  const aCategoryOrderNull = a.categorySortOrder == null ? 1 : 0;
+  const bCategoryOrderNull = b.categorySortOrder == null ? 1 : 0;
+  if (aCategoryOrderNull !== bCategoryOrderNull) {
+    return aCategoryOrderNull - bCategoryOrderNull;
+  }
+
+  const aCategoryOrder = a.categorySortOrder ?? 0;
+  const bCategoryOrder = b.categorySortOrder ?? 0;
+  if (aCategoryOrder !== bCategoryOrder) {
+    return aCategoryOrder - bCategoryOrder;
+  }
+
+  const byTitle = a.title.localeCompare(b.title, "ko");
+  if (byTitle !== 0) {
+    return byTitle;
+  }
+
+  const aId = Number(a.id);
+  const bId = Number(b.id);
+  if (Number.isFinite(aId) && Number.isFinite(bId)) {
+    return aId - bId;
+  }
+  return a.id.localeCompare(b.id);
+}
+
 export default function TodoWeekGrid({
   weekDays,
   today,
@@ -120,7 +163,9 @@ export default function TodoWeekGrid({
               quickAdd.onCategoryCreateFailedConsumed,
             notify: quickAdd.notify,
           } as const;
-          const dayTodos = todos.filter((t) => t.dueDate === key);
+          const dayTodos = todos
+            .filter((t) => t.dueDate === key)
+            .sort(compareTodoDisplayOrder);
           const isToday = isSameCalendarDay(day, today);
           const isSaturday = i === 5;
           const isSunday = i === 6;

@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from "react";
 export type Category = {
   id: string;
   label: string;
+  sortOrder?: number | null;
 };
 
 export type TodoItem = {
@@ -11,6 +12,7 @@ export type TodoItem = {
   dueDate: string;
   categoryId: string;
   categoryName?: string | null;
+  categorySortOrder?: number | null;
   completed: boolean;
 };
 

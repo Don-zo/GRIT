@@ -12,7 +12,7 @@ import { buildUpdateTodoBody } from "./mappers";
 import { useTodoData } from "./useTodoData";
 import { useTodoMutations } from "./useTodoMutations";
 
-export function useTodo() {
+export function useTodo(weekStartDate: string) {
   const {
     userId,
     queryClient,
@@ -25,7 +25,7 @@ export function useTodo() {
     setCategories,
     patchTodos,
     setGuestCategories,
-  } = useTodoData();
+  } = useTodoData({ weekStartDate });
 
   const { toast, clearToast, notify } = useToast();
 
