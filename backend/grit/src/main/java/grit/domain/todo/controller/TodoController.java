@@ -46,11 +46,11 @@ public class TodoController {
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "사용자 ID (PK), 반드시 로그인 사용자와 동일", example = "1") @PathVariable Long userId,
             @Parameter(description = "조회 기준 날짜(해당 주 월~일 조회). 미입력 시 오늘 날짜 사용", example = "2026-04-21")
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate weekStartDate,
+            @RequestParam(required = false) LocalDate weekStartDate,
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
-            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "page는 0 이상이어야 합니다.") int page,
             @Parameter(description = "페이지 크기", example = "20")
-            @RequestParam(defaultValue = "20") @Min(1) int size) {
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "size는 1 이상이어야 합니다.") int size) {
         MemberSelfAssert.assertSameMember(principal, userId);
         LocalDate baseDate = weekStartDate != null ? weekStartDate : LocalDate.now();
         WeeklyTodosPageResponseDTO response = todoService.findByUserIdWeekly(userId, baseDate, page, size);
