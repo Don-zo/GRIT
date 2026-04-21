@@ -25,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.text.Collator;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -49,14 +51,7 @@ public class TodoService {
     private final MemberGroupRepository memberGroupRepository;
 
     public WeeklyTodosPageResponseDTO findByUserIdWeekly(Long userId, LocalDate weekStartDate, int page, int size) {
-        if (page < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page는 0 이상이어야 합니다.");
-        }
-        if (size <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "size는 1 이상이어야 합니다.");
-        }
-
-        LocalDate normalizedWeekStart = weekStartDate.minusDays(weekStartDate.getDayOfWeek().getValue() - 1L);
+        LocalDate normalizedWeekStart = weekStartDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate weekEndDate = normalizedWeekStart.plusDays(6);
 
         Page<Todo> todosPage = todoRepository.findByOwnerIdAndDueDateBetweenWithRelations(
