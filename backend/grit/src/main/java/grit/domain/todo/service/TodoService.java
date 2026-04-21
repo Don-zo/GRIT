@@ -9,12 +9,16 @@ import grit.domain.todo.dto.CreateTodoRequestDTO;
 import grit.domain.todo.dto.DailyAchievementDTO;
 import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
 import grit.domain.todo.dto.SetTodoDoneRequestDTO;
+import grit.domain.todo.dto.TodoResponseDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
+import grit.domain.todo.dto.WeeklyTodosPageResponseDTO;
 import grit.domain.todo.entity.Todo;
 import grit.domain.todo.entity.TodoCategory;
 import grit.domain.todo.repository.TodoCategoryRepository;
 import grit.domain.todo.repository.TodoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,10 +48,36 @@ public class TodoService {
     private final GroupRepository groupRepository;
     private final MemberGroupRepository memberGroupRepository;
 
-    public List<Todo> findByUserId(Long userId) {
-        return todoRepository.findByOwnerIdWithRelations(userId).stream()
-                .sorted(todoDisplayComparator())
-                .toList();
+    public WeeklyTodosPageResponseDTO findByUserIdWeekly(Long userId, LocalDate weekStartDate, int page, int size) {
+        if (page < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page는 0 이상이어야 합니다.");
+        }
+        if (size <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "size는 1 이상이어야 합니다.");
+        }
+
+        LocalDate normalizedWeekStart = weekStartDate.minusDays(weekStartDate.getDayOfWeek().getValue() - 1L);
+        LocalDate weekEndDate = normalizedWeekStart.plusDays(6);
+
+        Page<Todo> todosPage = todoRepository.findByOwnerIdAndDueDateBetweenWithRelations(
+                userId,
+                normalizedWeekStart,
+                weekEndDate,
+                PageRequest.of(page, size)
+        );
+
+        return new WeeklyTodosPageResponseDTO(
+                normalizedWeekStart,
+                weekEndDate,
+                todosPage.getNumber(),
+                todosPage.getSize(),
+                todosPage.getTotalElements(),
+                todosPage.getTotalPages(),
+                todosPage.hasNext(),
+                todosPage.getContent().stream()
+                        .map(TodoResponseDTO::from)
+                        .toList()
+        );
     }
 
     public List<Todo> findForGroup(String groupCode, Long requesterUserId, Long focusUserId) {

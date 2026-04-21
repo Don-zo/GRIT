@@ -7,6 +7,7 @@ import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
 import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
+import grit.domain.todo.dto.WeeklyTodosPageResponseDTO;
 import grit.domain.todo.entity.Todo;
 import grit.domain.todo.service.TodoService;
 import grit.global.security.MemberSelfAssert;
@@ -23,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Tag(name = "Todo", description = "투두 관련 API")
@@ -31,21 +33,25 @@ import java.util.List;
 public class TodoController {
     private final TodoService todoService;
 
-    @Operation(summary = "내 투두 목록", description = "로그인한 사용자 본인의 투두만 조회합니다. 미완료가 먼저이고, 카테고리 표시 순서·내용(가나다)·id 순으로 정렬되며 완료 항목은 아래쪽에 둡니다.")
+    @Operation(summary = "내 주간 투두 목록", description = "로그인한 사용자 본인의 투두를 주 단위(월~일)로 페이지네이션 조회합니다. weekStartDate가 월요일이 아니면 해당 날짜가 포함된 주의 월요일로 보정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "403", description = "다른 사용자 ID로 조회 시도", content = @Content)
     })
     @GetMapping("/api/users/{userId}/todos")
-    public ResponseEntity<List<TodoResponseDTO>> findByUserId(
+    public ResponseEntity<WeeklyTodosPageResponseDTO> findByUserId(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "사용자 ID (PK), 반드시 로그인 사용자와 동일", example = "1") @PathVariable Long userId) {
+            @Parameter(description = "사용자 ID (PK), 반드시 로그인 사용자와 동일", example = "1") @PathVariable Long userId,
+            @Parameter(description = "조회 기준 날짜(해당 주 월~일 조회). 미입력 시 오늘 날짜 사용", example = "2026-04-21")
+            @RequestParam(required = false) LocalDate weekStartDate,
+            @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
         MemberSelfAssert.assertSameMember(principal, userId);
-        List<Todo> todos = todoService.findByUserId(userId);
-        List<TodoResponseDTO> responses = todos.stream()
-                .map(TodoResponseDTO::from)
-                .toList();
-        return ResponseEntity.ok(responses);
+        LocalDate baseDate = weekStartDate != null ? weekStartDate : LocalDate.now();
+        WeeklyTodosPageResponseDTO response = todoService.findByUserIdWeekly(userId, baseDate, page, size);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "그룹 투두 목록 (조회 전용)", description = "해당 그룹 멤버가 작성한 투두 전체를 반환합니다. query userId(그룹 멤버 PK) 작성자의 투두가 먼저 오고, 이후 미완료→카테고리 순서→내용(가나다)→id 순으로 정렬됩니다. 완료된 항목은 같은 그룹 내에서 아래쪽에 둡니다. userId는 필수. 요청자는 그룹 멤버여야 합니다.")
