@@ -1,6 +1,7 @@
+import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { useToastContext } from "@/contexts/ToastContext";
 import { userApi } from "@/apis/domains/user/api";
 import { fileApi } from "@/apis/domains/file/api";
 import Modal from "@/components/Modal";
@@ -26,6 +27,8 @@ export default function ProfileSettingsModal({
   const [dDayDate, setDDayDate] = useState("");
   const [dDayTitle, setDDayTitle] = useState("");
   const [weeklyStudyTimeGoal, setWeeklyStudyTimeGoal] = useState("");
+
+  const { notify } = useToastContext();
 
   const {
     data: member,
@@ -116,19 +119,20 @@ export default function ProfileSettingsModal({
         userApi.checkNicknameAvailability(trimmedNickname),
       onSuccess: (data) => {
         if (data.isAvailable) {
-          console.log("사용 가능 닉네임"); //TODO: 토스트
+          notify("사용 가능한 닉네임입니다.", "success");
         } else {
-          console.log("이미 사용중인 닉네임"); //TODO: 토스트
+          notify("이미 사용중인 닉네임입니다.", "error");
         }
       },
-      onError: () => {
-        console.log("요청 실패"); //TODO: 토스트
+      onError: (error) => {
+        console.log("닉네임 사용 불가", error);
+        notify("오류가 발생했습니다. 다시 시도해주세요.", "error");
       },
     });
 
   const handleCheckNicknameDuplicate = () => {
     const trimmedNickname = nickname.trim();
-    if (!trimmedNickname) return; //TODO: 토스트
+    if (!trimmedNickname) return;
     checkNicknameDuplicate(trimmedNickname);
   };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useToastContext } from "@/contexts/ToastContext";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/domains/group/api";
 import { fileApi } from "@/apis/domains/file/api";
@@ -25,6 +26,8 @@ export default function GroupSettingsModal({
   const [baseGroupImage, setBaseGroupImage] = useState(initialImage);
   const [groupName, setGroupName] = useState(initialName);
   const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const { notify } = useToastContext();
 
   const { data: groupInfo } = useQuery({
     queryKey: QUERY_KEYS.groups.detail(groupCode),
@@ -76,16 +79,18 @@ export default function GroupSettingsModal({
           queryKey: QUERY_KEYS.groups.my,
         });
         handleClose();
+        notify("그룹 정보가 수정되었습니다", "success");
       },
 
       onError: (error) => {
         console.error("그룹 정보 수정 실패:", error);
+        notify("그룹 정보 수정에 실패했습니다. 다시 시도해주세요", "error");
       },
     });
 
   const handleSave = async () => {
     if (!groupName.trim()) {
-      alert("그룹 이름을 입력해주세요."); //TODO: 확인 모달로 변경
+      notify("그룹 이름을 입력해주세요", "error");
       return;
     }
     await updateGroup();

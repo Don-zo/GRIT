@@ -17,7 +17,6 @@ const HomePage = () => {
   const [isFriendManageOpen, setIsFriendManageOpen] = useState(false);
   const location = useLocation();
   const state = location.state as HomeLocationState;
-
   const shouldOpenProfileSetup = state?.openProfileSetupModal === true;
   const oauthFirstTimeUser = state?.firstTimeUser === true;
 
@@ -25,12 +24,14 @@ const HomePage = () => {
     <SmallViewportNotice>
       <div className="flex flex-col pt-[65px] w-full h-auto bg-gray-darkest">
         <Header variant="dark" alwaysVisible />
-
         <div className="flex h-screen overflow-hidden overscroll-contain">
-          <aside className="w-17 shrink-0 overflow-y-auto bg-[#2E323A] py-5">
-            <LeftSidebar onOpenFriendManage={() => setIsFriendManageOpen(true)} />
+          <aside className="w-17 shrink-0 bg-[#2E323A] py-5">
+            <div className="overflow-y-auto h-full">
+              <LeftSidebar
+                onOpenFriendManage={() => setIsFriendManageOpen(true)}
+              />
+            </div>
           </aside>
-
           <div className="flex-1 overflow-y-auto overscroll-contain">
             <div className="mx-auto w-full max-w-[1180px] px-8 pb-16">
               <div className="mt-8 flex items-center justify-center gap-8">
@@ -40,17 +41,16 @@ const HomePage = () => {
                   oauthFirstTimeUser={oauthFirstTimeUser}
                 />
               </div>
-
               <div className="my-8">
                 <GroupSection />
               </div>
             </div>
           </div>
+          <FriendManageModal
+            open={isFriendManageOpen}
+            onClose={() => setIsFriendManageOpen(false)}
+          />
         </div>
-        <FriendManageModal
-          open={isFriendManageOpen}
-          onClose={() => setIsFriendManageOpen(false)}
-        />
       </div>
     </SmallViewportNotice>
   );
