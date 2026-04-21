@@ -61,14 +61,14 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
             닉네임을 입력해 주세요
           </p>
         </Modal.Header>
-        <Modal.Body className="flex flex-col items-center pb-16">
-          <div className="mt-6 w-full max-w-[360px]">
+        <Modal.Body className="flex flex-col items-center pb-12">
+          <div className="mt-5 w-full max-w-[320px]">
             <input
               value={friendNickname}
               onChange={(e) => setFriendNickname(e.target.value)}
               disabled={submitted}
               placeholder=""
-              className="h-14 w-full rounded-xl bg-white px-6 text-lg text-gray-900 outline-none disabled:opacity-90"
+              className="h-12 w-full rounded-xl bg-white px-4 text-base text-gray-900 outline-none disabled:opacity-90"
               aria-label="친구 닉네임"
             />
           </div>
@@ -78,7 +78,7 @@ export default function AddFriendModal({ open, onClose }: AddFriendModalProps) {
             onClick={handleSubmit}
             disabled={isDisabled}
             className={[
-              "mt-3 h-14 w-full max-w-[360px] rounded-xl text-lg font-semibold transition",
+              "mt-3 h-12 w-full max-w-[320px] rounded-xl text-base font-semibold transition",
               isDisabled
                 ? "bg-[#C9CDCC] text-white cursor-not-allowed"
                 : "bg-[#3E7358] text-[#EDFFF4] hover:bg-emerald-800",

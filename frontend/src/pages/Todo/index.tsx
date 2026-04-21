@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Header } from "@/components/Header";
+import SmallViewportNotice from "@/components/SmallViewportNotice";
 import Toast from "@/components/Toast";
 import { useTodo } from "@/hooks/todo/useTodo";
 import TodoWeekGrid, {
@@ -68,61 +69,63 @@ const TodoPage = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-gray-darkest pt-[65px]">
-      <Header variant="dark" alwaysVisible />
-      <div className="flex flex-col w-full min-w-0 select-none">
-        <Toast toast={b.toast} onClear={b.clearToast} />
-        <div className="flex flex-col gap-2 px-8 pt-4 pb-20">
-          {b.userId != null && b.isCategoriesError ? (
-            <p className="text-sm shrink-0 text-red-300/95">
-              카테고리 목록을 불러오지 못했습니다.
-            </p>
-          ) : null}
-          <div className="flex w-full min-w-0">
-            <div className="relative my-20 ml-2 flex w-full min-w-0 flex-[3] flex-col pl-6 pr-2 md:pl-8">
-              <TodoWeekHeader
-                monthHeading={monthHeading}
-                onPrevWeek={prevWeek}
-                onNextWeek={nextWeek}
-                onGoToday={goToday}
-              />
+    <SmallViewportNotice>
+      <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-gray-darkest pt-[65px]">
+        <Header variant="dark" alwaysVisible />
+        <div className="flex flex-col w-full min-w-0 select-none">
+          <Toast toast={b.toast} onClear={b.clearToast} />
+          <div className="flex flex-col gap-2 px-8 pt-4 pb-20">
+            {b.userId != null && b.isCategoriesError ? (
+              <p className="text-sm shrink-0 text-red-300/95">
+                카테고리 목록을 불러오지 못했습니다.
+              </p>
+            ) : null}
+            <div className="flex w-full min-w-0 justify-center">
+              <div className="relative my-20 flex w-full min-w-0 max-w-[1440px] flex-col px-2 md:px-4">
+                <TodoWeekHeader
+                  monthHeading={monthHeading}
+                  onPrevWeek={prevWeek}
+                  onNextWeek={nextWeek}
+                  onGoToday={goToday}
+                />
 
-              {b.isTodosError ? (
-                <p className="text-sm shrink-0 text-red-300/95">
-                  투두 목록을 불러오지 못했습니다.
-                </p>
-              ) : null}
-              {Boolean(b.userId) &&
-              (b.isTodosLoading || b.isCategoriesLoading) ? (
-                <p className="text-sm shrink-0 text-white/45">
-                  투두 불러오는 중…
-                </p>
-              ) : null}
+                {b.isTodosError ? (
+                  <p className="text-sm shrink-0 text-red-300/95">
+                    투두 목록을 불러오지 못했습니다.
+                  </p>
+                ) : null}
+                {Boolean(b.userId) &&
+                (b.isTodosLoading || b.isCategoriesLoading) ? (
+                  <p className="text-sm shrink-0 text-white/45">
+                    투두 불러오는 중…
+                  </p>
+                ) : null}
 
-              <TodoWeekGrid
-                weekDays={weekDays}
-                today={today}
-                todos={b.todos}
-                categories={b.categories}
-                dragOverDateKey={dragOverDateKey}
-                setDragOverDateKey={setDragOverDateKey}
-                onMoveTodoToDate={b.handleMoveTodoToDate}
-                onAddTodoForDate={b.requestAddTodoForDate}
-                quickAdd={quickAdd}
-                editingTodoId={b.editingTodo?.id ?? null}
-                onEditTodo={(todo) => b.setEditingId(todo.id)}
-                onDeleteTodo={b.handleDeleteTodo}
-                onToggleComplete={b.handleToggleComplete}
-                categoryLabelForTodo={categoryLabelForTodo}
-                onDragEndClear={onDragEndClear}
-                onUpdateTodo={b.handleUpdateTodo}
-                onCancelEdit={() => b.setEditingId(null)}
-              />
+                <TodoWeekGrid
+                  weekDays={weekDays}
+                  today={today}
+                  todos={b.todos}
+                  categories={b.categories}
+                  dragOverDateKey={dragOverDateKey}
+                  setDragOverDateKey={setDragOverDateKey}
+                  onMoveTodoToDate={b.handleMoveTodoToDate}
+                  onAddTodoForDate={b.requestAddTodoForDate}
+                  quickAdd={quickAdd}
+                  editingTodoId={b.editingTodo?.id ?? null}
+                  onEditTodo={(todo) => b.setEditingId(todo.id)}
+                  onDeleteTodo={b.handleDeleteTodo}
+                  onToggleComplete={b.handleToggleComplete}
+                  categoryLabelForTodo={categoryLabelForTodo}
+                  onDragEndClear={onDragEndClear}
+                  onUpdateTodo={b.handleUpdateTodo}
+                  onCancelEdit={() => b.setEditingId(null)}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </SmallViewportNotice>
   );
 };
 

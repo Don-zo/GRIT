@@ -33,20 +33,20 @@ export default function GroupCard({
 
         <div className="relative z-10 flex flex-col h-full pointer-events-none">
           {/* 라이브 뱃지 & 설정 아이콘 */}
-          <div className="flex justify-between p-3">
+          <div className="flex justify-between p-4">
             {isLive ? <LiveBadge /> : <div />}
             <button
               onClick={() => setIsSettingsOpen(true)}
               className="transition-transform hover:scale-110 pointer-events-auto"
             >
-              <Settings className="h-8 w-8 text-green-light" />
+              <Settings className="h-6 w-6 text-green-light" />
             </button>
           </div>
 
           {/* 이름 & 인원 */}
-          <div className="mt-auto flex items-center justify-between px-7 py-5 text-white bg-green-semidark">
-            <h3 className="truncate text-[17px] tracking-tight">{name}</h3>
-            <span className="flex shrink-0 text-[17px] font-thin opacity-90">
+          <div className="mt-auto flex items-center justify-between bg-green-semidark px-5 py-3 text-white">
+            <h3 className="truncate text-[15px] tracking-tight">{name}</h3>
+            <span className="flex shrink-0 text-[15px] font-thin opacity-90">
               {liveMembers}/{memberCount}
             </span>
           </div>

@@ -6,5 +6,5 @@ type ModalBodyProps = {
 };
 
 export function ModalBody({ children, className = "" }: ModalBodyProps) {
-  return <div className={`p-4 ${className}`}>{children}</div>;
+  return <div className={`p-3 ${className}`}>{children}</div>;
 }

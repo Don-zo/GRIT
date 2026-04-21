@@ -5,8 +5,8 @@ type ModalTitleProps = {
 
 export function ModalTitle({ size = "sm", className = "" }: ModalTitleProps) {
   const sizeClasses = {
-    sm: "text-3xl",
-    lg: "text-5xl mt-6",
+    sm: "text-2xl",
+    lg: "mt-4 text-4xl",
   };
 
   return (

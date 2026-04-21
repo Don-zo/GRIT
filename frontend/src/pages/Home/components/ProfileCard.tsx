@@ -44,8 +44,8 @@ const ProfileCard = ({
   const goalTimeLabel = member?.weeklyStudyTimeGoal?.trim() || "미설정";
 
   return (
-    <div className="w-1/2 h-70 bg-green-dark rounded-2xl p-6">
-      <div className="flex justify-end mb-4">
+    <div className="w-1/2 h-64 bg-green-dark rounded-2xl p-6">
+      <div className="mb-4 flex justify-end">
         <button
           type="button"
           onClick={() => {
@@ -64,7 +64,7 @@ const ProfileCard = ({
       </div>
 
       {isError && (
-        <p className="mb-3 text-sm text-red-300">
+        <p className="mb-4 text-sm text-red-300">
           프로필을 불러오지 못했습니다.{" "}
           <button
             type="button"
@@ -76,10 +76,10 @@ const ProfileCard = ({
         </p>
       )}
 
-      <div className="flex items-stretch justify-between mb-14">
+      <div className="mb-8 flex items-stretch justify-between">
         <div className="flex items-start gap-3">
-          <Avatar size={80} src={member?.imageUrl} />
-          <div className="flex min-w-0 flex-col gap-3">
+          <Avatar size={72} src={member?.imageUrl} />
+          <div className="flex min-w-0 flex-col gap-2">
             <div className="text-white flex flex-wrap items-center gap-1">
               <span className="text-h4 font-bold">
                 {isLoading ? "…" : displayName}
@@ -95,7 +95,7 @@ const ProfileCard = ({
           </div>
         </div>
 
-        <div className="w-[1.5px] bg-green-darkest self-stretch mx-4 shrink-0" />
+        <div className="mx-4 w-[1.5px] shrink-0 self-stretch bg-green-darkest" />
 
         <div className="flex flex-col items-end text-right shrink-0">
           <div className="flex items-center text-white text-bodySm gap-1">
@@ -114,7 +114,7 @@ const ProfileCard = ({
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-4 flex items-center justify-between">
           <span className="text-white text-bodyMd">이번 주 목표 공부시간</span>
           <span className="text-white text-bodyMd">
             {isLoading ? "…" : `목표 ${goalTimeLabel}`}

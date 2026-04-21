@@ -77,13 +77,13 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
 
   return (
     <header
-      className={`w-full ${currentStyle.bg} px-10 py-4 fixed top-0 left-0 right-0 z-[var(--z-header)] transition-all duration-500 ${
+      className={`w-full ${currentStyle.bg} px-12 py-4 fixed top-0 left-0 right-0 z-[var(--z-header)] transition-all duration-500 ${
         isHeaderVisible
           ? "opacity-100 translate-y-0"
           : "opacity-0 -translate-y-full pointer-events-none"
       }`}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="mx-auto flex w-full items-center justify-between">
         <h1 className={`text-3xl font-extrabold ${currentStyle.text}`}>GRIT</h1>
 
         <div className="flex gap-3 items-center">
