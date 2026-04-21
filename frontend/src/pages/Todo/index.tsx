@@ -11,22 +11,29 @@ import {
   addDays,
   formatMonthHeading,
   startOfWeekMonday,
+  toDateKey,
 } from "@/pages/Todo/components/weeklyTodo";
 
 const TodoPage = () => {
-  const b = useTodo();
-
   const [anchor, setAnchor] = useState(() => new Date());
   const [dragOverDateKey, setDragOverDateKey] = useState<string | null>(null);
 
   const onDragEndClear = () => setDragOverDateKey(null);
 
   const weekStart = useMemo(() => startOfWeekMonday(anchor), [anchor]);
+  const weekStartDate = useMemo(() => toDateKey(weekStart), [weekStart]);
+  const b = useTodo(weekStartDate);
   const monthHeading = useMemo(() => formatMonthHeading(weekStart), [weekStart]);
   const weekDays = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
     [weekStart],
   );
+  const todoFetchStatus = useMemo<"idle" | "loading" | "error">(() => {
+    if (b.userId == null) return "idle";
+    if (b.isTodosError || b.isCategoriesError) return "error";
+    if (b.isTodosLoading || b.isCategoriesLoading) return "loading";
+    return "idle";
+  }, [b.userId, b.isTodosError, b.isCategoriesError, b.isTodosLoading, b.isCategoriesLoading]);
 
   const today = useMemo(() => {
     const t = new Date();
@@ -87,19 +94,8 @@ const TodoPage = () => {
                   onPrevWeek={prevWeek}
                   onNextWeek={nextWeek}
                   onGoToday={goToday}
+                  fetchStatus={todoFetchStatus}
                 />
-
-                {b.isTodosError ? (
-                  <p className="text-sm shrink-0 text-red-300/95">
-                    투두 목록을 불러오지 못했습니다.
-                  </p>
-                ) : null}
-                {Boolean(b.userId) &&
-                (b.isTodosLoading || b.isCategoriesLoading) ? (
-                  <p className="text-sm shrink-0 text-white/45">
-                    투두 불러오는 중…
-                  </p>
-                ) : null}
 
                 <TodoWeekGrid
                   weekDays={weekDays}

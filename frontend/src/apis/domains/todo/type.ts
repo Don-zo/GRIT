@@ -43,7 +43,25 @@ export interface TodoApiItem {
   isDone: boolean;
   categoryId: number | null;
   categoryName: string | null;
+  categorySortOrder?: number | null;
   dueDate: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TodoListByUserParams {
+  weekStartDate?: string;
+  page?: number;
+  size?: number;
+}
+
+export interface TodoListByUserResponse {
+  weekStartDate: string;
+  weekEndDate: string;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  todos: TodoApiItem[];
 }

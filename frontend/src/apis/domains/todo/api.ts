@@ -6,15 +6,21 @@ import type {
   PatchTodoDoneBody,
   PatchTodoDueDateBody,
   ReorderTodoCategoriesBody,
-  TodoApiItem,
   TodoCategoryApiItem,
+  TodoListByUserParams,
+  TodoListByUserResponse,
+  TodoApiItem,
   UpdateTodoBody,
 } from "@/apis/domains/todo/type";
 
 export const todoApi = {
-  getListByUserId: async (userId: number): Promise<TodoApiItem[]> => {
-    const response = await apiClient.get<TodoApiItem[]>(
+  getListByUserId: async (
+    userId: number,
+    params?: TodoListByUserParams,
+  ): Promise<TodoListByUserResponse> => {
+    const response = await apiClient.get<TodoListByUserResponse>(
       ENDPOINTS.TODO.BY_USER(userId),
+      { params },
     );
     return response.data;
   },

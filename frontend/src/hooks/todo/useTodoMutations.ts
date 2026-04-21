@@ -35,6 +35,26 @@ export function useTodoMutations(options: {
   } = options;
 
   const reorderRequestIdRef = useRef(0);
+  const getTodoSnapshots = () => {
+    if (userId == null) return [];
+    return queryClient.getQueriesData<TodoItem[]>({
+      queryKey: QUERY_KEYS.todos.byUser(userId),
+    });
+  };
+  const restoreTodoSnapshots = (
+    snapshots: ReturnType<typeof getTodoSnapshots>,
+  ) => {
+    snapshots.forEach(([key, data]) => {
+      queryClient.setQueryData<TodoItem[]>(key, data);
+    });
+  };
+  const patchTodoQueries = (updater: (prev: TodoItem[]) => TodoItem[]) => {
+    if (userId == null) return;
+    queryClient.setQueriesData<TodoItem[]>(
+      { queryKey: QUERY_KEYS.todos.byUser(userId) },
+      (prev) => updater(prev ?? []),
+    );
+  };
 
   const createCategoryMutation = useMutation({
     mutationFn: ({ name, tempId: _tempId }: { name: string; tempId: string }) =>
@@ -105,44 +125,32 @@ export function useTodoMutations(options: {
       await queryClient.cancelQueries({
         queryKey: QUERY_KEYS.todos.byUser(userId),
       });
-      const previous = queryClient.getQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-      );
+      const previous = getTodoSnapshots();
       const cats =
         queryClient.getQueryData<Category[]>(
           QUERY_KEYS.todoCategories.byUser(userId),
         ) ?? [];
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-        (prev) => [
-          ...(prev ?? []),
-          buildOptimisticTodoItem(item, tempId, cats),
-        ],
-      );
+      patchTodoQueries((prev) => [
+        ...prev,
+        buildOptimisticTodoItem(item, tempId, cats),
+      ]);
       return { previous };
     },
     onSuccess: (data, { tempId }) => {
       if (userId == null) return;
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-        (prev) => {
-          const list = prev ?? [];
-          const mapped = mapTodoApiToItem(data);
-          if (!list.some((t) => t.id === tempId)) {
-            return [...list, mapped];
-          }
-          return list.map((t) => (t.id === tempId ? mapped : t));
-        },
-      );
+      patchTodoQueries((prev) => {
+        const mapped = mapTodoApiToItem(data);
+        if (!prev.some((t) => t.id === tempId)) {
+          return [...prev, mapped];
+        }
+        return prev.map((t) => (t.id === tempId ? mapped : t));
+      });
       notify("생성됐어요");
     },
     onError: (err, _v, context) => {
       if (userId == null) return;
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(
-          QUERY_KEYS.todos.byUser(userId),
-          context.previous,
-        );
+        restoreTodoSnapshots(context.previous);
       }
       if (isAxiosError(err)) {
         const status = err.response?.status;
@@ -175,31 +183,23 @@ export function useTodoMutations(options: {
       await queryClient.cancelQueries({
         queryKey: QUERY_KEYS.todos.byUser(userId),
       });
-      const previous = queryClient.getQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-      );
+      const previous = getTodoSnapshots();
+      const current = previous.flatMap(([, data]) => data ?? []);
       const cats =
         queryClient.getQueryData<Category[]>(
           QUERY_KEYS.todoCategories.byUser(userId),
         ) ?? [];
-      const prevTodo = previous?.find((t) => t.id === todoIdStr);
+      const prevTodo = current.find((t) => t.id === todoIdStr);
       if (!prevTodo) return { previous };
       const next = applyTodoUpdateOptimistic(prevTodo, body, cats);
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-        (prev) => (prev ?? []).map((t) => (t.id === todoIdStr ? next : t)),
-      );
+      patchTodoQueries((prev) => prev.map((t) => (t.id === todoIdStr ? next : t)));
       setEditingId(null);
       return { previous };
     },
     onSuccess: (data) => {
       if (userId == null) return;
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-        (prev) =>
-          (prev ?? []).map((t) =>
-            t.id === String(data.id) ? mapTodoApiToItem(data) : t,
-          ),
+      patchTodoQueries((prev) =>
+        prev.map((t) => (t.id === String(data.id) ? mapTodoApiToItem(data) : t)),
       );
       setEditingId(null);
       notify("수정됐어요");
@@ -207,10 +207,7 @@ export function useTodoMutations(options: {
     onError: (err, _v, context) => {
       if (userId == null) return;
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(
-          QUERY_KEYS.todos.byUser(userId),
-          context.previous,
-        );
+        restoreTodoSnapshots(context.previous);
       }
       if (isAxiosError(err)) {
         const status = err.response?.status;
@@ -243,35 +240,22 @@ export function useTodoMutations(options: {
       await queryClient.cancelQueries({
         queryKey: QUERY_KEYS.todos.byUser(userId),
       });
-      const previous = queryClient.getQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-      );
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-        (prev) =>
-          (prev ?? []).map((t) =>
-            t.id === todoIdStr ? { ...t, completed: isDone } : t,
-          ),
+      const previous = getTodoSnapshots();
+      patchTodoQueries((prev) =>
+        prev.map((t) => (t.id === todoIdStr ? { ...t, completed: isDone } : t)),
       );
       return { previous };
     },
     onSuccess: (data) => {
       if (userId == null) return;
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-        (prev) =>
-          (prev ?? []).map((t) =>
-            t.id === String(data.id) ? mapTodoApiToItem(data) : t,
-          ),
+      patchTodoQueries((prev) =>
+        prev.map((t) => (t.id === String(data.id) ? mapTodoApiToItem(data) : t)),
       );
     },
     onError: (err, _v, context) => {
       if (userId == null) return;
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(
-          QUERY_KEYS.todos.byUser(userId),
-          context.previous,
-        );
+        restoreTodoSnapshots(context.previous);
       }
       if (isAxiosError(err)) {
         const status = err.response?.status;
@@ -304,34 +288,23 @@ export function useTodoMutations(options: {
       await queryClient.cancelQueries({
         queryKey: QUERY_KEYS.todos.byUser(userId),
       });
-      const previous = queryClient.getQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-      );
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-        (prev) =>
-          (prev ?? []).map((t) => (t.id === todoIdStr ? { ...t, dueDate } : t)),
+      const previous = getTodoSnapshots();
+      patchTodoQueries((prev) =>
+        prev.map((t) => (t.id === todoIdStr ? { ...t, dueDate } : t)),
       );
       return { previous };
     },
     onSuccess: (data) => {
       if (userId == null) return;
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-        (prev) =>
-          (prev ?? []).map((t) =>
-            t.id === String(data.id) ? mapTodoApiToItem(data) : t,
-          ),
+      patchTodoQueries((prev) =>
+        prev.map((t) => (t.id === String(data.id) ? mapTodoApiToItem(data) : t)),
       );
       notify("이동됐어요");
     },
     onError: (err, _v, context) => {
       if (userId == null) return;
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(
-          QUERY_KEYS.todos.byUser(userId),
-          context.previous,
-        );
+        restoreTodoSnapshots(context.previous);
       }
       if (isAxiosError(err)) {
         const status = err.response?.status;
@@ -359,23 +332,15 @@ export function useTodoMutations(options: {
       await queryClient.cancelQueries({
         queryKey: QUERY_KEYS.todos.byUser(userId),
       });
-      const previous = queryClient.getQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-      );
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
-        (prev) => (prev ?? []).filter((t) => t.id !== todoIdStr),
-      );
+      const previous = getTodoSnapshots();
+      patchTodoQueries((prev) => prev.filter((t) => t.id !== todoIdStr));
       setEditingId((cur) => (cur === todoIdStr ? null : cur));
       return { previous };
     },
     onError: (err, _vars, context) => {
       if (userId == null) return;
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(
-          QUERY_KEYS.todos.byUser(userId),
-          context.previous,
-        );
+        restoreTodoSnapshots(context.previous);
       }
       if (isAxiosError(err)) {
         const status = err.response?.status;

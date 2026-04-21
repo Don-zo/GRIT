@@ -15,7 +15,17 @@ import {
 } from "@/pages/Todo/components/types";
 import { mapTodoApiToItem, mapTodoCategoryApiToCategory } from "./mappers";
 
-export function useTodoData() {
+type UseTodoDataOptions = {
+  weekStartDate: string;
+  page?: number;
+  size?: number;
+};
+
+export function useTodoData({
+  weekStartDate,
+  page = 0,
+  size = 20,
+}: UseTodoDataOptions) {
   const queryClient = useQueryClient();
   const userId = getStoredMember()?.id ?? null;
 
@@ -26,11 +36,15 @@ export function useTodoData() {
   } = useQuery({
     queryKey:
       userId != null
-        ? QUERY_KEYS.todos.byUser(userId)
+        ? QUERY_KEYS.todos.byUserWeek(userId, weekStartDate, page, size)
         : (["todos", "guest"] as const),
     queryFn: async () => {
-      const rows = await todoApi.getListByUserId(userId!);
-      return rows.map(mapTodoApiToItem);
+      const response = await todoApi.getListByUserId(userId!, {
+        weekStartDate,
+        page,
+        size,
+      });
+      return response.todos.map(mapTodoApiToItem);
     },
     enabled: userId != null,
   });
@@ -85,11 +99,11 @@ export function useTodoData() {
         return;
       }
       queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUser(userId),
+        QUERY_KEYS.todos.byUserWeek(userId, weekStartDate, page, size),
         (prev) => updater(prev ?? []),
       );
     },
-    [userId, queryClient],
+    [userId, weekStartDate, page, size, queryClient],
   );
 
   return {
