@@ -45,12 +45,16 @@ async function fetchTodos() {
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos`);
     if (response.status === 403) throw new Error('본인 계정의 투두만 볼 수 있습니다. (로그인·member_id 불일치)');
     if (!response.ok) throw new Error('투두 목록을 불러오지 못했습니다.');
-    return response.json();
+    const payload = await response.json();
+    // 백엔드가 페이지 객체(weekly)로 내려주는 최신 스펙과 단순 배열 응답 모두 호환
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.todos)) return payload.todos;
+    return [];
 }
 
 async function fetchAchievement() {
     const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos/achievement/last-7-days`);
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos/achievement`);
     if (response.status === 403) throw new Error('본인 계정의 달성도만 볼 수 있습니다.');
     if (!response.ok) throw new Error('달성도를 불러오지 못했습니다.');
     return response.json();
@@ -212,16 +216,26 @@ let activeCategoryFilter = '';
 
 function renderAchievement(data) {
     const container = document.getElementById('achievement-bars');
-    if (!data || data.length === 0) {
+    const todayLabel = document.getElementById('achievement-today');
+    const last7Days = data?.last7Days || [];
+    const today = data?.today;
+
+    if (!data || last7Days.length === 0) {
+        if (todayLabel) todayLabel.textContent = '';
         container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">최근 7일 데이터가 없습니다.</p>';
         return;
     }
 
+    if (todayLabel && today?.date) {
+        const todayRate = today.achievementRate ?? 0;
+        todayLabel.textContent = `오늘 달성도: ${todayRate}%`;
+    }
+
     const days = ['일', '월', '화', '수', '목', '금', '토'];
-    container.innerHTML = data.map(d => {
+    container.innerHTML = last7Days.map(d => {
         const date = new Date(d.date);
         const dayLabel = days[date.getDay()];
-        const rate = d.achievementRate || 0;
+        const rate = d.achievementRate ?? 0;
         const barColor = rate >= 80 ? 'var(--accent)' : rate >= 50 ? '#a78bfa' : 'rgba(99,102,241,0.35)';
         return `
             <div class="achievement-bar-item">
