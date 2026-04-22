@@ -6,6 +6,7 @@ import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
 import grit.domain.todo.dto.CreateTodoRequestDTO;
+import grit.domain.todo.dto.AchievementOverviewResponseDTO;
 import grit.domain.todo.dto.DailyAchievementDTO;
 import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
 import grit.domain.todo.dto.SetTodoDoneRequestDTO;
@@ -188,19 +189,19 @@ public class TodoService {
         return todo;
     }
 
-    public List<DailyAchievementDTO> getLast7DaysAchievement(Long userId) {
+    public AchievementOverviewResponseDTO getLast7DaysAchievement(Long userId) {
         LocalDate today = LocalDate.now();
-        LocalDate from = today.minusDays(7);
-        LocalDate to = today.minusDays(1);
+        LocalDate last7DaysFrom = today.minusDays(7);
+        LocalDate last7DaysTo = today.minusDays(1);
 
-        List<Todo> todos = todoRepository.findByOwnerIdAndDueDateBetween(userId, from, to);
+        List<Todo> todos = todoRepository.findByOwnerIdAndDueDateBetween(userId, last7DaysFrom, today);
 
         Map<LocalDate, List<Todo>> todosByDate = todos.stream()
                 .collect(Collectors.groupingBy(Todo::getDueDate));
 
-        List<DailyAchievementDTO> result = new ArrayList<>();
+        List<DailyAchievementDTO> last7Days = new ArrayList<>();
 
-        for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
+        for (LocalDate date = last7DaysFrom; !date.isAfter(last7DaysTo); date = date.plusDays(1)) {
             List<Todo> todosOfDay = todosByDate.getOrDefault(date, Collections.emptyList());
 
             long total = todosOfDay.size();
@@ -209,12 +210,22 @@ public class TodoService {
                     .count();
 
             if (total == 0) {
-                result.add(new DailyAchievementDTO(date, null, null, null));
+                last7Days.add(new DailyAchievementDTO(date, null, null, null));
             } else {
-                result.add(new DailyAchievementDTO(date, total, done));
+                last7Days.add(new DailyAchievementDTO(date, total, done));
             }
         }
 
-        return result;
+        List<Todo> todayTodos = todosByDate.getOrDefault(today, Collections.emptyList());
+        long todayTotal = todayTodos.size();
+        long todayDone = todayTodos.stream()
+                .filter(Todo::isDone)
+                .count();
+
+        DailyAchievementDTO todayAchievement = (todayTotal == 0)
+                ? new DailyAchievementDTO(today, null, null, null)
+                : new DailyAchievementDTO(today, todayTotal, todayDone);
+
+        return new AchievementOverviewResponseDTO(last7Days, todayAchievement);
     }
 }
