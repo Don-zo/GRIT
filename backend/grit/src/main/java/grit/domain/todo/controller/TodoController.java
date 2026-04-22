@@ -2,7 +2,7 @@ package grit.domain.todo.controller;
 
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.todo.dto.CreateTodoRequestDTO;
-import grit.domain.todo.dto.DailyAchievementDTO;
+import grit.domain.todo.dto.AchievementOverviewResponseDTO;
 import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
 import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
@@ -154,17 +154,17 @@ public class TodoController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "지난 7일간 일별 달성도 (본인만)", description = "오늘을 제외한 지난 7일간의 일별 투두 달성도입니다.")
+    @Operation(summary = "최근 달성도 조회 (본인만)", description = "오늘을 제외한 지난 7일간 일별 달성도와 오늘 달성도를 함께 반환합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "403", description = "다른 사용자 ID", content = @Content)
     })
     @GetMapping("/api/users/{userId}/todos/achievement/last-7-days")
-    public ResponseEntity<List<DailyAchievementDTO>> getLast7DaysAchievement(
+    public ResponseEntity<AchievementOverviewResponseDTO> getLast7DaysAchievement(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId) {
         MemberSelfAssert.assertSameMember(principal, userId);
-        List<DailyAchievementDTO> achievements = todoService.getLast7DaysAchievement(userId);
+        AchievementOverviewResponseDTO achievements = todoService.getLast7DaysAchievement(userId);
         return ResponseEntity.ok(achievements);
     }
 }
