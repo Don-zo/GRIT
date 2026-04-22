@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@Tag(name = "Todo", description = "투두 관련 API")
+@Tag(name = "Todo", descripti\on = "투두 관련 API")
 @RestController
 @RequiredArgsConstructor
 @Validated
@@ -159,7 +159,7 @@ public class TodoController {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "403", description = "다른 사용자 ID", content = @Content)
     })
-    @GetMapping("/api/users/{userId}/todos/achievement/last-7-days")
+    @GetMapping("/api/users/{userId}/todos/achievement")
     public ResponseEntity<AchievementOverviewResponseDTO> getLast7DaysAchievement(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId) {
