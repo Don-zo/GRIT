@@ -32,6 +32,8 @@ export const ENDPOINTS = {
     DONE: (todoId: number) => `/api/todos/${todoId}/done`,
     DUE_DATE: (todoId: number) => `/api/todos/${todoId}/due-date`,
     BY_USER: (userId: number) => `/api/users/${userId}/todos`,
+    ACHIEVEMENT_BY_USER: (userId: number) =>
+      `/api/users/${userId}/todos/achievement`,
     CATEGORIES_BY_USER: (userId: number) =>
       `/api/users/${userId}/todo-categories`,
     CATEGORIES_BY_USER_CATEGORY: (userId: number, categoryId: number) =>

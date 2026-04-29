@@ -6,6 +6,7 @@ import type {
   PatchTodoDoneBody,
   PatchTodoDueDateBody,
   ReorderTodoCategoriesBody,
+  TodoAchievementResponse,
   TodoCategoryApiItem,
   TodoListByUserParams,
   TodoListByUserResponse,
@@ -30,6 +31,15 @@ export const todoApi = {
   ): Promise<TodoCategoryApiItem[]> => {
     const response = await apiClient.get<TodoCategoryApiItem[]>(
       ENDPOINTS.TODO.CATEGORIES_BY_USER(userId),
+    );
+    return response.data;
+  },
+
+  getAchievementByUserId: async (
+    userId: number,
+  ): Promise<TodoAchievementResponse> => {
+    const response = await apiClient.get<TodoAchievementResponse>(
+      ENDPOINTS.TODO.ACHIEVEMENT_BY_USER(userId),
     );
     return response.data;
   },

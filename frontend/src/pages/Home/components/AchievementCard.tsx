@@ -1,29 +1,34 @@
 import React from "react";
+import dayjs from "dayjs";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Trophy, Settings } from "lucide-react";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
+import { getStoredMember } from "@/apis/domains/auth/api";
+import { todoApi } from "@/apis/domains/todo/api";
 import { PATHS } from "@/routes/path";
 
-interface AchievementCardProps {
-  todayProgress?: number; // 0-100
-  weeklyData?: {
-    day: string;
-    progress: number; // 0-100
-  }[];
-}
+const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"] as const;
 
-const AchievementCard: React.FC<AchievementCardProps> = ({
-  todayProgress = 70,
-  weeklyData = [
-    { day: "목", progress: 75 },
-    { day: "금", progress: 55 },
-    { day: "토", progress: 85 },
-    { day: "일", progress: 25 },
-    { day: "월", progress: 45 },
-    { day: "화", progress: 65 },
-    { day: "수", progress: 55 },
-  ],
-}) => {
+const AchievementCard: React.FC = () => {
   const navigate = useNavigate();
+  const userId = getStoredMember()?.id ?? null;
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey:
+      userId != null
+        ? QUERY_KEYS.todos.achievementByUser(userId)
+        : (["todos", "achievement", "guest"] as const),
+    queryFn: () => todoApi.getAchievementByUserId(userId!),
+    enabled: userId != null,
+  });
+
+  const resolvedTodayProgress = data?.today.achievementRate ?? 0;
+  const resolvedWeeklyData =
+    data?.last7Days.map((item) => ({
+      day: DAY_LABELS[dayjs(item.date).day()] ?? "",
+      progress: item.achievementRate ?? 0,
+    })) ?? [];
 
   return (
     <div className="w-1/2 h-64 bg-[#2E3039] rounded-2xl p-6 select-none">
@@ -35,7 +40,9 @@ const AchievementCard: React.FC<AchievementCardProps> = ({
             <span className="text-white text-bodyLg">오늘의 달성도</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-white text-bodyLg">{todayProgress}%</span>
+            <span className="text-white text-bodyLg">
+              {resolvedTodayProgress}%
+            </span>
             <button
               type="button"
               onClick={() => navigate(PATHS.TODO)}
@@ -52,16 +59,22 @@ const AchievementCard: React.FC<AchievementCardProps> = ({
         <div className="w-full h-4 bg-gray-semidark rounded-full overflow-hidden">
           <div
             className="h-full bg-green-normal rounded-full transition-all duration-300"
-            style={{ width: `${todayProgress}%` }}
+            style={{ width: `${resolvedTodayProgress}%` }}
           />
         </div>
       </div>
 
       {/* 이번 주 기록 섹션 */}
       <div>
-        <h3 className="mb-4 text-white text-bodyMd">이번 주 기록</h3>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-white text-bodyMd">이번 주 기록</h3>
+          {isLoading && <span className="text-caption text-gray-light">로딩 중…</span>}
+          {isError && !isLoading && (
+            <span className="text-caption text-red-300">조회 실패</span>
+          )}
+        </div>
         <div className="flex items-end gap-2">
-          {weeklyData.map((item, index) => (
+          {resolvedWeeklyData.map((item, index) => (
             <div key={index} className="flex-1 flex flex-col items-center gap-2">
               <div className="w-5 h-16 bg-gray-semidark rounded-full overflow-hidden relative flex flex-col justify-end">
                 <div

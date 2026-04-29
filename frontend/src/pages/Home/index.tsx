@@ -34,7 +34,7 @@ const HomePage = () => {
           </aside>
           <div className="flex-1 overflow-y-auto overscroll-contain">
             <div className="mx-auto w-full max-w-[1180px] px-8 pb-16">
-              <div className="mt-8 flex items-center justify-center gap-8">
+              <div className="mt-18 flex items-center justify-center gap-8">
                 <Achievement />
                 <ProfileCard
                   initialSettingsOpen={shouldOpenProfileSetup}
