@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@Tag(name = "Todo", descripti\on = "투두 관련 API")
+@Tag(name = "Todo", description = "투두 관련 API")
 @RestController
 @RequiredArgsConstructor
 @Validated
