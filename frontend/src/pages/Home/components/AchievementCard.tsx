@@ -9,17 +9,26 @@ import { todoApi } from "@/apis/domains/todo/api";
 import { PATHS } from "@/routes/path";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"] as const;
+const EMPTY_WEEKLY_DATA = Array.from({ length: 7 }, (_, index) => {
+  const date = dayjs().subtract(7 - index, "day");
+  return {
+    day: DAY_LABELS[date.day()],
+    progress: 0,
+  };
+});
 
 const AchievementCard: React.FC = () => {
   const navigate = useNavigate();
   const userId = getStoredMember()?.id ?? null;
 
   const { data, isLoading, isError } = useQuery({
-    queryKey:
-      userId != null
-        ? QUERY_KEYS.todos.achievementByUser(userId)
-        : (["todos", "achievement", "guest"] as const),
-    queryFn: () => todoApi.getAchievementByUserId(userId!),
+    queryKey: QUERY_KEYS.todos.achievement(userId),
+    queryFn: () => {
+      if (userId == null) {
+        throw new Error("로그인 사용자 정보가 필요합니다.");
+      }
+      return todoApi.getAchievementByUserId(userId);
+    },
     enabled: userId != null,
   });
 
@@ -28,7 +37,7 @@ const AchievementCard: React.FC = () => {
     data?.last7Days.map((item) => ({
       day: DAY_LABELS[dayjs(item.date).day()] ?? "",
       progress: item.achievementRate ?? 0,
-    })) ?? [];
+    })) ?? EMPTY_WEEKLY_DATA;
 
   return (
     <div className="w-1/2 h-64 bg-[#2E3039] rounded-2xl p-6 select-none">
@@ -58,7 +67,7 @@ const AchievementCard: React.FC = () => {
         </div>
         <div className="w-full h-4 bg-gray-semidark rounded-full overflow-hidden">
           <div
-            className="h-full bg-green-normal rounded-full transition-all duration-300"
+            className="h-full bg-green-normal rounded-full transition-all duration-600"
             style={{ width: `${resolvedTodayProgress}%` }}
           />
         </div>
@@ -78,7 +87,7 @@ const AchievementCard: React.FC = () => {
             <div key={index} className="flex-1 flex flex-col items-center gap-2">
               <div className="w-5 h-16 bg-gray-semidark rounded-full overflow-hidden relative flex flex-col justify-end">
                 <div
-                  className="w-full bg-green-normal rounded-full transition-all duration-300"
+                  className="w-full bg-green-normal rounded-full transition-all duration-600"
                   style={{ height: `${item.progress}%` }}
                 />
               </div>
