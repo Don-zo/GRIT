@@ -13,6 +13,10 @@ export const QUERY_KEYS = {
   todos: {
     all: ["todos"] as const,
     byUser: (userId: number) => ["todos", "user", userId] as const,
+    achievement: (userId: number | null) =>
+      ["todos", "achievement", "user", userId ?? "guest"] as const,
+    achievementByUser: (userId: number) =>
+      ["todos", "achievement", "user", userId] as const,
     byUserWeek: (
       userId: number,
       weekStartDate: string,

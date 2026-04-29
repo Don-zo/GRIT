@@ -65,3 +65,15 @@ export interface TodoListByUserResponse {
   hasNext: boolean;
   todos: TodoApiItem[];
 }
+
+export interface TodoAchievementDaily {
+  date: string;
+  totalCount: number | null;
+  doneCount: number | null;
+  achievementRate: number | null;
+}
+
+export interface TodoAchievementResponse {
+  last7Days: TodoAchievementDaily[];
+  today: TodoAchievementDaily;
+}
