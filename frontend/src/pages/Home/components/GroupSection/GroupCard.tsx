@@ -51,7 +51,7 @@ export default function GroupCard({
               </button>
             </div>
             <span className="flex shrink-0 text-[15px] font-thin opacity-90">
-              {liveMembers}/{memberCount}
+              {memberCount}/{liveMembers}
             </span>
           </div>
         </div>
