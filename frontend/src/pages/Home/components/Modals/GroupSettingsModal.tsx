@@ -26,6 +26,7 @@ export default function GroupSettingsModal({
   const [baseGroupImage, setBaseGroupImage] = useState(initialImage);
   const [groupName, setGroupName] = useState(initialName);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
 
   const { notify } = useToastContext();
 
@@ -42,11 +43,13 @@ export default function GroupSettingsModal({
     setBaseGroupImage(groupInfo.imageUrl ?? "");
     setGroupName(groupInfo.name);
     setImageFile(null);
+    setIsImageRemoved(false);
   }, [open, groupInfo]);
 
   const handleClose = () => {
     setGroupName(baseGroupName);
     setImageFile(null);
+    setIsImageRemoved(false);
     onClose();
   };
 
@@ -66,9 +69,13 @@ export default function GroupSettingsModal({
             imageName,
           });
         }
-        return groupApi.update(groupCode, {
+        const payload: { name: string; imageName?: string | null } = {
           name: trimmedGroupName,
-        });
+        };
+        if (isImageRemoved) {
+          payload.imageName = null;
+        }
+        return groupApi.update(groupCode, payload);
       },
 
       onSuccess: async () => {
@@ -133,7 +140,10 @@ export default function GroupSettingsModal({
           <ImageUploader
             size={140}
             initialImage={baseGroupImage}
-            onImageChange={(file) => setImageFile(file)}
+            onImageChange={(file) => {
+              setImageFile(file);
+              setIsImageRemoved(file === null);
+            }}
           />
 
           <div className="mx-auto mt-6 w-full max-w-[320px]">
