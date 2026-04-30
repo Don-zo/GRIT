@@ -33,9 +33,7 @@ export default function GroupCard({
 
         <div className="relative z-10 flex flex-col h-full pointer-events-none">
           {/* 라이브 뱃지 */}
-          <div className="flex justify-between p-4">
-            {isLive ? <LiveBadge /> : <div />}
-          </div>
+          <div className="p-4">{isLive && <LiveBadge />}</div>
 
           {/* 이름 & 설정 & 인원 */}
           <div className="mt-auto flex items-center justify-between bg-green-semidark px-5 py-3 text-white">
