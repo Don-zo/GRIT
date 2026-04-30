@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings } from "lucide-react";
+import { Pencil } from "lucide-react";
 import LiveBadge from "./LiveBadge";
 import GroupSettingsModal from "@/pages/Home/components/Modals/GroupSettingsModal";
 import type { Group } from "@/apis/domains/group/type";
@@ -32,22 +32,24 @@ export default function GroupCard({
         )}
 
         <div className="relative z-10 flex flex-col h-full pointer-events-none">
-          {/* 라이브 뱃지 & 설정 아이콘 */}
-          <div className="flex justify-between p-4">
-            {isLive ? <LiveBadge /> : <div />}
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="transition-transform hover:scale-110 pointer-events-auto"
-            >
-              <Settings className="h-6 w-6 text-green-light" />
-            </button>
-          </div>
+          {/* 라이브 뱃지 */}
+          <div className="p-4">{isLive && <LiveBadge />}</div>
 
-          {/* 이름 & 인원 */}
+          {/* 이름 & 설정 & 인원 */}
           <div className="mt-auto flex items-center justify-between bg-green-semidark px-5 py-3 text-white">
-            <h3 className="truncate text-[15px] tracking-tight">{name}</h3>
+            <div className="flex min-w-0 items-center gap-2">
+              <h3 className="truncate text-[15px] tracking-tight">{name}</h3>
+              <button
+                type="button"
+                aria-label="그룹 설정 열기"
+                onClick={() => setIsSettingsOpen(true)}
+                className="pointer-events-auto shrink-0 cursor-pointer transition-transform hover:scale-110"
+              >
+                <Pencil className="h-4 w-4 text-green-light" />
+              </button>
+            </div>
             <span className="flex shrink-0 text-[15px] font-thin opacity-90">
-              {liveMembers}/{memberCount}
+              {memberCount}/{liveMembers}
             </span>
           </div>
         </div>
