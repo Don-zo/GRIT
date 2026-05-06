@@ -6,8 +6,9 @@ import {
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
-import { getStoredMember } from "@/apis/domains/auth/api";
 import { todoApi } from "@/apis/domains/todo/api";
+import { userApi } from "@/apis/domains/user/api";
+import { getAccessToken } from "@/utils/tokenStorage";
 import {
   DEFAULT_CATEGORIES,
   type Category,
@@ -27,7 +28,13 @@ export function useTodoData({
   size = 20,
 }: UseTodoDataOptions) {
   const queryClient = useQueryClient();
-  const userId = getStoredMember()?.id ?? null;
+  const accessToken = getAccessToken();
+  const { data: member } = useQuery({
+    queryKey: QUERY_KEYS.member.me,
+    queryFn: userApi.get,
+    enabled: accessToken != null,
+  });
+  const userId = member?.id ?? null;
 
   const {
     data: serverTodos = [],
@@ -39,7 +46,7 @@ export function useTodoData({
         ? QUERY_KEYS.todos.byUserWeek(userId, weekStartDate, page, size)
         : (["todos", "guest"] as const),
     queryFn: async () => {
-      const response = await todoApi.getListByUserId(userId!, {
+      const response = await todoApi.getList({
         weekStartDate,
         page,
         size,
@@ -62,7 +69,7 @@ export function useTodoData({
         ? QUERY_KEYS.todoCategories.byUser(userId)
         : (["todoCategories", "guest"] as const),
     queryFn: async () => {
-      const rows = await todoApi.getCategoriesByUserId(userId!);
+      const rows = await todoApi.getCategories();
       const sorted = [...rows].sort((a, b) => {
         const ao = a.sortOrder ?? 0;
         const bo = b.sortOrder ?? 0;

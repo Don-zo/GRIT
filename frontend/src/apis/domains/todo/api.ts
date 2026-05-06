@@ -15,41 +15,33 @@ import type {
 } from "@/apis/domains/todo/type";
 
 export const todoApi = {
-  getListByUserId: async (
-    userId: number,
+  getList: async (
     params?: TodoListByUserParams,
   ): Promise<TodoListByUserResponse> => {
     const response = await apiClient.get<TodoListByUserResponse>(
-      ENDPOINTS.TODO.BY_USER(userId),
+      ENDPOINTS.TODO.LIST,
       { params },
     );
     return response.data;
   },
 
-  getCategoriesByUserId: async (
-    userId: number,
-  ): Promise<TodoCategoryApiItem[]> => {
+  getCategories: async (): Promise<TodoCategoryApiItem[]> => {
     const response = await apiClient.get<TodoCategoryApiItem[]>(
-      ENDPOINTS.TODO.CATEGORIES_BY_USER(userId),
+      ENDPOINTS.TODO.CATEGORIES,
     );
     return response.data;
   },
 
-  getAchievementByUserId: async (
-    userId: number,
-  ): Promise<TodoAchievementResponse> => {
+  getAchievement: async (): Promise<TodoAchievementResponse> => {
     const response = await apiClient.get<TodoAchievementResponse>(
-      ENDPOINTS.TODO.ACHIEVEMENT_BY_USER(userId),
+      ENDPOINTS.TODO.ACHIEVEMENT,
     );
     return response.data;
   },
 
-  createTodo: async (
-    userId: number,
-    body: CreateTodoBody,
-  ): Promise<TodoApiItem> => {
+  createTodo: async (body: CreateTodoBody): Promise<TodoApiItem> => {
     const response = await apiClient.post<TodoApiItem>(
-      ENDPOINTS.TODO.BY_USER(userId),
+      ENDPOINTS.TODO.LIST,
       body,
     );
     return response.data;
@@ -93,28 +85,26 @@ export const todoApi = {
   },
 
   createCategory: async (
-    userId: number,
     body: CreateTodoCategoryBody,
   ): Promise<TodoCategoryApiItem> => {
     const response = await apiClient.post<TodoCategoryApiItem>(
-      ENDPOINTS.TODO.CATEGORIES_BY_USER(userId),
+      ENDPOINTS.TODO.CATEGORIES,
       body,
     );
     return response.data;
   },
 
-  deleteCategory: async (userId: number, categoryId: number): Promise<void> => {
+  deleteCategory: async (categoryId: number): Promise<void> => {
     await apiClient.delete(
-      ENDPOINTS.TODO.CATEGORIES_BY_USER_CATEGORY(userId, categoryId),
+      ENDPOINTS.TODO.CATEGORY_BY_ID(categoryId),
     );
   },
 
   reorderCategories: async (
-    userId: number,
     body: ReorderTodoCategoriesBody,
   ): Promise<TodoCategoryApiItem[]> => {
     const response = await apiClient.patch<TodoCategoryApiItem[]>(
-      ENDPOINTS.TODO.CATEGORIES_REORDER(userId),
+      ENDPOINTS.TODO.CATEGORIES_REORDER,
       body,
     );
     return response.data;
