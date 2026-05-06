@@ -1,10 +1,6 @@
 // ────────────────────────────────────────
-// Todo JS — /api/users/{userId}/todos
+// Todo JS — /api/members/me/todos
 // ────────────────────────────────────────
-
-function getMemberId() {
-    return localStorage.getItem('member_id');
-}
 
 // 인증 확인
 function checkAuth() {
@@ -41,9 +37,7 @@ function escapeHtml(str) {
 // ────────────────────────────────────────
 
 async function fetchTodos() {
-    const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos`);
-    if (response.status === 403) throw new Error('본인 계정의 투두만 볼 수 있습니다. (로그인·member_id 불일치)');
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todos`);
     if (!response.ok) throw new Error('투두 목록을 불러오지 못했습니다.');
     const payload = await response.json();
     // 백엔드가 페이지 객체(weekly)로 내려주는 최신 스펙과 단순 배열 응답 모두 호환
@@ -53,24 +47,19 @@ async function fetchTodos() {
 }
 
 async function fetchAchievement() {
-    const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos/achievement`);
-    if (response.status === 403) throw new Error('본인 계정의 달성도만 볼 수 있습니다.');
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todos/achievement`);
     if (!response.ok) throw new Error('달성도를 불러오지 못했습니다.');
     return response.json();
 }
 
 async function fetchTodoCategories() {
-    const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todo-categories`);
-    if (response.status === 403) throw new Error('본인 카테고리만 볼 수 있습니다.');
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todo-categories`);
     if (!response.ok) throw new Error('카테고리 목록을 불러오지 못했습니다.');
     return response.json();
 }
 
 async function createTodoCategory(name) {
-    const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todo-categories`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todo-categories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -87,9 +76,8 @@ async function createTodoCategory(name) {
 }
 
 async function deleteTodoCategory(categoryId) {
-    const userId = getMemberId();
     const response = await apiFetch(
-        `${API_CONFIG.BASE_URL}/api/users/${userId}/todo-categories/${categoryId}`,
+        `${API_CONFIG.BASE_URL}/api/members/me/todo-categories/${categoryId}`,
         { method: 'DELETE' }
     );
     if (!response.ok) {
@@ -100,8 +88,7 @@ async function deleteTodoCategory(categoryId) {
 
 /** @param {number[]} categoryIds 본인 카테고리 ID 전체를 원하는 순서대로 */
 async function reorderTodoCategories(categoryIds) {
-    const userId = getMemberId();
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todo-categories/reorder`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todo-categories/reorder`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ categoryIds })
@@ -132,11 +119,10 @@ async function fetchGroupTodos(groupCode, userId) {
 }
 
 async function createTodo(content, categoryId, dueDate) {
-    const userId = getMemberId();
     const body = { content, dueDate };
     if (categoryId) body.categoryId = categoryId;
 
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/users/${userId}/todos`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -149,7 +135,7 @@ async function createTodo(content, categoryId, dueDate) {
 }
 
 async function updateTodo(todoId, patch) {
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todos/${todoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -173,7 +159,7 @@ async function handlePatchResponse(response, defaultMsg) {
 
 /** 마감일만 변경 (캘린더 드래그앤드롭 등). body: { dueDate: 'YYYY-MM-DD' } */
 async function patchTodoDueDate(todoId, dueDate) {
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}/due-date`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todos/${todoId}/due-date`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dueDate })
@@ -183,7 +169,7 @@ async function patchTodoDueDate(todoId, dueDate) {
 
 /** 완료 체크/해제만. body: { isDone: boolean } */
 async function patchTodoDone(todoId, isDone) {
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}/done`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todos/${todoId}/done`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isDone })
@@ -192,7 +178,7 @@ async function patchTodoDone(todoId, isDone) {
 }
 
 async function deleteTodo(todoId) {
-    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/todos/${todoId}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todos/${todoId}`, {
         method: 'DELETE'
     });
     if (response.status === 403) throw new Error('본인의 투두만 삭제할 수 있습니다.');

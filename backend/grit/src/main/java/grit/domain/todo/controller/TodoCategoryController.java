@@ -5,7 +5,6 @@ import grit.domain.todo.dto.CreateTodoCategoryRequestDto;
 import grit.domain.todo.dto.ReorderTodoCategoriesRequestDto;
 import grit.domain.todo.dto.TodoCategoryResponseDto;
 import grit.domain.todo.service.TodoCategoryService;
-import grit.global.security.MemberSelfAssert;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,12 +27,10 @@ public class TodoCategoryController {
     private final TodoCategoryService todoCategoryService;
 
     @Operation(summary = "내 투두 카테고리 목록", description = "사용자가 등록한 투두 카테고리를 표시 순서(sortOrder)대로 조회합니다.")
-    @GetMapping("/api/users/{userId}/todo-categories")
+    @GetMapping("/api/members/me/todo-categories")
     public ResponseEntity<List<TodoCategoryResponseDto>> list(
-            @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId) {
-        MemberSelfAssert.assertSameMember(principal, userId);
-        return ResponseEntity.ok(todoCategoryService.findByUserId(userId));
+            @AuthenticationPrincipal MemberPrincipal principal) {
+        return ResponseEntity.ok(todoCategoryService.findByUserId(principal.id()));
     }
 
     @Operation(summary = "투두 카테고리 등록", description = "이름은 같은 사용자 내에서 중복될 수 없습니다. 수정 API는 없습니다.")
@@ -42,13 +39,11 @@ public class TodoCategoryController {
             @ApiResponse(responseCode = "404", description = "사용자 없음", content = @Content),
             @ApiResponse(responseCode = "409", description = "이름 중복", content = @Content)
     })
-    @PostMapping("/api/users/{userId}/todo-categories")
+    @PostMapping("/api/members/me/todo-categories")
     public ResponseEntity<TodoCategoryResponseDto> create(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId,
             @Valid @RequestBody CreateTodoCategoryRequestDto request) {
-        MemberSelfAssert.assertSameMember(principal, userId);
-        TodoCategoryResponseDto created = todoCategoryService.create(userId, request);
+        TodoCategoryResponseDto created = todoCategoryService.create(principal.id(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -56,16 +51,13 @@ public class TodoCategoryController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "순서 저장 성공"),
             @ApiResponse(responseCode = "400", description = "ID 목록 불일치·중복", content = @Content),
-            @ApiResponse(responseCode = "403", description = "본인이 아님", content = @Content),
             @ApiResponse(responseCode = "404", description = "사용자 없음", content = @Content)
     })
-    @PatchMapping("/api/users/{userId}/todo-categories/reorder")
+    @PatchMapping("/api/members/me/todo-categories/reorder")
     public ResponseEntity<List<TodoCategoryResponseDto>> reorder(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId,
             @Valid @RequestBody ReorderTodoCategoriesRequestDto request) {
-        MemberSelfAssert.assertSameMember(principal, userId);
-        List<TodoCategoryResponseDto> updated = todoCategoryService.reorder(userId, request);
+        List<TodoCategoryResponseDto> updated = todoCategoryService.reorder(principal.id(), request);
         return ResponseEntity.ok(updated);
     }
 
@@ -74,13 +66,11 @@ public class TodoCategoryController {
             @ApiResponse(responseCode = "204", description = "삭제 성공"),
             @ApiResponse(responseCode = "404", description = "카테고리 없음", content = @Content)
     })
-    @DeleteMapping("/api/users/{userId}/todo-categories/{categoryId}")
+    @DeleteMapping("/api/members/me/todo-categories/{categoryId}")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId,
             @Parameter(description = "카테고리 ID", example = "1") @PathVariable Long categoryId) {
-        MemberSelfAssert.assertSameMember(principal, userId);
-        todoCategoryService.delete(userId, categoryId);
+        todoCategoryService.delete(principal.id(), categoryId);
         return ResponseEntity.noContent().build();
     }
 }
