@@ -38,7 +38,6 @@ function escapeHtml(str) {
 
 async function fetchTodos() {
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todos`);
-    if (response.status === 403) throw new Error('본인 계정의 투두만 볼 수 있습니다. (로그인·member_id 불일치)');
     if (!response.ok) throw new Error('투두 목록을 불러오지 못했습니다.');
     const payload = await response.json();
     // 백엔드가 페이지 객체(weekly)로 내려주는 최신 스펙과 단순 배열 응답 모두 호환
@@ -49,14 +48,12 @@ async function fetchTodos() {
 
 async function fetchAchievement() {
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todos/achievement`);
-    if (response.status === 403) throw new Error('본인 계정의 달성도만 볼 수 있습니다.');
     if (!response.ok) throw new Error('달성도를 불러오지 못했습니다.');
     return response.json();
 }
 
 async function fetchTodoCategories() {
     const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/todo-categories`);
-    if (response.status === 403) throw new Error('본인 카테고리만 볼 수 있습니다.');
     if (!response.ok) throw new Error('카테고리 목록을 불러오지 못했습니다.');
     return response.json();
 }

@@ -51,7 +51,6 @@ public class TodoCategoryController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "순서 저장 성공"),
             @ApiResponse(responseCode = "400", description = "ID 목록 불일치·중복", content = @Content),
-            @ApiResponse(responseCode = "403", description = "본인이 아님", content = @Content),
             @ApiResponse(responseCode = "404", description = "사용자 없음", content = @Content)
     })
     @PatchMapping("/api/members/me/todo-categories/reorder")

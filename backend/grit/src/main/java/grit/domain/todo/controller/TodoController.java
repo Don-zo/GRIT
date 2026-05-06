@@ -38,7 +38,6 @@ public class TodoController {
     @Operation(summary = "내 주간 투두 목록", description = "로그인한 사용자 본인의 투두를 주 단위(월~일)로 페이지네이션 조회합니다. weekStartDate가 월요일이 아니면 해당 날짜가 포함된 주의 월요일로 보정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "403", description = "다른 사용자 ID로 조회 시도", content = @Content)
     })
     @GetMapping("/api/members/me/todos")
     public ResponseEntity<WeeklyTodosPageResponseDTO> findByUserId(
@@ -77,7 +76,6 @@ public class TodoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "투두 생성 성공"),
             @ApiResponse(responseCode = "400", description = "입력 검증 실패", content = @Content),
-            @ApiResponse(responseCode = "403", description = "본인이 아님", content = @Content),
             @ApiResponse(responseCode = "404", description = "사용자·카테고리 없음", content = @Content)
     })
     @PostMapping("/api/members/me/todos")
@@ -152,7 +150,6 @@ public class TodoController {
     @Operation(summary = "최근 달성도 조회 (본인만)", description = "오늘을 제외한 지난 7일간 일별 달성도와 오늘 달성도를 함께 반환합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "403", description = "다른 사용자 ID", content = @Content)
     })
     @GetMapping("/api/members/me/todos/achievement")
     public ResponseEntity<AchievementOverviewResponseDTO> getLast7DaysAchievement(
