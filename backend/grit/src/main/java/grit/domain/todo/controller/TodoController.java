@@ -10,7 +10,6 @@ import grit.domain.todo.dto.UpdateTodoRequestDTO;
 import grit.domain.todo.dto.WeeklyTodosPageResponseDTO;
 import grit.domain.todo.entity.Todo;
 import grit.domain.todo.service.TodoService;
-import grit.global.security.MemberSelfAssert;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,21 +38,18 @@ public class TodoController {
     @Operation(summary = "내 주간 투두 목록", description = "로그인한 사용자 본인의 투두를 주 단위(월~일)로 페이지네이션 조회합니다. weekStartDate가 월요일이 아니면 해당 날짜가 포함된 주의 월요일로 보정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "403", description = "다른 사용자 ID로 조회 시도", content = @Content)
     })
-    @GetMapping("/api/users/{userId}/todos")
+    @GetMapping("/api/members/me/todos")
     public ResponseEntity<WeeklyTodosPageResponseDTO> findByUserId(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "사용자 ID (PK), 반드시 로그인 사용자와 동일", example = "1") @PathVariable Long userId,
             @Parameter(description = "조회 기준 날짜(해당 주 월~일 조회). 미입력 시 오늘 날짜 사용", example = "2026-04-21")
             @RequestParam(required = false) LocalDate weekStartDate,
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "page는 0 이상이어야 합니다.") int page,
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "size는 1 이상이어야 합니다.") int size) {
-        MemberSelfAssert.assertSameMember(principal, userId);
         LocalDate baseDate = weekStartDate != null ? weekStartDate : LocalDate.now();
-        WeeklyTodosPageResponseDTO response = todoService.findByUserIdWeekly(userId, baseDate, page, size);
+        WeeklyTodosPageResponseDTO response = todoService.findByUserIdWeekly(principal.id(), baseDate, page, size);
         return ResponseEntity.ok(response);
     }
 
@@ -80,16 +76,13 @@ public class TodoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "투두 생성 성공"),
             @ApiResponse(responseCode = "400", description = "입력 검증 실패", content = @Content),
-            @ApiResponse(responseCode = "403", description = "본인이 아님", content = @Content),
             @ApiResponse(responseCode = "404", description = "사용자·카테고리 없음", content = @Content)
     })
-    @PostMapping("/api/users/{userId}/todos")
+    @PostMapping("/api/members/me/todos")
     public ResponseEntity<TodoResponseDTO> create(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId,
             @Valid @RequestBody CreateTodoRequestDTO request) {
-        MemberSelfAssert.assertSameMember(principal, userId);
-        Todo todo = todoService.create(userId, request);
+        Todo todo = todoService.create(principal.id(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(TodoResponseDTO.from(todo));
     }
 
@@ -99,7 +92,7 @@ public class TodoController {
             @ApiResponse(responseCode = "403", description = "본인의 투두만 수정할 수 있음", content = @Content),
             @ApiResponse(responseCode = "404", description = "투두를 찾을 수 없음", content = @Content)
     })
-    @PutMapping("/api/todos/{todoId}")
+    @PutMapping("/api/members/me/todos/{todoId}")
     public ResponseEntity<TodoResponseDTO> update(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
@@ -115,7 +108,7 @@ public class TodoController {
             @ApiResponse(responseCode = "403", description = "본인의 투두만 수정할 수 있음", content = @Content),
             @ApiResponse(responseCode = "404", description = "투두를 찾을 수 없음", content = @Content)
     })
-    @PatchMapping("/api/todos/{todoId}/due-date")
+    @PatchMapping("/api/members/me/todos/{todoId}/due-date")
     public ResponseEntity<TodoResponseDTO> moveDueDate(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
@@ -131,7 +124,7 @@ public class TodoController {
             @ApiResponse(responseCode = "403", description = "본인의 투두만 수정할 수 있음", content = @Content),
             @ApiResponse(responseCode = "404", description = "투두를 찾을 수 없음", content = @Content)
     })
-    @PatchMapping("/api/todos/{todoId}/done")
+    @PatchMapping("/api/members/me/todos/{todoId}/done")
     public ResponseEntity<TodoResponseDTO> setDone(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId,
@@ -146,7 +139,7 @@ public class TodoController {
             @ApiResponse(responseCode = "403", description = "본인의 투두만 삭제할 수 있음", content = @Content),
             @ApiResponse(responseCode = "404", description = "투두를 찾을 수 없음", content = @Content)
     })
-    @DeleteMapping("/api/todos/{todoId}")
+    @DeleteMapping("/api/members/me/todos/{todoId}")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "투두 ID (PK)", example = "1") @PathVariable Long todoId) {
@@ -157,14 +150,11 @@ public class TodoController {
     @Operation(summary = "최근 달성도 조회 (본인만)", description = "오늘을 제외한 지난 7일간 일별 달성도와 오늘 달성도를 함께 반환합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "403", description = "다른 사용자 ID", content = @Content)
     })
-    @GetMapping("/api/users/{userId}/todos/achievement")
+    @GetMapping("/api/members/me/todos/achievement")
     public ResponseEntity<AchievementOverviewResponseDTO> getLast7DaysAchievement(
-            @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "사용자 ID (PK)", example = "1") @PathVariable Long userId) {
-        MemberSelfAssert.assertSameMember(principal, userId);
-        AchievementOverviewResponseDTO achievements = todoService.getLast7DaysAchievement(userId);
+            @AuthenticationPrincipal MemberPrincipal principal) {
+        AchievementOverviewResponseDTO achievements = todoService.getLast7DaysAchievement(principal.id());
         return ResponseEntity.ok(achievements);
     }
 }
