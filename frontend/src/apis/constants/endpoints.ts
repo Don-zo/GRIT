@@ -28,17 +28,13 @@ export const ENDPOINTS = {
     TOKEN: "/livekit/token",
   },
   TODO: {
-    BY_ID: (todoId: number) => `/api/todos/${todoId}`,
-    DONE: (todoId: number) => `/api/todos/${todoId}/done`,
-    DUE_DATE: (todoId: number) => `/api/todos/${todoId}/due-date`,
-    BY_USER: (userId: number) => `/api/users/${userId}/todos`,
-    ACHIEVEMENT_BY_USER: (userId: number) =>
-      `/api/users/${userId}/todos/achievement`,
-    CATEGORIES_BY_USER: (userId: number) =>
-      `/api/users/${userId}/todo-categories`,
-    CATEGORIES_BY_USER_CATEGORY: (userId: number, categoryId: number) =>
-      `/api/users/${userId}/todo-categories/${categoryId}`,
-    CATEGORIES_REORDER: (userId: number) =>
-      `/api/users/${userId}/todo-categories/reorder`,
+    BY_ID: (todoId: number) => `/api/members/me/todos/${todoId}`,
+    DONE: (todoId: number) => `/api/members/me/todos/${todoId}/done`,
+    DUE_DATE: (todoId: number) => `/api/members/me/todos/${todoId}/due-date`,
+    LIST: `/api/members/me/todos`,
+    ACHIEVEMENT: `/api/members/me/todos/achievement`,
+    CATEGORIES: `/api/members/me/todo-categories`,
+    CATEGORY_BY_ID: (categoryId: number) => `/api/members/me/todo-categories/${categoryId}`,
+    CATEGORIES_REORDER: `/api/members/me/todo-categories/reorder`,
   },
 } as const;

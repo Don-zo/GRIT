@@ -58,7 +58,7 @@ export function useTodoMutations(options: {
 
   const createCategoryMutation = useMutation({
     mutationFn: ({ name, tempId: _tempId }: { name: string; tempId: string }) =>
-      todoApi.createCategory(userId!, { name }),
+      todoApi.createCategory({ name }),
     onMutate: async ({ name, tempId }) => {
       if (userId == null) return {};
       await queryClient.cancelQueries({
@@ -119,7 +119,7 @@ export function useTodoMutations(options: {
         categoryId: string;
       };
       tempId: string;
-    }) => todoApi.createTodo(userId!, buildCreateTodoBody(vars.item)),
+    }) => todoApi.createTodo(buildCreateTodoBody(vars.item)),
     onMutate: async ({ item, tempId }) => {
       if (userId == null) return {};
       await queryClient.cancelQueries({
@@ -365,7 +365,7 @@ export function useTodoMutations(options: {
       categoryId: number;
       categoryIdStr: string;
     }) => {
-      await todoApi.deleteCategory(userId!, categoryId);
+      await todoApi.deleteCategory(categoryId);
     },
     onMutate: async ({ categoryIdStr }) => {
       if (userId == null) return {};
@@ -414,7 +414,7 @@ export function useTodoMutations(options: {
   const reorderCategoriesMutation = useMutation({
     mutationFn: async ({ categoryIds }: { categoryIds: number[] }) => {
       const requestId = ++reorderRequestIdRef.current;
-      const data = await todoApi.reorderCategories(userId!, { categoryIds });
+      const data = await todoApi.reorderCategories({ categoryIds });
       return { data, requestId };
     },
     onMutate: async ({ categoryIds }) => {

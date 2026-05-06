@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Trophy, Settings } from "lucide-react";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
-import { getStoredMember } from "@/apis/domains/auth/api";
 import { todoApi } from "@/apis/domains/todo/api";
+import { userApi } from "@/apis/domains/user/api";
+import { getAccessToken } from "@/utils/tokenStorage";
 import { PATHS } from "@/routes/path";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"] as const;
@@ -19,7 +20,13 @@ const EMPTY_WEEKLY_DATA = Array.from({ length: 7 }, (_, index) => {
 
 const AchievementCard: React.FC = () => {
   const navigate = useNavigate();
-  const userId = getStoredMember()?.id ?? null;
+  const accessToken = getAccessToken();
+  const { data: member } = useQuery({
+    queryKey: QUERY_KEYS.member.me,
+    queryFn: userApi.get,
+    enabled: accessToken != null,
+  });
+  const userId = member?.id ?? null;
 
   const { data, isLoading, isError } = useQuery({
     queryKey: QUERY_KEYS.todos.achievement(userId),
@@ -27,7 +34,7 @@ const AchievementCard: React.FC = () => {
       if (userId == null) {
         throw new Error("로그인 사용자 정보가 필요합니다.");
       }
-      return todoApi.getAchievementByUserId(userId);
+      return todoApi.getAchievement();
     },
     enabled: userId != null,
   });
