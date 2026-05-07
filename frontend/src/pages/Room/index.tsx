@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { PATHS } from "@/routes/path";
 import BottomBar from "@/pages/Room/components/BottomBar/BottomBar";
 import TopBar from "@/pages/Room/components/TopBar/TopBar";
@@ -21,6 +21,7 @@ type PomodoroConfig = {
 
 const RoomPage = () => {
   const navigate = useNavigate();
+  const { groupCode } = useParams();
 
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [livekitTestStatus, setLivekitTestStatus] = useState(""); //테스트 상태메세지

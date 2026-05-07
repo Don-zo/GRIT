@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import LiveBadge from "./LiveBadge";
 import GroupSettingsModal from "@/pages/Home/components/Modals/GroupSettingsModal";
@@ -17,11 +18,17 @@ export default function GroupCard({
   isLive = true,
   liveMembers = 6,
 }: GroupCardProps) {
+  const navigate = useNavigate();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const handleGoToRoom = () => {
+    navigate(`/room/${groupCode}`);
+  };
 
   return (
-    <div className="w-full h-fit bg-gray-dark rounded-2xl shadow-xl/20">
-      {/* 그룹 사진 (없으면 회색 배경) */}
+    <div
+      onClick={handleGoToRoom}
+      className="w-full h-fit bg-gray-dark rounded-2xl shadow-xl/20"
+    >
       <div className="flex flex-col overflow-hidden relative aspect-square rounded-2xl w-full bg-gray-semidark">
         {imageUrl && (
           <img
@@ -32,10 +39,8 @@ export default function GroupCard({
         )}
 
         <div className="relative z-10 flex flex-col h-full pointer-events-none">
-          {/* 라이브 뱃지 */}
           <div className="p-4">{isLive && <LiveBadge />}</div>
 
-          {/* 이름 & 설정 & 인원 */}
           <div className="mt-auto flex items-center justify-between bg-green-semidark px-5 py-3 text-white">
             <div className="flex min-w-0 items-center gap-2">
               <h3 className="truncate text-[15px] tracking-tight">{name}</h3>
