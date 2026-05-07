@@ -6,6 +6,7 @@ import grit.domain.member.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record MemberResponseDto(
@@ -21,6 +22,8 @@ public record MemberResponseDto(
 
         @Schema(description = "한 줄 소개", example = "오늘 하루도 파이팅", nullable = true)
         String introduction,
+
+        UUID imageName,
 
         String imageUrl,
 
@@ -40,6 +43,7 @@ public record MemberResponseDto(
                     member.getNickname(),
                     member.getEmail(),
                     member.getIntroduction(),
+                    member.getImageName(),
                     imageUrl,
                     member.getDDayDate(),
                     member.getDDayTitle(),
@@ -54,6 +58,7 @@ public record MemberResponseDto(
                     member.getNickname(),
                     null,          // email 비공개
                     member.getIntroduction(),
+                    member.getImageName(),
                     imageUrl,
                     member.getDDayDate(),
                     member.getDDayTitle(),

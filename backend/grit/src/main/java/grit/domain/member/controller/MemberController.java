@@ -4,11 +4,11 @@ import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.member.dto.MemberNickNameAvailabilityResponseDto;
 import grit.domain.member.dto.MemberProfileImageUploadUrlResponseDto;
 import grit.domain.member.dto.MemberProfileInitializeRequestDto;
+import grit.domain.member.dto.MemberProfileUpdateRequestDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
 import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
-import grit.domain.member.dto.MemberProfilePatchRequestDto;
 import grit.domain.member.dto.MemberResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -43,17 +43,17 @@ public class MemberController {
         return ResponseEntity.ok(toResponse(member));
     }
 
-    @Operation(summary = "정보 수정", description = "사용자의 정보(닉네임, 비밀번호, 한 줄 소개)를 수정합니다. 3개 중 하나만 응답 바디에 적어도 정상적으로 수정됩니다.")
+    @Operation(summary = "프로필 수정", description = "사용자의 프로필 전체를 수정합니다. null로 전달한 선택 필드는 삭제됩니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "정보 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 (예: 기존 비밀번호/닉네임과 동일한 값으로 변경 시도)", content = @Content),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자 ID", content = @Content),
             @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임", content = @Content)
     })
-    @PatchMapping("/me/profile")
-    public ResponseEntity<MemberResponseDto> patchProfile(
+    @PutMapping("/me/profile")
+    public ResponseEntity<MemberResponseDto> updateProfile(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
-            @Valid @RequestBody MemberProfilePatchRequestDto requestDto) {
+            @Valid @RequestBody MemberProfileUpdateRequestDto requestDto) {
 
         Member member = getAuthenticatedMember(memberPrincipal);
         memberService.updateProfile(member, requestDto.nickname(), requestDto.introduction(),

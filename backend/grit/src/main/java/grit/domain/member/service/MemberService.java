@@ -43,6 +43,10 @@ public class MemberService {
     }
 
     public boolean isNicknameTaken(Member currentMember, String nickname) {
+        if (nickname == null) {
+            return false;
+        }
+
         if (nickname.equals(currentMember.getNickname())) {
             return false;
         }
@@ -98,7 +102,7 @@ public class MemberService {
             Member member, String nickname, String introduction, UUID image,
             LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
 
-        if (nickname != null && isNicknameTaken(member, nickname)) {
+        if (isNicknameTaken(member, nickname)) {
             throw new NicknameConflictException("이미 사용 중인 닉네임입니다.");
         }
 
