@@ -17,9 +17,12 @@ const imagePlaceholder = document.getElementById('image-placeholder');
 const imageOverlay = document.getElementById('image-overlay');
 const imageInput = document.getElementById('image-input');
 const imageUploadArea = document.getElementById('image-upload-area');
+const imageRemoveBtn = document.getElementById('image-remove-btn');
 
 // 이미지 상태
 let uploadedFileName = null;  // S3에 업로드된 파일명
+let existingImageName = null;
+let imageRemoved = false;
 
 // 에러 메시지 표시
 function showError(message) {
@@ -43,12 +46,66 @@ function updateCounter(inputEl, counterId, maxLen) {
     else if (len >= maxLen * 0.8) parent.classList.add('near-limit');
 }
 
+function updateImageRemoveButton() {
+    const hasImage = !!uploadedFileName || (!!existingImageName && !imageRemoved);
+    imageRemoveBtn.style.display = hasImage ? 'inline-block' : 'none';
+}
+
+function clearProfileImagePreview() {
+    uploadedFileName = null;
+    imageRemoved = true;
+    imageInput.value = '';
+    imagePreviewImg.removeAttribute('src');
+    imagePreviewImg.style.display = 'none';
+    imagePlaceholder.style.display = '';
+    updateImageRemoveButton();
+}
+
+function getProfileImageNameForSave() {
+    if (uploadedFileName) return uploadedFileName;
+    if (imageRemoved) return null;
+    return existingImageName;
+}
+
+function cacheMemberInfo(member) {
+    localStorage.setItem('member_id', member.id);
+    localStorage.setItem('member_email', member.email);
+    if (member.nickname) localStorage.setItem('member_nickname', member.nickname);
+    else localStorage.removeItem('member_nickname');
+    if (member.introduction) localStorage.setItem('member_introduction', member.introduction);
+    else localStorage.removeItem('member_introduction');
+    if (member.imageName) localStorage.setItem('member_imageName', member.imageName);
+    else localStorage.removeItem('member_imageName');
+    if (member.imageUrl) localStorage.setItem('member_image', member.imageUrl);
+    else localStorage.removeItem('member_image');
+    if (member.dDayDate) localStorage.setItem('member_dDayDate', member.dDayDate);
+    else localStorage.removeItem('member_dDayDate');
+    if (member.dDayTitle) localStorage.setItem('member_dDayTitle', member.dDayTitle);
+    else localStorage.removeItem('member_dDayTitle');
+    if (member.weeklyStudyTimeGoal) localStorage.setItem('member_weeklyStudyTimeGoal', member.weeklyStudyTimeGoal);
+    else localStorage.removeItem('member_weeklyStudyTimeGoal');
+}
+
+async function refreshMemberInfoForEdit() {
+    if (localStorage.getItem('is_first_time_user') !== 'false') return;
+
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me`);
+    if (!response.ok) throw new Error('프로필 정보를 불러올 수 없습니다.');
+
+    cacheMemberInfo(await response.json());
+}
+
 // ── 이미지 업로드 ──
 
 // 이미지 클릭 → 파일 선택
 imagePreview.addEventListener('click', () => {
     if (imageUploadArea.classList.contains('uploading')) return;
     imageInput.click();
+});
+
+imageRemoveBtn.addEventListener('click', () => {
+    if (imageUploadArea.classList.contains('uploading')) return;
+    clearProfileImagePreview();
 });
 
 // 파일 선택 시 → 즉시 S3 업로드
@@ -79,13 +136,22 @@ imageInput.addEventListener('change', async (e) => {
         imageOverlay.innerHTML = '<div class="upload-spinner"></div>';
 
         uploadedFileName = await uploadImageToS3(file);
+        imageRemoved = false;
+        updateImageRemoveButton();
         toast.success('이미지가 업로드되었습니다.');
     } catch (error) {
         showError(error.message);
         uploadedFileName = null;
-        // 미리보기 롤백
-        imagePreviewImg.style.display = 'none';
-        imagePlaceholder.style.display = '';
+        const memberImage = localStorage.getItem('member_image');
+        if (memberImage && existingImageName && !imageRemoved) {
+            imagePreviewImg.src = memberImage;
+            imagePreviewImg.style.display = 'block';
+            imagePlaceholder.style.display = 'none';
+        } else {
+            imagePreviewImg.style.display = 'none';
+            imagePlaceholder.style.display = '';
+        }
+        updateImageRemoveButton();
     } finally {
         imageUploadArea.classList.remove('uploading');
         imageOverlay.innerHTML = `
@@ -125,7 +191,9 @@ async function uploadImageToS3(file) {
 
 // ── 사용자 정보 로드 ──
 
-function loadMemberInfo() {
+async function loadMemberInfo() {
+    await refreshMemberInfoForEdit();
+
     const email = localStorage.getItem('member_email');
     if (!email) {
         showError('로그인 정보를 찾을 수 없습니다.');
@@ -168,12 +236,14 @@ function loadMemberInfo() {
 
     // 기존 프로필 이미지 표시
     const memberImage = localStorage.getItem('member_image');
+    existingImageName = localStorage.getItem('member_imageName');
     if (memberImage) {
+        imageRemoved = false;
         imagePreviewImg.src = memberImage;
         imagePreviewImg.style.display = 'block';
         imagePlaceholder.style.display = 'none';
-        // uploadedFileName은 설정하지 않음 — 이미 저장된 이미지이므로
     }
+    updateImageRemoveButton();
 }
 
 // 실시간 글자수 카운터 이벤트
@@ -188,21 +258,15 @@ async function updateProfile(nickname, introduction, imageFileName, dDayDate, dD
         if (!token) throw new Error('인증 정보를 찾을 수 없습니다.');
 
         const isFirstTime = localStorage.getItem('is_first_time_user') !== 'false';
-        const method = isFirstTime ? 'POST' : 'PATCH';
-
-        const body = { nickname, introduction };
-
-        // 이미지 파일명이 있으면 포함 (UUID)
-        if (imageFileName) {
-            body.imageName = imageFileName;
-        }
-
-        // D-Day
-        if (dDayDate) body.dDayDate = dDayDate;
-        if (dDayTitle) body.dDayTitle = dDayTitle;
-
-        // 주간 공부 목표
-        if (weeklyGoal) body.weeklyStudyTimeGoal = weeklyGoal;
+        const method = isFirstTime ? 'POST' : 'PUT';
+        const body = {
+            nickname,
+            introduction,
+            imageName: imageFileName,
+            dDayDate,
+            dDayTitle,
+            weeklyStudyTimeGoal: weeklyGoal
+        };
 
         const response = await apiFetch(`${API_CONFIG.BASE_URL}/api/members/me/profile`, {
             method,
@@ -216,21 +280,7 @@ async function updateProfile(nickname, introduction, imageFileName, dDayDate, dD
         }
 
         const updated = await response.json();
-        localStorage.setItem('member_id', updated.id);
-        localStorage.setItem('member_email', updated.email);
-        if (updated.nickname) localStorage.setItem('member_nickname', updated.nickname);
-        else localStorage.removeItem('member_nickname');
-        if (updated.introduction) localStorage.setItem('member_introduction', updated.introduction);
-        else localStorage.removeItem('member_introduction');
-        if (updated.imageUrl) localStorage.setItem('member_image', updated.imageUrl);
-        else localStorage.removeItem('member_image');
-        if (updated.dDayDate) localStorage.setItem('member_dDayDate', updated.dDayDate);
-        else localStorage.removeItem('member_dDayDate');
-        if (updated.dDayTitle) localStorage.setItem('member_dDayTitle', updated.dDayTitle);
-        else localStorage.removeItem('member_dDayTitle');
-        if (updated.weeklyStudyTimeGoal) localStorage.setItem('member_weeklyStudyTimeGoal', updated.weeklyStudyTimeGoal);
-        else localStorage.removeItem('member_weeklyStudyTimeGoal');
-
+        cacheMemberInfo(updated);
         localStorage.setItem('is_first_time_user', 'false');
 
         return updated;
@@ -279,7 +329,7 @@ profileForm.addEventListener('submit', async (e) => {
     submitBtn.textContent = '처리 중...';
 
     try {
-        await updateProfile(nickname, introduction, uploadedFileName, dDayDate, dDayTitle, weeklyGoal);
+        await updateProfile(nickname, introduction, getProfileImageNameForSave(), dDayDate, dDayTitle, weeklyGoal);
         toast.success('프로필이 저장되었습니다.');
         setTimeout(() => { window.location.href = '/main.html'; }, 800);
     } catch (error) {
@@ -290,4 +340,8 @@ profileForm.addEventListener('submit', async (e) => {
 });
 
 // 페이지 로드 시 사용자 정보 표시
-document.addEventListener('DOMContentLoaded', loadMemberInfo);
+document.addEventListener('DOMContentLoaded', () => {
+    loadMemberInfo().catch((error) => {
+        showError(error.message);
+    });
+});
