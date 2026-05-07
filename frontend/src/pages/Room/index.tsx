@@ -24,7 +24,7 @@ const RoomPage = () => {
   const { groupCode } = useParams();
 
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
-  const [livekitTestStatus, setLivekitTestStatus] = useState(""); //테스트 상태메세지
+  const [, setLivekitTestStatus] = useState(""); //테스트 상태메세지
 
   //token && serverUrl 있을 때만 연결
   const {
@@ -88,7 +88,6 @@ const RoomPage = () => {
     })),
   ];
 
-  const [muted, setMuted] = useState(false);
   const [todoOpen, setTodoOpen] = useState(false);
   const [pomodoroConfig, setPomodoroConfig] = useState<PomodoroConfig>({
     studyMinutes: 45,
@@ -116,32 +115,12 @@ const RoomPage = () => {
 
   return (
     <div className="flex flex-col w-full h-screen bg-gray-darkest">
-      {/* 여기서부터 livekit 연결 테스트 확인용*/}
-      {/* <div className="absolute top-20 right-4 z-50 flex flex-col gap-2">
-        <button
-          onClick={handleLivekitConnection}
-          className="bg-blue-500 text-white text-xs px-3 py-2 rounded hover:bg-blue-600"
-        >
-          LiveKit 연결 테스트
-        </button>
-
-        {/* 상태 메시지 */}
-      {/* {livekitTestStatus && (
-          <div className="bg-black/70 text-white text-xs p-2 rounded max-w-[250px]">
-            {livekitTestStatus}
-          </div>
-        )} */}
-
-      {/* 연결 성공 시 참가자 수 표시 */}
-      {/* {isConnected && (
-          <div className="bg-green-500/70 text-white text-xs p-2 rounded">
-            참가자: {remoteParticipants.length}명
-          </div>
-        )}
-      </div> */}
-      {/*여기까지 livekit 테스트용 */}
-
       {/* 상단바 */}
+      {isConnected && (
+        <div className="bg-green-500/70 text-white text-xs p-2 rounded">
+          참가자: {remoteParticipants.length}명
+        </div>
+      )}
       <TopBar
         isTodoOpen={todoOpen}
         onToggleTodo={() => setTodoOpen((prev) => !prev)}
