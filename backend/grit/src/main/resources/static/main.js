@@ -47,6 +47,8 @@ async function fetchUserInfo() {
         else localStorage.removeItem('member_nickname');
         if (memberInfo.introduction) localStorage.setItem('member_introduction', memberInfo.introduction);
         else localStorage.removeItem('member_introduction');
+        if (memberInfo.imageName) localStorage.setItem('member_imageName', memberInfo.imageName);
+        else localStorage.removeItem('member_imageName');
         if (memberInfo.imageUrl) localStorage.setItem('member_image', memberInfo.imageUrl);
         else localStorage.removeItem('member_image');
         if (memberInfo.dDayDate) localStorage.setItem('member_dDayDate', memberInfo.dDayDate);

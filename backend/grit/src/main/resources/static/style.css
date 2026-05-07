@@ -1297,6 +1297,20 @@ textarea.form-input {
     color: var(--text-muted);
 }
 
+.profile-image-remove-btn {
+    margin-top: 8px;
+    border: 0;
+    background: transparent;
+    color: var(--error);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.profile-image-remove-btn:hover {
+    text-decoration: underline;
+}
+
 .profile-image-upload.uploading .profile-image-overlay {
     opacity: 1;
     background: rgba(0, 0, 0, 0.6);

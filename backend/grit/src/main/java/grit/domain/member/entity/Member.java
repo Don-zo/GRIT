@@ -12,7 +12,6 @@ import java.util.*;
 
 import grit.domain.group.entity.MemberGroup;
 import jakarta.persistence.*;
-import java.util.function.Consumer;
 import lombok.*;
 
 @Getter
@@ -101,13 +100,13 @@ public class Member extends BaseEntity {
             LocalDate dDayDate, String dDayTitle, LocalTime weeklyStudyTimeGoal) {
         validateRoleForUpdate();
 
-        updateIfPresent(nickname, val -> this.nickname = val, "닉네임");
-        updateIfPresentAllowBlank(introduction, val -> this.introduction = val);
-        updateIfPresent(imageName, val -> this.imageName = val);
-        updateIfPresent(dDayDate, val -> this.dDayDate = val);
-        updateIfPresent(dDayTitle, val -> this.dDayTitle = val);
-        updateIfPresent(weeklyStudyTimeGoal, val -> this.weeklyStudyTimeGoal = val);
-        validateDDayConsistency(this.dDayDate, this.dDayTitle);
+        this.nickname = validateAndGet(nickname, "닉네임");
+        this.introduction = introduction;
+        this.imageName = imageName;
+        validateDDayConsistency(dDayDate, dDayTitle);
+        this.dDayDate = dDayDate;
+        this.dDayTitle = dDayTitle;
+        this.weeklyStudyTimeGoal = weeklyStudyTimeGoal;
     }
 
     private void validateRoleForInitialization() {
@@ -142,24 +141,6 @@ public class Member extends BaseEntity {
             throw new InvalidInputException(fieldName + "은(는) 필수입니다.");
         }
         return value;
-    }
-
-    private void updateIfPresent(String value, Consumer<String> setter, String fieldName) {
-        if (value != null) {
-            setter.accept(validateAndGet(value, fieldName));
-        }
-    }
-
-    private <T> void updateIfPresent(T value, Consumer<T> setter) {
-        if (value != null) {
-            setter.accept(value);
-        }
-    }
-
-    private void updateIfPresentAllowBlank(String value, Consumer<String> setter) {
-        if (value != null) {
-            setter.accept(value);
-        }
     }
 
 }

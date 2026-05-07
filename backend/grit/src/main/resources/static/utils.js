@@ -55,7 +55,7 @@
                 pendingRequests.forEach(resolve => resolve());
                 // refresh 실패 → 로그아웃
                 ['access_token', 'member_id',
-                    'member_email', 'member_nickname', 'member_introduction', 'member_image',
+                    'member_email', 'member_nickname', 'member_introduction', 'member_imageName', 'member_image',
                     'member_dDayDate', 'member_dDayTitle', 'member_weeklyStudyTimeGoal']
                     .forEach(k => localStorage.removeItem(k));
                 window.location.href = '/index.html';
@@ -85,7 +85,7 @@ window.logout = async function () {
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (e) { /* ignore */ }
     ['access_token', 'member_id', 'member_email', 'member_nickname',
-        'member_introduction', 'member_image', 'is_first_time_user',
+        'member_introduction', 'member_imageName', 'member_image', 'is_first_time_user',
         'member_dDayDate', 'member_dDayTitle', 'member_weeklyStudyTimeGoal']
         .forEach(k => localStorage.removeItem(k));
     window.location.href = '/index.html';
