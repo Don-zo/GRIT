@@ -28,10 +28,10 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
   const updateParticipant = useCallback(
     (participant: RemoteParticipant | LocalParticipant) => {
       const videoPublication = participant.getTrackPublication(
-        Track.Source.Camera
+        Track.Source.Camera,
       );
       const audioPublication = participant.getTrackPublication(
-        Track.Source.Microphone
+        Track.Source.Microphone,
       );
 
       const participantData: ParticipantData = {
@@ -49,7 +49,7 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
         return next;
       });
     },
-    []
+    [],
   );
 
   // LiveKit Room 연결
@@ -70,71 +70,71 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
       // 이벤트 리스너 설정
       newRoom
         .on(RoomEvent.Connected, () => {
-          console.log("LiveKit Room에 연결됨");
+          console.log("LiveKit Room에 연결됨"); //TODO: 테스트용 콘솔
           setIsConnected(true);
           setLocalParticipant(newRoom.localParticipant);
         })
         .on(RoomEvent.Disconnected, () => {
-          console.log("LiveKit Room 연결 해제됨");
+          console.log("LiveKit Room 연결 해제됨"); //TODO: 테스트용 콘솔
           setIsConnected(false);
         })
         .on(
           RoomEvent.ParticipantConnected,
           (participant: RemoteParticipant) => {
-            console.log("참가자 입장:", participant.identity);
+            console.log("참가자 입장:", participant.identity); //TODO: 테스트용 콘솔
             updateParticipant(participant);
-          }
+          },
         )
         .on(
           RoomEvent.ParticipantDisconnected,
           (participant: RemoteParticipant) => {
-            console.log("참가자 퇴장:", participant.identity);
+            console.log("참가자 퇴장:", participant.identity); //TODO: 테스트용 콘솔
             setParticipants((prev) => {
               const next = new Map(prev);
               next.delete(participant.identity);
               return next;
             });
-          }
+          },
         )
         .on(
           RoomEvent.TrackSubscribed,
           (
             track: RemoteTrack,
             _publication: RemoteTrackPublication,
-            participant: RemoteParticipant
+            participant: RemoteParticipant,
           ) => {
-            console.log("트랙 구독:", participant.identity, track.kind);
+            console.log("트랙 구독:", participant.identity, track.kind); //TODO: 테스트용 콘솔
             updateParticipant(participant);
-          }
+          },
         )
         .on(
           RoomEvent.TrackUnsubscribed,
           (
             track: RemoteTrack,
             _publication: RemoteTrackPublication,
-            participant: RemoteParticipant
+            participant: RemoteParticipant,
           ) => {
-            console.log("트랙 구독 해제:", participant.identity, track.kind);
+            console.log("트랙 구독 해제:", participant.identity, track.kind); //TODO: 테스트용 콘솔
             updateParticipant(participant);
-          }
+          },
         )
         .on(
           RoomEvent.TrackMuted,
           (_publication: TrackPublication, participant: Participant) => {
-            console.log("트랙 음소거:", participant.identity);
+            console.log("트랙 음소거:", participant.identity); //TODO: 테스트용 콘솔
             updateParticipant(
-              participant as RemoteParticipant | LocalParticipant
+              participant as RemoteParticipant | LocalParticipant,
             );
-          }
+          },
         )
         .on(
           RoomEvent.TrackUnmuted,
           (_publication: TrackPublication, participant: Participant) => {
-            console.log("트랙 음소거 해제:", participant.identity);
+            console.log("트랙 음소거 해제:", participant.identity); //TODO: 테스트용 콘솔
             updateParticipant(
-              participant as RemoteParticipant | LocalParticipant
+              participant as RemoteParticipant | LocalParticipant,
             );
-          }
+          },
         );
 
       // Room에 연결
@@ -148,7 +148,7 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
       setRoom(newRoom);
       roomRef.current = newRoom;
     } catch (err) {
-      console.error("LiveKit 연결 실패:", err);
+      console.error("LiveKit 연결 실패:", err); //TODO: 테스트용 콘솔
       setError(err as Error);
     }
   }, [serverUrl, token, updateParticipant]);
@@ -165,13 +165,6 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
     if (!roomRef.current) return;
     const enabled = roomRef.current.localParticipant.isCameraEnabled;
     await roomRef.current.localParticipant.setCameraEnabled(!enabled);
-  }, []);
-
-  // 화면 공유 토글
-  const toggleScreenShare = useCallback(async () => {
-    if (!roomRef.current) return;
-    const enabled = roomRef.current.localParticipant.isScreenShareEnabled;
-    await roomRef.current.localParticipant.setScreenShareEnabled(!enabled);
   }, []);
 
   // 로컬 비디오/오디오 활성화
@@ -215,6 +208,5 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
     enableCameraAndMicrophone,
     toggleMicrophone,
     toggleCamera,
-    toggleScreenShare,
   };
 };
