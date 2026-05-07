@@ -25,7 +25,7 @@ export const ENDPOINTS = {
     DETAIL: (nickname: string) => `/api/friends/${nickname}`,
   },
   LIVEKIT: {
-    TOKEN: "/livekit/token",
+    TOKEN: (groupCode: string) => `/api/group/${groupCode}/livekit/token`,
   },
   TODO: {
     BY_ID: (todoId: number) => `/api/members/me/todos/${todoId}`,
@@ -34,7 +34,8 @@ export const ENDPOINTS = {
     LIST: `/api/members/me/todos`,
     ACHIEVEMENT: `/api/members/me/todos/achievement`,
     CATEGORIES: `/api/members/me/todo-categories`,
-    CATEGORY_BY_ID: (categoryId: number) => `/api/members/me/todo-categories/${categoryId}`,
+    CATEGORY_BY_ID: (categoryId: number) =>
+      `/api/members/me/todo-categories/${categoryId}`,
     CATEGORIES_REORDER: `/api/members/me/todo-categories/reorder`,
   },
 } as const;

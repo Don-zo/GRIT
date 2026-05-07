@@ -3,7 +3,7 @@ export const PATHS = {
   LANDING: "/landing",
   //LOGIN: "/login",
   SIGNUP: "/signup",
-  ROOM: "/room",
+  ROOM: "/room/:groupCode",
   GOOGLE_OAUTH_REDIRECT: "/auth/redirect/google",
   TODO: "/todo",
 } as const;
