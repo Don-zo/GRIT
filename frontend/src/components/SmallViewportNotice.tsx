@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
-const MIN_TABLET_WIDTH = 768;
+const MIN_TABLET_WIDTH = 700;
 
 interface SmallViewportNoticeProps {
   children: ReactNode;

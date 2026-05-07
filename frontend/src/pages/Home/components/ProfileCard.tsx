@@ -44,7 +44,7 @@ const ProfileCard = ({
   const goalTimeLabel = member?.weeklyStudyTimeGoal?.trim() || "미설정";
 
   return (
-    <div className="w-1/2 h-64 bg-green-dark rounded-2xl p-6">
+    <div className="w-full lg:w-1/2 h-64 bg-green-dark rounded-2xl p-6">
       <div className="mb-4 flex justify-end">
         <button
           type="button"
