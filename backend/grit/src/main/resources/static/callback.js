@@ -28,12 +28,20 @@ function saveTokens(accessToken) {
 function saveMemberInfo(member) {
     localStorage.setItem('member_id', member.id);
     localStorage.setItem('member_email', member.email);
-    if (member.nickname) {
-        localStorage.setItem('member_nickname', member.nickname);
-    }
-    if (member.introduction) {
-        localStorage.setItem('member_introduction', member.introduction);
-    }
+    if (member.nickname) localStorage.setItem('member_nickname', member.nickname);
+    else localStorage.removeItem('member_nickname');
+    if (member.introduction) localStorage.setItem('member_introduction', member.introduction);
+    else localStorage.removeItem('member_introduction');
+    if (member.imageName) localStorage.setItem('member_imageName', member.imageName);
+    else localStorage.removeItem('member_imageName');
+    if (member.imageUrl) localStorage.setItem('member_image', member.imageUrl);
+    else localStorage.removeItem('member_image');
+    if (member.dDayDate) localStorage.setItem('member_dDayDate', member.dDayDate);
+    else localStorage.removeItem('member_dDayDate');
+    if (member.dDayTitle) localStorage.setItem('member_dDayTitle', member.dDayTitle);
+    else localStorage.removeItem('member_dDayTitle');
+    if (member.weeklyStudyTimeGoal) localStorage.setItem('member_weeklyStudyTimeGoal', member.weeklyStudyTimeGoal);
+    else localStorage.removeItem('member_weeklyStudyTimeGoal');
 }
 
 // 백엔드로 인가 코드 전송
@@ -73,7 +81,7 @@ async function sendCodeToBackend(code) {
             saveMemberInfo(data.member);
         }
 
-        // 최초 가입 여부 저장 — profile-setup.js에서 POST/PATCH 분기에 사용
+        // 최초 가입 여부 저장 — profile-setup.js에서 POST/PUT 분기에 사용
         localStorage.setItem('is_first_time_user', data.firstTimeUser ? 'true' : 'false');
 
         updateStatus('로그인 성공! 이동 중...');
