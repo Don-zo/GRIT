@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import { Track } from "livekit-client";
-import type { LocalParticipant, RemoteTrack } from "livekit-client";
+import type { LocalParticipant } from "livekit-client";
 
 type VideoTileProps = {
   participant?: LocalParticipant;
-  videoTrack?: RemoteTrack;
-  audioTrack?: RemoteTrack;
+  videoTrack?: Track | null;
+  audioTrack?: Track | null;
 };
 
 export default function VideoTile({
@@ -21,12 +21,16 @@ export default function VideoTile({
       ? participant.getTrackPublication(Track.Source.Camera)?.track
       : videoTrack;
 
-    if (track && videoRef.current) {
-      track.attach(videoRef.current);
+    const element = videoRef.current;
+
+    if (track && element) {
+      track.attach(element);
     }
 
     return () => {
-      videoTrack?.detach();
+      if (track && element) {
+        track.detach(element);
+      }
     };
   }, [participant, videoTrack]);
 
@@ -35,12 +39,16 @@ export default function VideoTile({
       ? participant.getTrackPublication(Track.Source.Microphone)?.track
       : audioTrack;
 
-    if (track && audioRef.current) {
-      track.attach(audioRef.current);
+    const element = audioRef.current;
+
+    if (track && element) {
+      track.attach(element);
     }
 
     return () => {
-      track?.detach();
+      if (track && element) {
+        track.detach(element);
+      }
     };
   }, [participant, audioTrack]);
 

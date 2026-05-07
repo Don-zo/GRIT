@@ -37,8 +37,8 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
       const participantData: ParticipantData = {
         identity: participant.identity,
         name: participant.name || participant.identity,
-        videoTrack: videoPublication?.track as RemoteTrack,
-        audioTrack: audioPublication?.track as RemoteTrack,
+        videoTrack: videoPublication?.track,
+        audioTrack: audioPublication?.track,
         isMuted: audioPublication?.isMuted ?? true,
         isVideoEnabled: !(videoPublication?.isMuted ?? true),
       };
@@ -135,18 +135,27 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
               participant as RemoteParticipant | LocalParticipant,
             );
           },
-        );
+        )
 
-      // Room에 연결
+        .on(RoomEvent.LocalTrackPublished, () => {
+          setLocalParticipant(newRoom.localParticipant);
+        })
+        .on(RoomEvent.LocalTrackUnpublished, () => {
+          setLocalParticipant(newRoom.localParticipant);
+        });
+
       await newRoom.connect(serverUrl, token);
-
-      // 기존 참가자 업데이트
-      newRoom.remoteParticipants.forEach((participant) => {
-        updateParticipant(participant);
-      });
 
       setRoom(newRoom);
       roomRef.current = newRoom;
+      setLocalParticipant(newRoom.localParticipant);
+
+      await newRoom.localParticipant.setCameraEnabled(true);
+      await newRoom.localParticipant.setMicrophoneEnabled(true);
+
+      newRoom.remoteParticipants.forEach((participant) => {
+        updateParticipant(participant);
+      });
     } catch (err) {
       console.error("LiveKit 연결 실패:", err); //TODO: 테스트용 콘솔
       setError(err as Error);

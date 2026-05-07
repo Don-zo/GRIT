@@ -1,4 +1,4 @@
-import { RemoteTrack } from "livekit-client";
+import { Track } from "livekit-client";
 
 export interface UseLiveKitProps {
   serverUrl: string;
@@ -8,8 +8,8 @@ export interface UseLiveKitProps {
 export interface ParticipantData {
   identity: string;
   name: string;
-  videoTrack?: RemoteTrack;
-  audioTrack?: RemoteTrack;
+  videoTrack?: Track | null;
+  audioTrack?: Track | null;
   isMuted: boolean;
   isVideoEnabled: boolean;
 }

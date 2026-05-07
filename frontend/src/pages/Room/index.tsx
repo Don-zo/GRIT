@@ -30,10 +30,12 @@ const RoomPage = () => {
   const {
     isConnected,
     participants: remoteParticipants,
+    localParticipant,
     room,
     error,
     toggleMicrophone,
     toggleCamera,
+    enableCameraAndMicrophone,
   } = useLiveKit({
     serverUrl: token ? LIVEKIT_URL : "",
     token: token || "",
@@ -70,6 +72,13 @@ const RoomPage = () => {
       console.log("livekit 연결");
     }
   }, [isConnected, remoteParticipants]);
+
+  useEffect(() => {
+    if (isConnected) {
+      enableCameraAndMicrophone();
+    }
+  }, [isConnected, enableCameraAndMicrophone]);
+
   //에러
   useEffect(() => {
     if (error) {
@@ -80,11 +89,24 @@ const RoomPage = () => {
 
   // participants 참가자 목록
   const allParticipants = [
+    {
+      id: "local",
+      name: "원래 있던 사람이라고 치자",
+      isMuted: false,
+      video: localParticipant ? (
+        <VideoTile participant={localParticipant} />
+      ) : null,
+    },
     ...remoteParticipants.map((p) => ({
       id: p.identity,
       name: p.name,
       isMuted: p.isMuted,
-      video: <VideoTile videoTrack={p.videoTrack} audioTrack={p.audioTrack} />,
+      video: (
+        <VideoTile
+          videoTrack={p.videoTrack ?? undefined}
+          audioTrack={p.audioTrack ?? undefined}
+        />
+      ),
     })),
   ];
 
