@@ -101,7 +101,7 @@ public class Member extends BaseEntity {
         validateRoleForUpdate();
 
         this.nickname = validateAndGet(nickname, "닉네임");
-        this.introduction = requireNotNull(introduction, "자기소개");
+        this.introduction = introduction;
         this.imageName = imageName;
         validateDDayConsistency(dDayDate, dDayTitle);
         this.dDayDate = dDayDate;

@@ -43,7 +43,7 @@ public class MemberController {
         return ResponseEntity.ok(toResponse(member));
     }
 
-    @Operation(summary = "프로필 수정", description = "사용자의 프로필 전체를 수정합니다. null로 전달한 선택 필드는 삭제됩니다.")
+    @Operation(summary = "프로필 수정", description = "사용자의 프로필 전체를 수정합니다. nickname은 필수이며, introduction/imageName/dDayDate/dDayTitle/weeklyStudyTimeGoal은 null로 전달하면 삭제됩니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "정보 수정 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
