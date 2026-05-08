@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/group/{groupCode}/livekit")
-public class LiveKitController2 {
+public class LiveKitController {
 
     private final MemberService memberService;
     private final LiveKitService liveKitService;
