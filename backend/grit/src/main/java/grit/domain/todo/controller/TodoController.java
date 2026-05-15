@@ -6,7 +6,7 @@ import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
 import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
-import grit.domain.todo.dto.WeeklyTodosPageResponseDTO;
+import grit.domain.todo.dto.TodoRangeResponseDTO;
 import grit.domain.todo.entity.Todo;
 import grit.domain.todo.service.TodoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
@@ -35,6 +36,7 @@ import java.util.List;
 @Validated
 public class TodoController {
     private final TodoService todoService;
+    private final Clock clock;
 
     @Operation(
             summary = "내 투두 목록 (기간 조회)",
@@ -49,7 +51,7 @@ public class TodoController {
             @ApiResponse(responseCode = "400", description = "dayCount 범위 오류 등", content = @Content),
     })
     @GetMapping("/api/members/me/todos")
-    public ResponseEntity<WeeklyTodosPageResponseDTO> findByUserId(
+    public ResponseEntity<TodoRangeResponseDTO> findByUserId(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Parameter(description = "조회 구간 첫 날(포함)", example = "2026-05-15")
             @RequestParam(required = false) LocalDate startDate,
@@ -60,10 +62,10 @@ public class TodoController {
             Integer dayCount) {
         LocalDate resolvedStartDate = startDate != null
                 ? startDate
-                : LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                : LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         int resolvedDayCount = dayCount != null ? dayCount : 7;
 
-        WeeklyTodosPageResponseDTO response = todoService.findByUserIdInRange(
+        TodoRangeResponseDTO response = todoService.findByUserIdInRange(
                 principal.id(), resolvedStartDate, resolvedDayCount);
         return ResponseEntity.ok(response);
     }

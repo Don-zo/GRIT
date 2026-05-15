@@ -1,13 +1,15 @@
 package grit.domain.todo.dto;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
 import java.time.LocalDate;
 import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class WeeklyTodosPageResponseDTO {
+public class TodoRangeResponseDTO {
     @Schema(description = "조회 구간 첫 날(포함)", example = "2026-05-15")
     private LocalDate startDate;
 

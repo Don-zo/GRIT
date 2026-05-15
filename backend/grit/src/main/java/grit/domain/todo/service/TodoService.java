@@ -11,7 +11,7 @@ import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
 import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
-import grit.domain.todo.dto.WeeklyTodosPageResponseDTO;
+import grit.domain.todo.dto.TodoRangeResponseDTO;
 import grit.domain.todo.entity.Todo;
 import grit.domain.todo.entity.TodoCategory;
 import grit.domain.todo.repository.TodoCategoryRepository;
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.text.Collator;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,8 +44,9 @@ public class TodoService {
     private final MemberRepository memberRepository;
     private final GroupRepository groupRepository;
     private final MemberGroupRepository memberGroupRepository;
+    private final Clock clock;
 
-    public WeeklyTodosPageResponseDTO findByUserIdInRange(Long userId, LocalDate startDate, int dayCount) {
+    public TodoRangeResponseDTO findByUserIdInRange(Long userId, LocalDate startDate, int dayCount) {
         LocalDate endDate = startDate.plusDays(dayCount - 1L);
 
         List<TodoResponseDTO> todos = todoRepository
@@ -53,7 +55,7 @@ public class TodoService {
                 .map(TodoResponseDTO::from)
                 .toList();
 
-        return new WeeklyTodosPageResponseDTO(
+        return new TodoRangeResponseDTO(
                 startDate,
                 endDate,
                 dayCount,
@@ -176,7 +178,7 @@ public class TodoService {
     }
 
     public AchievementOverviewResponseDTO getLast7DaysAchievement(Long userId) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         LocalDate last7DaysFrom = today.minusDays(7);
         LocalDate last7DaysTo = today.minusDays(1);
 
