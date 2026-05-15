@@ -131,33 +131,20 @@ export default function GroupSettingsModal({
       <Modal.Overlay />
       <Modal.Content>
         <div onClick={(e) => e.stopPropagation()}>
-        <Modal.CloseButton />
+          <Modal.CloseButton />
 
-        <Modal.Header className="flex flex-col items-center">
-          <Modal.Title />
-        </Modal.Header>
+          <Modal.Header className="flex flex-col items-center">
+            <Modal.Title />
+          </Modal.Header>
 
-        <Modal.Body className="flex flex-col items-center pb-6">
-          <ImageUploader
-            size={140}
-            initialImage={baseGroupImage}
-            onImageChange={(file) => {
-              setImageFile(file);
-              setIsImageRemoved(file === null);
-            }}
-          />
-
-          <div className="mx-auto mt-6 w-full max-w-[320px]">
-            <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
-              그룹 이름
-            </label>
-
-            <input
-              type="text"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              className="h-12 w-full rounded-lg bg-white px-4 text-sm text-gray-900 outline-none"
-              placeholder="그룹 이름을 입력하세요"
+          <Modal.Body className="flex flex-col items-center pb-6">
+            <ImageUploader
+              size={140}
+              initialImage={baseGroupImage}
+              onImageChange={(file) => {
+                setImageFile(file);
+                setIsImageRemoved(file === null);
+              }}
             />
 
             <div className="mx-auto mt-6 w-full max-w-[320px]">
