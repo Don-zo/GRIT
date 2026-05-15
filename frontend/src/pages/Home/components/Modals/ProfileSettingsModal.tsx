@@ -22,6 +22,7 @@ export default function ProfileSettingsModal({
   isInitialProfile,
 }: ProfileSettingsModalProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
   const [nickname, setNickname] = useState("");
   const [introduction, setIntroduction] = useState("");
   const [dDayDate, setDDayDate] = useState("");
@@ -48,6 +49,7 @@ export default function ProfileSettingsModal({
     setDDayTitle(member.dDayTitle ?? "");
     setWeeklyStudyTimeGoal(member.weeklyStudyTimeGoal ?? "");
     setImageFile(null);
+    setIsImageRemoved(false);
   }, [open, member]);
 
   const queryClient = useQueryClient();
@@ -86,10 +88,13 @@ export default function ProfileSettingsModal({
         });
       }
 
+      const imagePatch = isImageRemoved ? { imageName: null } : {};
+
       if (isInitialProfile) {
         return userApi.createInitialInfo({
           nickname: trimmedNickname,
           introduction: introduction,
+          ...imagePatch,
           dDayDate: dDayDate || null,
           dDayTitle: dDayTitle || null,
           weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
@@ -99,6 +104,7 @@ export default function ProfileSettingsModal({
       return userApi.update({
         nickname: trimmedNickname,
         introduction: introduction,
+        ...imagePatch,
         dDayDate: dDayDate || null,
         dDayTitle: dDayTitle || null,
         weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
@@ -168,7 +174,11 @@ export default function ProfileSettingsModal({
                 size={144}
                 initialImage={member?.imageUrl}
                 className="shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
-                onImageChange={(file) => setImageFile(file)}
+                clearButtonClassName="-right-[-25px] -top-1 h-6 w-6"
+                onImageChange={(file) => {
+                  setImageFile(file);
+                  setIsImageRemoved(file === null);
+                }}
               />
               <div className="flex flex-col gap-4">
                 <div className="flex items-end gap-2">
@@ -205,7 +215,9 @@ export default function ProfileSettingsModal({
           <Divider />
 
           <section className="w-full">
-            <h3 className="text-base font-semibold text-[#D6FDE5]">D-day 설정</h3>
+            <h3 className="text-base font-semibold text-[#D6FDE5]">
+              D-day 설정
+            </h3>
 
             <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
               <FormInput

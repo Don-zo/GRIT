@@ -7,7 +7,7 @@ export interface Group {
 
 export interface GroupInput {
   name: string;
-  imageName?: string;
+  imageName?: string | null;
 }
 
 export type CreateGroupRequest = GroupInput;
