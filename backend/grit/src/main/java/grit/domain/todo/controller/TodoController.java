@@ -1,5 +1,4 @@
 package grit.domain.todo.controller;
-
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.todo.dto.CreateTodoRequestDTO;
 import grit.domain.todo.dto.AchievementOverviewResponseDTO;
@@ -7,7 +6,7 @@ import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
 import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
-import grit.domain.todo.dto.WeeklyTodosPageResponseDTO;
+import grit.domain.todo.dto.TodoRangeResponseDTO;
 import grit.domain.todo.entity.Todo;
 import grit.domain.todo.service.TodoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,8 +24,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
+import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @Tag(name = "Todo", description = "투두 관련 API")
@@ -34,22 +36,37 @@ import java.util.List;
 @Validated
 public class TodoController {
     private final TodoService todoService;
+    private final Clock clock;
 
-    @Operation(summary = "내 주간 투두 목록", description = "로그인한 사용자 본인의 투두를 주 단위(월~일)로 페이지네이션 조회합니다. weekStartDate가 월요일이 아니면 해당 날짜가 포함된 주의 월요일로 보정합니다.")
+    @Operation(
+            summary = "내 투두 목록 (기간 조회)",
+            description = """
+                    로그인한 사용자 본인의 투두를 dueDate 기준으로 조회합니다. 조회 구간 내 투두를 한 번에 모두 반환합니다.
+                    조회 구간: [startDate, startDate + (dayCount - 1)일] (양끝 포함).
+                    startDate·dayCount 미입력 시 이번 주 월요일부터 7일간 조회합니다.
+                    """
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "400", description = "dayCount 범위 오류 등", content = @Content),
     })
     @GetMapping("/api/members/me/todos")
-    public ResponseEntity<WeeklyTodosPageResponseDTO> findByUserId(
+    public ResponseEntity<TodoRangeResponseDTO> findByUserId(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "조회 기준 날짜(해당 주 월~일 조회). 미입력 시 오늘 날짜 사용", example = "2026-04-21")
-            @RequestParam(required = false) LocalDate weekStartDate,
-            @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
-            @RequestParam(defaultValue = "0") @Min(value = 0, message = "page는 0 이상이어야 합니다.") int page,
-            @Parameter(description = "페이지 크기", example = "20")
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "size는 1 이상이어야 합니다.") int size) {
-        LocalDate baseDate = weekStartDate != null ? weekStartDate : LocalDate.now();
-        WeeklyTodosPageResponseDTO response = todoService.findByUserIdWeekly(principal.id(), baseDate, page, size);
+            @Parameter(description = "조회 구간 첫 날(포함)", example = "2026-05-15")
+            @RequestParam(required = false) LocalDate startDate,
+            @Parameter(description = "조회 일수(1~7). startDate와 함께 사용", example = "5")
+            @RequestParam(required = false)
+            @Min(value = 1, message = "dayCount는 1 이상이어야 합니다.")
+            @Max(value = 7, message = "dayCount는 7 이하여야 합니다.")
+            Integer dayCount) {
+        LocalDate resolvedStartDate = startDate != null
+                ? startDate
+                : LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        int resolvedDayCount = dayCount != null ? dayCount : 7;
+
+        TodoRangeResponseDTO response = todoService.findByUserIdInRange(
+                principal.id(), resolvedStartDate, resolvedDayCount);
         return ResponseEntity.ok(response);
     }
 
