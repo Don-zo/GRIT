@@ -43,8 +43,6 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
     }
   })();
 
-  const verticalPadding = count === 5 ? "py-2" : "py-2";
-
   const pomodoroPositionClass = (() => {
     switch (count) {
       case 1:
@@ -69,9 +67,7 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
   })();
 
   return (
-    <div
-      className={`relative w-full h-full bg-gray-darkest ${verticalPadding}`}
-    >
+    <div className={`relative w-full h-full bg-gray-darkest py-2`}>
       <div className={`grid ${gridClass} gap-4 w-full h-full`}>
         {layout.map((box, index) => {
           const participant = participants[index];

@@ -30,7 +30,6 @@ const RoomPage = () => {
   const {
     isConnected,
     participants: remoteParticipants,
-    localParticipant,
     room,
     error,
     toggleMicrophone,
@@ -129,17 +128,10 @@ const RoomPage = () => {
 
   return (
     <div className="flex flex-col w-full h-screen bg-gray-darkest">
-      {/* 상단바 */}
-      {isConnected && (
-        <div className="bg-green-500/70 text-white text-xs p-2 rounded">
-          참가자: {remoteParticipants.length}명
-        </div>
-      )}
       <TopBar
         isTodoOpen={todoOpen}
         onToggleTodo={() => setTodoOpen((prev) => !prev)}
       />
-
       <div className="flex flex-1 overflow-hidden">
         <div
           className={`flex items-center justify-center flex-1 min-w-0 transition-all duration-300 ease-out ${
@@ -160,7 +152,6 @@ const RoomPage = () => {
           </div>
         </div>
       </div>
-
       <BottomBar
         onPomodoroStart={(config) => {
           setPomodoroConfig(config);
