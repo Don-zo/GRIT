@@ -26,6 +26,7 @@ export default function GroupSettingsModal({
   const [baseGroupImage, setBaseGroupImage] = useState(initialImage);
   const [groupName, setGroupName] = useState(initialName);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
 
   const { notify } = useToastContext();
 
@@ -42,11 +43,13 @@ export default function GroupSettingsModal({
     setBaseGroupImage(groupInfo.imageUrl ?? "");
     setGroupName(groupInfo.name);
     setImageFile(null);
+    setIsImageRemoved(false);
   }, [open, groupInfo]);
 
   const handleClose = () => {
     setGroupName(baseGroupName);
     setImageFile(null);
+    setIsImageRemoved(false);
     onClose();
   };
 
@@ -66,9 +69,13 @@ export default function GroupSettingsModal({
             imageName,
           });
         }
-        return groupApi.update(groupCode, {
+        const payload: { name: string; imageName?: string | null } = {
           name: trimmedGroupName,
-        });
+        };
+        if (isImageRemoved) {
+          payload.imageName = null;
+        }
+        return groupApi.update(groupCode, payload);
       },
 
       onSuccess: async () => {
@@ -124,17 +131,33 @@ export default function GroupSettingsModal({
       <Modal.Overlay />
       <Modal.Content>
         <div onClick={(e) => e.stopPropagation()}>
-          <Modal.CloseButton />
+        <Modal.CloseButton />
 
-          <Modal.Header className="flex flex-col items-center">
-            <Modal.Title />
-          </Modal.Header>
+        <Modal.Header className="flex flex-col items-center">
+          <Modal.Title />
+        </Modal.Header>
 
-          <Modal.Body className="flex flex-col items-center pb-6">
-            <ImageUploader
-              size={140}
-              initialImage={baseGroupImage}
-              onImageChange={(file) => setImageFile(file)}
+        <Modal.Body className="flex flex-col items-center pb-6">
+          <ImageUploader
+            size={140}
+            initialImage={baseGroupImage}
+            onImageChange={(file) => {
+              setImageFile(file);
+              setIsImageRemoved(file === null);
+            }}
+          />
+
+          <div className="mx-auto mt-6 w-full max-w-[320px]">
+            <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
+              그룹 이름
+            </label>
+
+            <input
+              type="text"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              className="h-12 w-full rounded-lg bg-white px-4 text-sm text-gray-900 outline-none"
+              placeholder="그룹 이름을 입력하세요"
             />
 
             <div className="mx-auto mt-6 w-full max-w-[320px]">
