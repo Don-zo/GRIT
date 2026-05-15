@@ -47,7 +47,10 @@ export default function GroupCard({
               <button
                 type="button"
                 aria-label="그룹 설정 열기"
-                onClick={() => setIsSettingsOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSettingsOpen(true);
+                }}
                 className="pointer-events-auto shrink-0 cursor-pointer transition-transform hover:scale-110"
               >
                 <Pencil className="h-4 w-4 text-green-light" />
