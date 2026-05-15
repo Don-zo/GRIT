@@ -47,7 +47,7 @@ const AchievementCard: React.FC = () => {
     })) ?? EMPTY_WEEKLY_DATA;
 
   return (
-    <div className="w-1/2 h-64 bg-[#2E3039] rounded-2xl p-6 select-none">
+    <div className="w-full lg:w-1/2 h-64 bg-[#2E3039] rounded-2xl p-6 select-none">
       {/* 오늘의 달성도 섹션 */}
       <div className="mb-6">
         <div className="mb-4 flex items-center justify-between">

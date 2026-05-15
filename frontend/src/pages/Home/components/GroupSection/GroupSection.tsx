@@ -23,7 +23,7 @@ export default function GroupSection() {
 
   return (
     <section className="w-auto h-auto bg-[#2E3039] rounded-3xl p-8">
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-4 [@media(min-width:768px)_and_(max-width:1023px)]:justify-items-center [@media(min-width:768px)_and_(max-width:1023px)]:[&>*]:w-full [@media(min-width:768px)_and_(max-width:1023px)]:[&>*]:max-w-[clamp(180px,24vw,240px)]">
         <div className="flex flex-col gap-8">
           <Button
             icon={<Plus size={32} />}
