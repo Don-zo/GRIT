@@ -89,14 +89,6 @@ const RoomPage = () => {
 
   // participants 참가자 목록
   const allParticipants = [
-    {
-      id: "local",
-      name: "원래 있던 사람이라고 치자",
-      isMuted: false,
-      video: localParticipant ? (
-        <VideoTile participant={localParticipant} />
-      ) : null,
-    },
     ...remoteParticipants.map((p) => ({
       id: p.identity,
       name: p.name,
