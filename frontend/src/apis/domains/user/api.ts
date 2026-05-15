@@ -25,7 +25,7 @@ export const userApi = {
   },
 
   update: async (data: UpdateMemberRequest): Promise<MemberResponse> => {
-    const response = await apiClient.patch<MemberResponse>(
+    const response = await apiClient.put<MemberResponse>(
       ENDPOINTS.MY.PROFILE,
       data,
     );
