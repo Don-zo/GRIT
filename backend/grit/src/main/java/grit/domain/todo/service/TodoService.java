@@ -1,5 +1,4 @@
 package grit.domain.todo.service;
-
 import grit.domain.group.entity.Group;
 import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
@@ -18,17 +17,12 @@ import grit.domain.todo.entity.TodoCategory;
 import grit.domain.todo.repository.TodoCategoryRepository;
 import grit.domain.todo.repository.TodoRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.text.Collator;
 import java.time.LocalDate;
-import java.time.DayOfWeek;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,7 +35,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TodoService {
-    /** {@link Collator}는 스레드 세이프가 아니므로 스레드 로컬로 둡니다. */
     private static final ThreadLocal<Collator> KOREAN_TEXT_ORDER =
             ThreadLocal.withInitial(() -> Collator.getInstance(Locale.KOREA));
 
@@ -51,28 +44,21 @@ public class TodoService {
     private final GroupRepository groupRepository;
     private final MemberGroupRepository memberGroupRepository;
 
-    public WeeklyTodosPageResponseDTO findByUserIdWeekly(Long userId, LocalDate weekStartDate, int page, int size) {
-        LocalDate normalizedWeekStart = weekStartDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate weekEndDate = normalizedWeekStart.plusDays(6);
+    public WeeklyTodosPageResponseDTO findByUserIdInRange(Long userId, LocalDate startDate, int dayCount) {
+        LocalDate endDate = startDate.plusDays(dayCount - 1L);
 
-        Page<Todo> todosPage = todoRepository.findByOwnerIdAndDueDateBetweenWithRelations(
-                userId,
-                normalizedWeekStart,
-                weekEndDate,
-                PageRequest.of(page, size)
-        );
+        List<TodoResponseDTO> todos = todoRepository
+                .findByOwnerIdAndDueDateBetweenWithRelations(userId, startDate, endDate)
+                .stream()
+                .map(TodoResponseDTO::from)
+                .toList();
 
         return new WeeklyTodosPageResponseDTO(
-                normalizedWeekStart,
-                weekEndDate,
-                todosPage.getNumber(),
-                todosPage.getSize(),
-                todosPage.getTotalElements(),
-                todosPage.getTotalPages(),
-                todosPage.hasNext(),
-                todosPage.getContent().stream()
-                        .map(TodoResponseDTO::from)
-                        .toList()
+                startDate,
+                endDate,
+                dayCount,
+                todos.size(),
+                todos
         );
     }
 
