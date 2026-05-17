@@ -17,12 +17,11 @@ export const QUERY_KEYS = {
       ["todos", "achievement", "user", userId ?? "guest"] as const,
     achievementByUser: (userId: number) =>
       ["todos", "achievement", "user", userId] as const,
-    byUserWeek: (
+    byUserRange: (
       userId: number,
-      weekStartDate: string,
-      page: number,
-      size: number,
-    ) => ["todos", "user", userId, weekStartDate, page, size] as const,
+      startDate: string,
+      dayCount: number,
+    ) => ["todos", "user", userId, startDate, dayCount] as const,
   },
   todoCategories: {
     all: ["todoCategories"] as const,

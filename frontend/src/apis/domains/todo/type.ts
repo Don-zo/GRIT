@@ -50,19 +50,17 @@ export interface TodoApiItem {
 }
 
 export interface TodoListByUserParams {
-  weekStartDate?: string;
-  page?: number;
-  size?: number;
+  /** yyyy-MM-dd, 미입력 시 서버가 이번 주 월요일부터 7일 */
+  startDate?: string;
+  /** 1~7, 미입력 시 서버 기본값 */
+  dayCount?: number;
 }
 
 export interface TodoListByUserResponse {
-  weekStartDate: string;
-  weekEndDate: string;
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
+  startDate: string;
+  endDate: string;
+  dayCount: number;
+  totalCount: number;
   todos: TodoApiItem[];
 }
 

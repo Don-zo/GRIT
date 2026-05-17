@@ -2,6 +2,10 @@ export const DND_TODO_MIME = "application/x-grit-todo-id";
 
 export const WEEKDAY_KO = ["월", "화", "수", "목", "금", "토", "일"] as const;
 
+export function weekdayIndexMondayFirst(day: Date): number {
+  return (day.getDay() + 6) % 7;
+}
+
 const LIST_PANEL = {
   solid: "overflow-hidden rounded-xl bg-[#2A2F38]",
   layered:
