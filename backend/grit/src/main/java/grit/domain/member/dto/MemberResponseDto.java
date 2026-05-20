@@ -11,8 +11,8 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record MemberResponseDto(
 
-        @Schema(description = "외부 노출용 사용자 UUID", example = "550e8400-e29b-41d4-a716-446655440000")
-        UUID publicId,
+        @Schema(description = "사용자 고유 ID (PK)", example = "1")
+        Long id,
 
         @Schema(description = "닉네임", example = "그릿유저")
         String nickname,
@@ -39,7 +39,7 @@ public record MemberResponseDto(
 
     public static MemberResponseDto fromWithResolvedUrl(Member member, String imageUrl) {
         return new MemberResponseDto(
-                    member.getPublicId(),
+                    member.getId(),
                     member.getNickname(),
                     member.getEmail(),
                     member.getIntroduction(),
@@ -54,7 +54,7 @@ public record MemberResponseDto(
     // 친구 목록용 변환 (이메일 제외)
     public static MemberResponseDto fromForFriend(Member member, String imageUrl) {
         return new MemberResponseDto(
-                    member.getPublicId(),
+                    member.getId(),
                     member.getNickname(),
                     null,          // email 비공개
                     member.getIntroduction(),
