@@ -2,6 +2,7 @@ package grit.domain.group.livekit.pomodoro.entity;
 
 import grit.domain.group.entity.Group;
 import grit.global.entity.BaseEntity;
+import grit.global.exception.InvalidInputException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,11 +22,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -65,4 +64,28 @@ public class Pomodoro extends BaseEntity {
 
     @Version
     private Long version;
+
+    public boolean isIdle() {
+        return status == PomodoroStatus.IDLE;
+    }
+
+    public void start(LocalDateTime startedAt, int focusMinutes, int totalRounds) {
+        this.status = PomodoroStatus.RUNNING;
+        this.startedAt = startedAt;
+        this.focusMinutes = focusMinutes;
+        this.totalRounds = totalRounds;
+        this.currentRound = 1;
+    }
+
+    public void pause() {
+        if (status == PomodoroStatus.PAUSED || status == PomodoroStatus.IDLE) {
+            throw new InvalidInputException("일시정지할 수 없는 상태입니다.");
+        }
+
+        this.status = PomodoroStatus.PAUSED;
+    }
+
+    public void stop() {
+        this.status = PomodoroStatus.IDLE;
+    }
 }
