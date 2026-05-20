@@ -19,13 +19,22 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "members")
+@Table(
+        name = "members",
+        indexes = {
+                @Index(name = "ux_members_public_id", columnList = "public_id", unique = true)
+        }
+)
 @ToString(callSuper = true, exclude = { "memberGroups", "friends" }) // lombok 무한루프 방지용
 public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Builder.Default
+    @Column(nullable = false, updatable = false)
+    private UUID publicId = UUID.randomUUID();
 
     @Setter
     @Column(unique = true, length = 10) // 소셜 로그인 닉네임 받기 전일 때 위해서 null 허용
