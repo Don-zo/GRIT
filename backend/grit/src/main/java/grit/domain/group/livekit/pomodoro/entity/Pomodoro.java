@@ -56,7 +56,12 @@ public class Pomodoro extends BaseEntity {
     @Min(1)
     @Max(6)
     @Column(nullable = false)
-    private int repeatCount;
+    private int totalRounds;
+
+    @Min(1)
+    @Max(6)
+    @Column(nullable = false)
+    private int currentRound;
 
     @Version
     private Long version;
