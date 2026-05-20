@@ -734,10 +734,10 @@
                 const text = new TextDecoder().decode(payload);
                 const data = JSON.parse(text);
 
-                if (data.type !== 'reaction') return;
-                if (!data.emojiChar || !data.senderIdentity) return;
+                if (!data.emojiChar || !data.senderUserId) return;
 
-                showReactionOnTile(data.senderIdentity, data.emojiChar);
+                const senderId = String(data.senderUserId);
+                showReactionOnTile(senderId, data.emojiChar);
             } catch (err) {
                 console.error('리액션 수신 파싱 오류:', err);
             }

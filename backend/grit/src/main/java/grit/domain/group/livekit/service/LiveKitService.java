@@ -47,7 +47,7 @@ public class LiveKitService {
         checkPermission(member, group);
 
         AccessToken token = new AccessToken(apiKey, apiSecret);
-        token.setIdentity(member.getPublicId().toString());
+        token.setIdentity(member.getId().toString());
         token.setName(member.getNickname());
         token.addGrants(
                 new RoomJoin(true),
@@ -64,10 +64,9 @@ public class LiveKitService {
         checkPermission(member, group);
         sendData(roomName(group.getCode()),
                 Map.of(
-                        "type", "reaction",
                         "emoji", emoji.name(),
                         "emojiChar", emoji.getEmoji(),
-                        "senderIdentity", member.getPublicId().toString()
+                        "senderUserId", member.getId()
                 ), Kind.RELIABLE);
     }
 
