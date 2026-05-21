@@ -118,7 +118,7 @@ const ProfileCard = ({
         <div className="mb-4 flex items-center justify-between">
           <span className="text-white text-bodyMd">이번 주 목표 공부시간</span>
           <span className="text-white text-bodyMd">
-            {isLoading ? "…" : `목표 ${goalTimeLabel}`}
+            {isLoading ? "…" : `${goalTimeLabel}`}
           </span>
         </div>
         <div className="w-full h-4 bg-gray-dark rounded-full overflow-hidden">
