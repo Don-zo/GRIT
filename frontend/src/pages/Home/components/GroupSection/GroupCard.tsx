@@ -42,7 +42,7 @@ export default function GroupCard({
         <div className="relative z-10 flex flex-col h-full pointer-events-none">
           <div className="flex items-start p-4">
             {isLive && <LiveBadge />}
-            <div className="pointer-events-none ml-auto opacity-0 transition-opacity group-hover/card:opacity-100 group-hover/card:pointer-events-auto">
+            <div className="pointer-events-none ml-auto opacity-0 transition-opacity group-hover/card:opacity-100 group-hover/card:pointer-events-auto focus-within:pointer-events-auto focus-within:opacity-100">
               <GroupCodeBadge groupCode={groupCode} />
             </div>
           </div>
