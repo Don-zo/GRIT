@@ -19,6 +19,8 @@ import java.util.List;
 })
 public class Group extends BaseEntity {
 
+    public static final int MAX_MEMBER_COUNT = 6;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,6 +43,10 @@ public class Group extends BaseEntity {
 
     public void increaseMemberCount() {
         this.memberCount++;
+    }
+
+    public boolean isFull() {
+        return this.memberCount >= MAX_MEMBER_COUNT;
     }
 
     public void decreaseMemberCount() {

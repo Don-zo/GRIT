@@ -54,7 +54,7 @@ public class GroupController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "가입 성공"),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 그룹 또는 사용자", content = @Content),
-            @ApiResponse(responseCode = "409", description = "이미 가입된 그룹", content = @Content)
+            @ApiResponse(responseCode = "409", description = "이미 가입된 그룹 또는 그룹 정원 초과", content = @Content)
     })
     @PostMapping("/{groupCode}/join")
     public ResponseEntity<GroupInfoResponseDto> joinGroup(
