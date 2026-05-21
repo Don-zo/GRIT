@@ -9,6 +9,12 @@ import { Divider } from "@/components/Divider";
 import { FormInput } from "@/components/FormInput";
 import { ImageUploader } from "@/components/ImageUploader";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
+import WeeklyStudyGoalPicker from "@/pages/Home/components/Modals/WeeklyStudyGoalPicker";
+import {
+  normalizeStudyGoalMinutes,
+  parseStudyGoal,
+  serializeStudyGoal,
+} from "@/utils/studyGoalTime";
 
 type ProfileSettingsModalProps = {
   open: boolean;
@@ -27,8 +33,8 @@ export default function ProfileSettingsModal({
   const [introduction, setIntroduction] = useState("");
   const [dDayDate, setDDayDate] = useState("");
   const [dDayTitle, setDDayTitle] = useState("");
-  const [weeklyStudyTimeGoal, setWeeklyStudyTimeGoal] = useState("");
-
+  const [studyGoalHours, setStudyGoalHours] = useState(0);
+  const [studyGoalMinutes, setStudyGoalMinutes] = useState(0);
   const { notify } = useToastContext();
 
   const {
@@ -39,15 +45,21 @@ export default function ProfileSettingsModal({
     queryKey: QUERY_KEYS.member.me,
     queryFn: userApi.get,
     enabled: open,
+    staleTime: 0,
   });
 
   useEffect(() => {
     if (!open || !member) return;
+
+    const rawGoal = member.weeklyStudyTimeGoal;
+    const { hours, minutes } = parseStudyGoal(rawGoal);
+
     setNickname(member.nickname);
     setIntroduction(member.introduction);
     setDDayDate(member.dDayDate ?? "");
     setDDayTitle(member.dDayTitle ?? "");
-    setWeeklyStudyTimeGoal(member.weeklyStudyTimeGoal ?? "");
+    setStudyGoalHours(hours);
+    setStudyGoalMinutes(normalizeStudyGoalMinutes(minutes));
     setImageFile(null);
     setIsImageRemoved(false);
   }, [open, member]);
@@ -61,6 +73,19 @@ export default function ProfileSettingsModal({
       if (!trimmedNickname) throw new Error("닉네임을 입력해주세요");
       if (!introduction) throw new Error("소개를 입력해주세요");
 
+      const weeklyStudyTimeGoal = serializeStudyGoal(
+        studyGoalHours,
+        studyGoalMinutes,
+      );
+
+      const profilePayload = {
+        nickname: trimmedNickname,
+        introduction,
+        dDayDate: dDayDate || null,
+        dDayTitle: dDayTitle || null,
+        weeklyStudyTimeGoal,
+      };
+
       if (imageFile) {
         const imageName = await fileApi.uploadFileWithPresignedInfo(
           imageFile,
@@ -69,22 +94,14 @@ export default function ProfileSettingsModal({
 
         if (isInitialProfile) {
           return userApi.createInitialInfo({
-            nickname: trimmedNickname,
-            introduction: introduction,
+            ...profilePayload,
             imageName,
-            dDayDate: dDayDate || null,
-            dDayTitle: dDayTitle || null,
-            weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
           });
         }
 
         return userApi.update({
-          nickname: trimmedNickname,
-          introduction: introduction,
+          ...profilePayload,
           imageName,
-          dDayDate: dDayDate || null,
-          dDayTitle: dDayTitle || null,
-          weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
         });
       }
 
@@ -92,30 +109,27 @@ export default function ProfileSettingsModal({
 
       if (isInitialProfile) {
         return userApi.createInitialInfo({
-          nickname: trimmedNickname,
-          introduction: introduction,
+          ...profilePayload,
           ...imagePatch,
-          dDayDate: dDayDate || null,
-          dDayTitle: dDayTitle || null,
-          weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
         });
       }
 
       return userApi.update({
-        nickname: trimmedNickname,
-        introduction: introduction,
+        ...profilePayload,
         ...imagePatch,
-        dDayDate: dDayDate || null,
-        dDayTitle: dDayTitle || null,
-        weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
       });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.member.me });
+      notify("프로필이 저장되었습니다.", "success");
       onClose();
     },
     onError: (error) => {
       console.error("프로필 저장 에러", error);
+      notify(
+        error instanceof Error ? error.message : "저장에 실패했습니다.",
+        "error",
+      );
     },
   });
 
@@ -237,23 +251,18 @@ export default function ProfileSettingsModal({
 
           <Divider />
 
-          <section className="w-full">
-            <div className="flex items-end justify-between">
-              <h3 className="text-base font-semibold text-[#D6FDE5]">
-                이번주 목표 공부시간 설정
-              </h3>
-              <span className="text-sm font-medium text-[#D6FDE5]">
-                6시간 30분
-              </span>
-            </div>
+          <section className="mb-4 w-full">
+            <h3 className="text-base font-semibold text-[#D6FDE5]">
+              이번주 목표 공부시간 설정
+            </h3>
 
-            <div className="mt-3">
-              <input
-                type="range"
-                min={0}
-                max={12 * 60}
-                defaultValue={390}
-                className="w-full accent-[#82C397]"
+            <div className="mt-4">
+              <WeeklyStudyGoalPicker
+                hours={studyGoalHours}
+                minutes={studyGoalMinutes}
+                disabled={isFormDisabled}
+                onHoursChange={setStudyGoalHours}
+                onMinutesChange={setStudyGoalMinutes}
               />
             </div>
           </section>
