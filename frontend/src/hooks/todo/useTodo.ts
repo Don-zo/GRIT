@@ -7,12 +7,13 @@ import {
 } from "react";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { useToast } from "@/hooks/useToast";
+import type { TodoListFetchParams } from "@/pages/Todo/components/todoWeekLayout";
 import type { Category } from "@/pages/Todo/components/types";
 import { buildUpdateTodoBody } from "./mappers";
 import { useTodoData } from "./useTodoData";
 import { useTodoMutations } from "./useTodoMutations";
 
-export function useTodo(weekStartDate: string) {
+export function useTodo(listParams: TodoListFetchParams) {
   const {
     userId,
     queryClient,
@@ -25,7 +26,7 @@ export function useTodo(weekStartDate: string) {
     setCategories,
     patchTodos,
     setGuestCategories,
-  } = useTodoData({ weekStartDate });
+  } = useTodoData({ listParams });
 
   const { toast, clearToast, notify } = useToast();
 

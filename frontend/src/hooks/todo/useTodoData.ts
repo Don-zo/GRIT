@@ -9,6 +9,7 @@ import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { todoApi } from "@/apis/domains/todo/api";
 import { userApi } from "@/apis/domains/user/api";
 import { getAccessToken } from "@/utils/tokenStorage";
+import type { TodoListFetchParams } from "@/pages/Todo/components/todoWeekLayout";
 import {
   DEFAULT_CATEGORIES,
   type Category,
@@ -17,16 +18,11 @@ import {
 import { mapTodoApiToItem, mapTodoCategoryApiToCategory } from "./mappers";
 
 type UseTodoDataOptions = {
-  weekStartDate: string;
-  page?: number;
-  size?: number;
+  listParams: TodoListFetchParams;
 };
 
-export function useTodoData({
-  weekStartDate,
-  page = 0,
-  size = 20,
-}: UseTodoDataOptions) {
+export function useTodoData({ listParams }: UseTodoDataOptions) {
+  const { startDate, dayCount } = listParams;
   const queryClient = useQueryClient();
   const accessToken = getAccessToken();
   const { data: member } = useQuery({
@@ -36,21 +32,19 @@ export function useTodoData({
   });
   const userId = member?.id ?? null;
 
+  const listQueryKey =
+    userId != null
+      ? QUERY_KEYS.todos.byUserRange(userId, startDate, dayCount)
+      : (["todos", "guest"] as const);
+
   const {
     data: serverTodos = [],
     isLoading: isTodosLoading,
     isError: isTodosError,
   } = useQuery({
-    queryKey:
-      userId != null
-        ? QUERY_KEYS.todos.byUserWeek(userId, weekStartDate, page, size)
-        : (["todos", "guest"] as const),
+    queryKey: listQueryKey,
     queryFn: async () => {
-      const response = await todoApi.getList({
-        weekStartDate,
-        page,
-        size,
-      });
+      const response = await todoApi.getList({ startDate, dayCount });
       return response.todos.map(mapTodoApiToItem);
     },
     enabled: userId != null,
@@ -105,12 +99,11 @@ export function useTodoData({
         setGuestTodos((prev) => updater(prev));
         return;
       }
-      queryClient.setQueryData<TodoItem[]>(
-        QUERY_KEYS.todos.byUserWeek(userId, weekStartDate, page, size),
-        (prev) => updater(prev ?? []),
+      queryClient.setQueryData<TodoItem[]>(listQueryKey, (prev) =>
+        updater(prev ?? []),
       );
     },
-    [userId, weekStartDate, page, size, queryClient],
+    [userId, listQueryKey, queryClient],
   );
 
   return {

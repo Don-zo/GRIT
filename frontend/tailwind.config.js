@@ -34,4 +34,5 @@ export default {
     },
   },
   plugins: [],
+  safelist: ['grid-cols-3', 'grid-cols-5', 'grid-cols-7'],
 };

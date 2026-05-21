@@ -8,11 +8,15 @@ import TodoWeekGrid, {
 } from "@/pages/Todo/components/TodoWeekGrid";
 import type { TodoItem } from "@/pages/Todo/components/types";
 import {
+  getTodoListFetchParams,
+  getVisibleWeekDays,
+} from "@/pages/Todo/components/todoWeekLayout";
+import {
   addDays,
   formatMonthHeading,
   startOfWeekMonday,
-  toDateKey,
 } from "@/pages/Todo/components/weeklyTodo";
+import { useTodoWeekColumnCount } from "@/pages/Todo/hooks/useTodoWeekColumnCount";
 
 const TodoPage = () => {
   const [anchor, setAnchor] = useState(() => new Date());
@@ -21,25 +25,32 @@ const TodoPage = () => {
   const onDragEndClear = () => setDragOverDateKey(null);
 
   const weekStart = useMemo(() => startOfWeekMonday(anchor), [anchor]);
-  const weekStartDate = useMemo(() => toDateKey(weekStart), [weekStart]);
-  const b = useTodo(weekStartDate);
   const monthHeading = useMemo(() => formatMonthHeading(weekStart), [weekStart]);
   const weekDays = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
     [weekStart],
   );
+  const today = useMemo(() => {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return t;
+  }, []);
+  const { columnCount, layoutRef } = useTodoWeekColumnCount();
+  const visibleWeekDays = useMemo(
+    () => getVisibleWeekDays(weekDays, today, columnCount),
+    [weekDays, today, columnCount],
+  );
+  const listFetchParams = useMemo(
+    () => getTodoListFetchParams(weekDays, today, columnCount),
+    [weekDays, today, columnCount],
+  );
+  const b = useTodo(listFetchParams);
   const todoFetchStatus = useMemo<"idle" | "loading" | "error">(() => {
     if (b.userId == null) return "idle";
     if (b.isTodosError || b.isCategoriesError) return "error";
     if (b.isTodosLoading || b.isCategoriesLoading) return "loading";
     return "idle";
   }, [b.userId, b.isTodosError, b.isCategoriesError, b.isTodosLoading, b.isCategoriesLoading]);
-
-  const today = useMemo(() => {
-    const t = new Date();
-    t.setHours(0, 0, 0, 0);
-    return t;
-  }, []);
 
   const categoryLabelForTodo = (todo: TodoItem) => {
     if (todo.categoryName) return todo.categoryName;
@@ -77,18 +88,21 @@ const TodoPage = () => {
 
   return (
     <SmallViewportNotice>
-      <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-gray-darkest pt-[65px]">
+      <div className="relative flex h-screen w-full flex-col overflow-hidden bg-gray-darkest pt-[65px]">
         <Header variant="dark" alwaysVisible />
-        <div className="flex flex-col w-full min-w-0 select-none">
+        <div className="flex min-h-0 flex-1 flex-col w-full min-w-0 select-none overflow-hidden">
           <Toast toast={b.toast} onClear={b.clearToast} />
-          <div className="flex flex-col gap-2 px-8 pt-4 pb-20">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-20 py-20 md:py-14">
             {b.userId != null && b.isCategoriesError ? (
               <p className="text-sm shrink-0 text-red-300/95">
                 카테고리 목록을 불러오지 못했습니다.
               </p>
             ) : null}
-            <div className="flex w-full min-w-0 justify-center">
-              <div className="relative my-20 flex w-full min-w-0 max-w-[1440px] flex-col px-2 md:px-4">
+            <div
+              ref={layoutRef}
+              className="flex min-h-0 flex-1 w-full min-w-0 justify-center overflow-hidden"
+            >
+              <div className="relative flex min-h-0 w-full min-w-0 max-w-[1440px] flex-1 flex-col px-2 md:px-4">
                 <TodoWeekHeader
                   monthHeading={monthHeading}
                   onPrevWeek={prevWeek}
@@ -98,7 +112,8 @@ const TodoPage = () => {
                 />
 
                 <TodoWeekGrid
-                  weekDays={weekDays}
+                  weekDays={visibleWeekDays}
+                  columnCount={columnCount}
                   today={today}
                   todos={b.todos}
                   categories={b.categories}

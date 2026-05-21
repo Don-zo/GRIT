@@ -1,12 +1,18 @@
 import { ChevronLeft, ChevronRight, LoaderCircle, Plus, XCircle } from "lucide-react";
+import DayTodoScrollList from "./DayTodoScrollList";
 import TodoComposeBlock from "./TodoComposeBlock";
 import TodoRow from "./TodoRow";
 import type { Category, TodoItem, TodoQuickAddConfig } from "./types";
+import {
+  gridColsClassForCount,
+  type TodoWeekColumnCount,
+} from "./todoWeekLayout";
 import {
   DND_TODO_MIME,
   WEEKDAY_KO,
   isSameCalendarDay,
   toDateKey,
+  weekdayIndexMondayFirst,
   weeklyAddButtonClass,
   weeklyDayHeaderClass,
   weeklyListPanelClass,
@@ -28,7 +34,7 @@ export function TodoWeekHeader({
   fetchStatus = "idle",
 }: TodoWeekHeaderProps) {
   return (
-    <div className="sticky top-[65px] z-30 shrink-0 border-b border-white/10 bg-gray-darkest/95 py-2 pb-3 backdrop-blur-md supports-[backdrop-filter]:bg-gray-darkest/90">
+    <div className="z-30 shrink-0 border-b border-white/10 bg-gray-darkest py-2 pb-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h2 className="font-semibold text-white text-h3">{monthHeading}</h2>
@@ -74,6 +80,7 @@ export function TodoWeekHeader({
 
 type TodoWeekGridProps = {
   weekDays: Date[];
+  columnCount: TodoWeekColumnCount;
   today: Date;
   todos: TodoItem[];
   categories: Category[];
@@ -127,6 +134,7 @@ function compareTodoDisplayOrder(a: TodoItem, b: TodoItem): number {
 
 export default function TodoWeekGrid({
   weekDays,
+  columnCount,
   today,
   todos,
   categories,
@@ -145,10 +153,13 @@ export default function TodoWeekGrid({
   onCancelEdit,
 }: TodoWeekGridProps) {
   return (
-    <div className="w-full min-w-0 pt-4 pb-10">
-      <div className="grid grid-cols-7 gap-2">
-        {weekDays.map((day, i) => {
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col pt-3">
+      <div
+        className={`grid min-h-0 flex-1 grid-rows-1 gap-2 ${gridColsClassForCount(columnCount)}`}
+      >
+        {weekDays.map((day) => {
           const key = toDateKey(day);
+          const weekdayIndex = weekdayIndexMondayFirst(day);
           const composePicker = {
             categories,
             setCategories: quickAdd.setCategories,
@@ -167,8 +178,8 @@ export default function TodoWeekGrid({
             .filter((t) => t.dueDate === key)
             .sort(compareTodoDisplayOrder);
           const isToday = isSameCalendarDay(day, today);
-          const isSaturday = i === 5;
-          const isSunday = i === 6;
+          const isSaturday = weekdayIndex === 5;
+          const isSunday = weekdayIndex === 6;
 
           const listPanelClass = weeklyListPanelClass(
             isToday,
@@ -189,13 +200,13 @@ export default function TodoWeekGrid({
           return (
             <div
               key={key}
-              className="relative flex h-full min-h-[min(560px,62vh)] w-full min-w-0 flex-col gap-2"
+              className="relative flex h-full min-h-0 w-full min-w-0 flex-col gap-2"
             >
               <div className={`group/day-head ${dayHeaderClass}`}>
                 <div className="flex items-center justify-between gap-2 px-4 py-3.5">
                   <div
                     className="flex min-w-0 flex-1 items-baseline gap-2 text-left"
-                    aria-label={`${WEEKDAY_KO[i]}요일 ${day.getDate()}일`}
+                    aria-label={`${WEEKDAY_KO[weekdayIndex]}요일 ${day.getDate()}일`}
                   >
                     <span
                       className={`shrink-0 text-h3 font-bold tabular-nums leading-none ${
@@ -221,7 +232,7 @@ export default function TodoWeekGrid({
                               : "text-white/55"
                       }`}
                     >
-                      {WEEKDAY_KO[i]}
+                      {WEEKDAY_KO[weekdayIndex]}
                     </span>
                   </div>
                   {onAddTodoForDate ? (
@@ -266,7 +277,7 @@ export default function TodoWeekGrid({
                   setDragOverDateKey(null);
                 }}
               >
-                <ul className="relative z-[1] flex flex-1 flex-col gap-3 list-none px-2 pt-2 pb-6">
+                <DayTodoScrollList>
                 {quickAdd.pendingDueDate === key ? (
                   <li className="shrink-0">
                     <TodoComposeBlock
@@ -305,7 +316,7 @@ export default function TodoWeekGrid({
                     />
                   ),
                 )}
-                </ul>
+                </DayTodoScrollList>
               </div>
             </div>
           );
