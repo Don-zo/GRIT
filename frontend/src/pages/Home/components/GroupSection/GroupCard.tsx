@@ -34,7 +34,7 @@ export default function GroupCard({
           <img
             src={imageUrl}
             alt={name}
-            className="absolute inset-0 w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         )}
 
