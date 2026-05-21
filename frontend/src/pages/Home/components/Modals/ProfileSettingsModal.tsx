@@ -11,8 +11,11 @@ import { ImageUploader } from "@/components/ImageUploader";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import WeeklyStudyGoalPicker from "@/pages/Home/components/Modals/WeeklyStudyGoalPicker";
 import {
-  formatStudyGoal,
+  detectStudyGoalFormat,
+  normalizeStudyGoalMinutes,
   parseStudyGoal,
+  serializeStudyGoal,
+  type StudyGoalApiFormat,
 } from "@/utils/studyGoalTime";
 
 type ProfileSettingsModalProps = {
@@ -34,6 +37,8 @@ export default function ProfileSettingsModal({
   const [dDayTitle, setDDayTitle] = useState("");
   const [studyGoalHours, setStudyGoalHours] = useState(0);
   const [studyGoalMinutes, setStudyGoalMinutes] = useState(0);
+  const [studyGoalApiFormat, setStudyGoalApiFormat] =
+    useState<StudyGoalApiFormat>("korean");
 
   const { notify } = useToastContext();
 
@@ -45,17 +50,22 @@ export default function ProfileSettingsModal({
     queryKey: QUERY_KEYS.member.me,
     queryFn: userApi.get,
     enabled: open,
+    staleTime: 0,
   });
 
   useEffect(() => {
     if (!open || !member) return;
+
+    const rawGoal = member.weeklyStudyTimeGoal;
+    const { hours, minutes } = parseStudyGoal(rawGoal);
+
     setNickname(member.nickname);
     setIntroduction(member.introduction);
     setDDayDate(member.dDayDate ?? "");
     setDDayTitle(member.dDayTitle ?? "");
-    const { hours, minutes } = parseStudyGoal(member.weeklyStudyTimeGoal);
+    setStudyGoalApiFormat(detectStudyGoalFormat(rawGoal));
     setStudyGoalHours(hours);
-    setStudyGoalMinutes(minutes);
+    setStudyGoalMinutes(normalizeStudyGoalMinutes(minutes));
     setImageFile(null);
     setIsImageRemoved(false);
   }, [open, member]);
@@ -69,6 +79,20 @@ export default function ProfileSettingsModal({
       if (!trimmedNickname) throw new Error("닉네임을 입력해주세요");
       if (!introduction) throw new Error("소개를 입력해주세요");
 
+      const weeklyStudyTimeGoal = serializeStudyGoal(
+        studyGoalHours,
+        studyGoalMinutes,
+        studyGoalApiFormat,
+      );
+
+      const profilePayload = {
+        nickname: trimmedNickname,
+        introduction,
+        dDayDate: dDayDate || null,
+        dDayTitle: dDayTitle || null,
+        weeklyStudyTimeGoal,
+      };
+
       if (imageFile) {
         const imageName = await fileApi.uploadFileWithPresignedInfo(
           imageFile,
@@ -77,22 +101,14 @@ export default function ProfileSettingsModal({
 
         if (isInitialProfile) {
           return userApi.createInitialInfo({
-            nickname: trimmedNickname,
-            introduction: introduction,
+            ...profilePayload,
             imageName,
-            dDayDate: dDayDate || null,
-            dDayTitle: dDayTitle || null,
-            weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
           });
         }
 
         return userApi.update({
-          nickname: trimmedNickname,
-          introduction: introduction,
+          ...profilePayload,
           imageName,
-          dDayDate: dDayDate || null,
-          dDayTitle: dDayTitle || null,
-          weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
         });
       }
 
@@ -100,30 +116,27 @@ export default function ProfileSettingsModal({
 
       if (isInitialProfile) {
         return userApi.createInitialInfo({
-          nickname: trimmedNickname,
-          introduction: introduction,
+          ...profilePayload,
           ...imagePatch,
-          dDayDate: dDayDate || null,
-          dDayTitle: dDayTitle || null,
-          weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
         });
       }
 
       return userApi.update({
-        nickname: trimmedNickname,
-        introduction: introduction,
+        ...profilePayload,
         ...imagePatch,
-        dDayDate: dDayDate || null,
-        dDayTitle: dDayTitle || null,
-        weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
       });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.member.me });
+      notify("프로필이 저장되었습니다.", "success");
       onClose();
     },
     onError: (error) => {
       console.error("프로필 저장 에러", error);
+      notify(
+        error instanceof Error ? error.message : "저장에 실패했습니다.",
+        "error",
+      );
     },
   });
 
@@ -153,9 +166,6 @@ export default function ProfileSettingsModal({
   const handleSave = async () => {
     await saveProfile();
   };
-
-  const weeklyStudyTimeGoal =
-    formatStudyGoal(studyGoalHours, studyGoalMinutes) || null;
 
   const isFormDisabled = isMemberInfoLoading || isPending;
 
