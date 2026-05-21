@@ -55,6 +55,10 @@ public class Pomodoro extends BaseEntity {
     @Column(nullable = false)
     private long accumulatedPausedSeconds;
 
+    private Instant anchorFocusEndsAt;
+
+    private Instant anchorBreakEndsAt;
+
     @Min(1)
     @Max(60)
     @Column(nullable = false)
@@ -75,16 +79,19 @@ public class Pomodoro extends BaseEntity {
         this.accumulatedPausedSeconds = 0;
         this.focusMinutes = focusMinutes;
         this.totalRounds = totalRounds;
+        this.anchorFocusEndsAt = startedAt.plusSeconds(getFocusSeconds());
+        this.anchorBreakEndsAt = startedAt.plusSeconds(ROUND_SECONDS);
     }
 
-    public void pause(Instant pausedAt) {
-        PomodoroStatus currentStatus = getCurrentStatus(pausedAt);
+    public void pause(Instant pauseStartedAt) {
+        PomodoroStatus currentStatus = getCurrentStatus(pauseStartedAt);
         if (currentStatus != PomodoroStatus.RUNNING && currentStatus != PomodoroStatus.BREAK) {
             throw new InvalidInputException("일시정지할 수 없는 뽀모도로 상태입니다.");
         }
 
+        pinCurrentRoundBoundaries(pauseStartedAt);
         this.status = PomodoroStatus.PAUSED;
-        this.pausedAt = pausedAt;
+        this.pausedAt = pauseStartedAt;
     }
 
     public void resume(Instant resumedAt) {
@@ -93,7 +100,10 @@ public class Pomodoro extends BaseEntity {
         }
 
         if (this.pausedAt != null) {
-            this.accumulatedPausedSeconds += Math.max(0, Duration.between(this.pausedAt, resumedAt).getSeconds());
+            pinCurrentRoundBoundaries(this.pausedAt);
+            long pauseSeconds = Math.max(0, Duration.between(this.pausedAt, resumedAt).getSeconds());
+            this.accumulatedPausedSeconds += pauseSeconds;
+            delayFutureBoundariesAfter(this.pausedAt, pauseSeconds);
         }
         this.status = PomodoroStatus.RUNNING;
         this.pausedAt = null;
@@ -103,6 +113,8 @@ public class Pomodoro extends BaseEntity {
         this.status = PomodoroStatus.IDLE;
         this.pausedAt = null;
         this.accumulatedPausedSeconds = 0;
+        this.anchorFocusEndsAt = null;
+        this.anchorBreakEndsAt = null;
     }
 
     public PomodoroStatus getCurrentStatus(Instant now) {
@@ -110,12 +122,12 @@ public class Pomodoro extends BaseEntity {
             return status;
         }
 
-        long elapsedSeconds = getElapsedSeconds(now);
+        long elapsedSeconds = getElapsedSecondsAt(now);
         if (elapsedSeconds >= totalRounds * ROUND_SECONDS) {
             return PomodoroStatus.FINISHED;
         }
 
-        return getRoundElapsedSeconds(elapsedSeconds) < focusMinutes * 60L
+        return getRoundElapsedSeconds(elapsedSeconds) < getFocusSeconds()
                 ? PomodoroStatus.RUNNING
                 : PomodoroStatus.BREAK;
     }
@@ -130,7 +142,7 @@ public class Pomodoro extends BaseEntity {
             return null;
         }
 
-        return getRoundElapsedSeconds(getElapsedSeconds(now)) < focusMinutes * 60L
+        return getRoundElapsedSeconds(getElapsedSecondsAt(now)) < getFocusSeconds()
                 ? PomodoroPhase.FOCUS
                 : PomodoroPhase.BREAK;
     }
@@ -140,7 +152,7 @@ public class Pomodoro extends BaseEntity {
             return 1;
         }
 
-        long elapsedSeconds = getElapsedSeconds(now);
+        long elapsedSeconds = getElapsedSecondsAt(now);
         if (elapsedSeconds >= totalRounds * ROUND_SECONDS) {
             return totalRounds;
         }
@@ -152,51 +164,25 @@ public class Pomodoro extends BaseEntity {
         return 60 - focusMinutes;
     }
 
-    public Instant getPhaseStartedAt(Instant now) {
+    public Instant getFocusEndsAt(Instant now) {
         if (isIdleOrFinished(now)) {
             return null;
         }
 
-        return toActualTime(getPhaseStartElapsedSeconds(now));
+        return withOngoingPause(getCurrentRoundBoundaries(now).focusEndsAt(), now);
     }
 
-    public Instant getPhaseEndsAt(Instant now) {
+    public Instant getBreakEndsAt(Instant now) {
         if (isIdleOrFinished(now)) {
             return null;
         }
 
-        return toActualTime(getPhaseEndElapsedSeconds(now)).plusSeconds(getCurrentPauseSeconds(now));
+        return withOngoingPause(getCurrentRoundBoundaries(now).breakEndsAt(), now);
     }
 
     private boolean isIdleOrFinished(Instant now) {
         PomodoroStatus currentStatus = getCurrentStatus(now);
         return currentStatus == PomodoroStatus.IDLE || currentStatus == PomodoroStatus.FINISHED || startedAt == null;
-    }
-
-    private long getPhaseStartElapsedSeconds(Instant now) {
-        long elapsedSeconds = getElapsedSeconds(now);
-        long roundElapsedSeconds = getRoundElapsedSeconds(elapsedSeconds);
-        long focusSeconds = focusMinutes * 60L;
-        long roundStartSeconds = elapsedSeconds - roundElapsedSeconds;
-
-        return roundElapsedSeconds < focusSeconds
-                ? roundStartSeconds
-                : roundStartSeconds + focusSeconds;
-    }
-
-    private long getPhaseEndElapsedSeconds(Instant now) {
-        long elapsedSeconds = getElapsedSeconds(now);
-        long roundElapsedSeconds = getRoundElapsedSeconds(elapsedSeconds);
-        long focusSeconds = focusMinutes * 60L;
-        long roundStartSeconds = elapsedSeconds - roundElapsedSeconds;
-
-        return roundElapsedSeconds < focusSeconds
-                ? roundStartSeconds + focusSeconds
-                : roundStartSeconds + ROUND_SECONDS;
-    }
-
-    private Instant toActualTime(long elapsedSeconds) {
-        return startedAt.plusSeconds(accumulatedPausedSeconds + elapsedSeconds);
     }
 
     private long getCurrentPauseSeconds(Instant now) {
@@ -207,14 +193,85 @@ public class Pomodoro extends BaseEntity {
         return Math.max(0, Duration.between(pausedAt, now).getSeconds());
     }
 
-    private long getElapsedSeconds(Instant now) {
-        Instant effectiveNow = status == PomodoroStatus.PAUSED && pausedAt != null ? pausedAt : now;
-        long rawElapsedSeconds = Math.max(0, Duration.between(startedAt, effectiveNow).getSeconds());
+    private RoundBoundaries getCurrentRoundBoundaries(Instant now) {
+        RoundBoundaries boundaries = getAnchorBoundaries();
+        Instant effectiveNow = getEffectiveNow(now);
+
+        for (int round = 1; round < totalRounds && !effectiveNow.isBefore(boundaries.breakEndsAt()); round++) {
+            boundaries = boundaries.nextRound(getFocusSeconds());
+        }
+
+        return boundaries;
+    }
+
+    private RoundBoundaries getAnchorBoundaries() {
+        Instant focusEndsAt = anchorFocusEndsAt != null
+                ? anchorFocusEndsAt
+                : startedAt.plusSeconds(getFocusSeconds());
+        Instant breakEndsAt = anchorBreakEndsAt != null
+                ? anchorBreakEndsAt
+                : startedAt.plusSeconds(ROUND_SECONDS);
+
+        return new RoundBoundaries(focusEndsAt, breakEndsAt);
+    }
+
+    private void pinCurrentRoundBoundaries(Instant now) {
+        RoundBoundaries boundaries = getCurrentRoundBoundaries(now);
+        this.anchorFocusEndsAt = boundaries.focusEndsAt();
+        this.anchorBreakEndsAt = boundaries.breakEndsAt();
+    }
+
+    private void delayFutureBoundariesAfter(Instant pauseStartedAt, long pauseSeconds) {
+        if (pauseSeconds == 0) {
+            return;
+        }
+
+        if (anchorFocusEndsAt != null && pauseStartedAt.isBefore(anchorFocusEndsAt)) {
+            anchorFocusEndsAt = anchorFocusEndsAt.plusSeconds(pauseSeconds);
+        }
+        if (anchorBreakEndsAt != null && pauseStartedAt.isBefore(anchorBreakEndsAt)) {
+            anchorBreakEndsAt = anchorBreakEndsAt.plusSeconds(pauseSeconds);
+        }
+    }
+
+    private Instant withOngoingPause(Instant boundary, Instant now) {
+        if (status == PomodoroStatus.PAUSED && pausedAt != null && pausedAt.isBefore(boundary)) {
+            return boundary.plusSeconds(getCurrentPauseSeconds(now));
+        }
+
+        return boundary;
+    }
+
+    private long getElapsedSecondsAt(Instant now) {
+        long rawElapsedSeconds = Math.max(0, Duration.between(startedAt, getEffectiveNow(now)).getSeconds());
 
         return Math.max(0, rawElapsedSeconds - accumulatedPausedSeconds);
     }
 
+    private Instant getEffectiveNow(Instant now) {
+        return status == PomodoroStatus.PAUSED && pausedAt != null ? pausedAt : now;
+    }
+
     private long getRoundElapsedSeconds(long elapsedSeconds) {
         return elapsedSeconds % ROUND_SECONDS;
+    }
+
+    private long getFocusSeconds() {
+        return focusMinutes * 60L;
+    }
+
+    private record RoundBoundaries(
+            Instant focusEndsAt,
+            Instant breakEndsAt
+    ) {
+
+        private RoundBoundaries nextRound(long focusSeconds) {
+            Instant nextRoundStartedAt = breakEndsAt;
+
+            return new RoundBoundaries(
+                    nextRoundStartedAt.plusSeconds(focusSeconds),
+                    nextRoundStartedAt.plusSeconds(ROUND_SECONDS)
+            );
+        }
     }
 }

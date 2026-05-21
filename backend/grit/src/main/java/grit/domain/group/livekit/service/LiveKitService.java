@@ -82,8 +82,8 @@ public class LiveKitService {
         timer.put("status", pomodoro.getCurrentStatus(serverNow).name());
         timer.put("phase", pomodoro.getCurrentPhase(serverNow));
         timer.put("serverNow", serverNow);
-        timer.put("phaseStartedAt", pomodoro.getPhaseStartedAt(serverNow));
-        timer.put("phaseEndsAt", pomodoro.getPhaseEndsAt(serverNow));
+        timer.put("focusEndsAt", pomodoro.getFocusEndsAt(serverNow));
+        timer.put("breakEndsAt", pomodoro.getBreakEndsAt(serverNow));
         timer.put("pausedAt", pomodoro.getPausedAt());
         timer.put("focusMinutes", pomodoro.getFocusMinutes());
         timer.put("breakMinutes", pomodoro.getBreakMinutes());
