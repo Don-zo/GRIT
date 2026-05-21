@@ -3,6 +3,7 @@ package grit.domain.group.livekit.service;
 import grit.domain.group.GroupService;
 import grit.domain.group.entity.Group;
 import grit.domain.group.livekit.constraint.ReactionEmoji;
+import grit.domain.group.livekit.pomodoro.entity.Pomodoro;
 import grit.domain.member.entity.Member;
 import grit.global.exception.AccessDeniedException;
 import io.livekit.server.AccessToken;
@@ -13,6 +14,9 @@ import io.livekit.server.RoomJoin;
 import io.livekit.server.RoomName;
 import io.livekit.server.RoomServiceClient;
 import jakarta.annotation.PostConstruct;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import livekit.LivekitModels.DataPacket.Kind;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +39,7 @@ public class LiveKitService {
 
     private final GroupService groupService;
     private final ObjectMapper objectMapper;
+    private final Clock clock;
     private RoomServiceClient client;
 
     @PostConstruct
@@ -67,6 +72,28 @@ public class LiveKitService {
                         "type", "reaction",
                         "emoji", emoji.name(),
                         "emojiChar", emoji.getEmoji(),
+                        "senderNickname", member.getNickname()
+                ), Kind.RELIABLE);
+    }
+
+    public void sendPomodoroSync(Member member, Group group, Pomodoro pomodoro) {
+        LocalDateTime serverNow = LocalDateTime.now(clock);
+        Map<String, Object> timer = new LinkedHashMap<>();
+        timer.put("status", pomodoro.getCurrentStatus(serverNow).name());
+        timer.put("phase", pomodoro.getCurrentPhase(serverNow));
+        timer.put("serverNow", serverNow);
+        timer.put("phaseStartedAt", pomodoro.getPhaseStartedAt(serverNow));
+        timer.put("phaseEndsAt", pomodoro.getPhaseEndsAt(serverNow));
+        timer.put("pausedAt", pomodoro.getPausedAt());
+        timer.put("focusMinutes", pomodoro.getFocusMinutes());
+        timer.put("breakMinutes", pomodoro.getBreakMinutes());
+        timer.put("currentRound", pomodoro.getCurrentRound(serverNow));
+        timer.put("totalRounds", pomodoro.getTotalRounds());
+
+        sendData(roomName(group.getCode()),
+                Map.of(
+                        "type", "pomodoro.sync",
+                        "timer", timer,
                         "senderNickname", member.getNickname()
                 ), Kind.RELIABLE);
     }
