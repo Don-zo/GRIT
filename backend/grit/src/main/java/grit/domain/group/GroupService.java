@@ -76,6 +76,10 @@ public class GroupService {
             throw new EntityAlreadyExistsException("이미 가입된 그룹입니다.");
         }
 
+        if (group.isFull()) {
+            throw new EntityAlreadyExistsException("그룹은 최대 6명까지만 참여할 수 있습니다.");
+        }
+
         MemberGroup memberGroup = MemberGroup.builder()
                 .member(member)
                 .group(group)
