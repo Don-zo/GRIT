@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { PATHS } from "@/routes/path";
@@ -13,9 +13,21 @@ type HeaderProps = {
 };
 
 export function Header({ variant, alwaysVisible = false }: HeaderProps) {
+  const headerRef = useRef<HTMLElement>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(alwaysVisible);
   const [isDropDownOpen, SetIsDropDownOpen] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+
+    const blockWheel = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+    el.addEventListener("wheel", blockWheel, { passive: false });
+    return () => el.removeEventListener("wheel", blockWheel);
+  }, []);
 
   const { data: user } = useQuery({
     queryKey: QUERY_KEYS.member.me,
@@ -77,6 +89,7 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
 
   return (
     <header
+      ref={headerRef}
       className={`w-full ${currentStyle.bg} px-12 py-4 fixed top-0 left-0 right-0 z-[var(--z-header)] transition-all duration-500 ${
         isHeaderVisible
           ? "opacity-100 translate-y-0"
