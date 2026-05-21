@@ -35,7 +35,7 @@ public class PomodoroService {
 
     @Transactional
     public Pomodoro start(Member member, String groupCode, int focusMinutes, int totalRounds) {
-        Group group = groupService.findGroupByCode(groupCode);
+        Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
         Pomodoro pomodoro = pomodoroRepository.findByGroup(group).orElse(null);
@@ -47,7 +47,7 @@ public class PomodoroService {
 
         pomodoro.start(Instant.now(clock), focusMinutes, totalRounds);
 
-        Pomodoro savedPomodoro = pomodoroRepository.saveAndFlush(pomodoro);
+        Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
 
         return savedPomodoro;
@@ -60,7 +60,7 @@ public class PomodoroService {
 
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.pause(Instant.now(clock));
-        Pomodoro savedPomodoro = pomodoroRepository.saveAndFlush(pomodoro);
+        Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
 
         return savedPomodoro;
@@ -73,7 +73,7 @@ public class PomodoroService {
 
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.resume(Instant.now(clock));
-        Pomodoro savedPomodoro = pomodoroRepository.saveAndFlush(pomodoro);
+        Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
 
         return savedPomodoro;
@@ -86,7 +86,7 @@ public class PomodoroService {
 
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.stop();
-        Pomodoro savedPomodoro = pomodoroRepository.saveAndFlush(pomodoro);
+        Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
 
         return savedPomodoro;
