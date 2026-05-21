@@ -9,6 +9,11 @@ import { Divider } from "@/components/Divider";
 import { FormInput } from "@/components/FormInput";
 import { ImageUploader } from "@/components/ImageUploader";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
+import WeeklyStudyGoalPicker from "@/pages/Home/components/Modals/WeeklyStudyGoalPicker";
+import {
+  formatStudyGoal,
+  parseStudyGoal,
+} from "@/utils/studyGoalTime";
 
 type ProfileSettingsModalProps = {
   open: boolean;
@@ -27,7 +32,8 @@ export default function ProfileSettingsModal({
   const [introduction, setIntroduction] = useState("");
   const [dDayDate, setDDayDate] = useState("");
   const [dDayTitle, setDDayTitle] = useState("");
-  const [weeklyStudyTimeGoal, setWeeklyStudyTimeGoal] = useState("");
+  const [studyGoalHours, setStudyGoalHours] = useState(0);
+  const [studyGoalMinutes, setStudyGoalMinutes] = useState(0);
 
   const { notify } = useToastContext();
 
@@ -47,7 +53,9 @@ export default function ProfileSettingsModal({
     setIntroduction(member.introduction);
     setDDayDate(member.dDayDate ?? "");
     setDDayTitle(member.dDayTitle ?? "");
-    setWeeklyStudyTimeGoal(member.weeklyStudyTimeGoal ?? "");
+    const { hours, minutes } = parseStudyGoal(member.weeklyStudyTimeGoal);
+    setStudyGoalHours(hours);
+    setStudyGoalMinutes(minutes);
     setImageFile(null);
     setIsImageRemoved(false);
   }, [open, member]);
@@ -146,6 +154,9 @@ export default function ProfileSettingsModal({
     await saveProfile();
   };
 
+  const weeklyStudyTimeGoal =
+    formatStudyGoal(studyGoalHours, studyGoalMinutes) || null;
+
   const isFormDisabled = isMemberInfoLoading || isPending;
 
   return (
@@ -237,23 +248,18 @@ export default function ProfileSettingsModal({
 
           <Divider />
 
-          <section className="w-full">
-            <div className="flex items-end justify-between">
-              <h3 className="text-base font-semibold text-[#D6FDE5]">
-                이번주 목표 공부시간 설정
-              </h3>
-              <span className="text-sm font-medium text-[#D6FDE5]">
-                6시간 30분
-              </span>
-            </div>
+          <section className="mb-4 w-full">
+            <h3 className="text-base font-semibold text-[#D6FDE5]">
+              이번주 목표 공부시간 설정
+            </h3>
 
-            <div className="mt-3">
-              <input
-                type="range"
-                min={0}
-                max={12 * 60}
-                defaultValue={390}
-                className="w-full accent-[#82C397]"
+            <div className="mt-4">
+              <WeeklyStudyGoalPicker
+                hours={studyGoalHours}
+                minutes={studyGoalMinutes}
+                disabled={isFormDisabled}
+                onHoursChange={setStudyGoalHours}
+                onMinutesChange={setStudyGoalMinutes}
               />
             </div>
           </section>
