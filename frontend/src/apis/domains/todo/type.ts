@@ -50,9 +50,7 @@ export interface TodoApiItem {
 }
 
 export interface TodoListByUserParams {
-  /** yyyy-MM-dd, 미입력 시 서버가 이번 주 월요일부터 7일 */
   startDate?: string;
-  /** 1~7, 미입력 시 서버 기본값 */
   dayCount?: number;
 }
 
