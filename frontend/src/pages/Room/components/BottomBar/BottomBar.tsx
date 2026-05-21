@@ -1,6 +1,7 @@
 import CustomBtn from "@/pages/Room/components/CustomBtn";
 import { useState } from "react";
 import { Mic, MicOff, Video, VideoOff, Smile, X } from "lucide-react";
+import type { Reaction } from "@/apis/domains/livekit/type";
 import EmojiModal from "./EmojiModal";
 import PomodoroModal from "./PomodoroModal";
 
@@ -12,6 +13,7 @@ type PomodoroConfig = {
 };
 
 type BottomBarProps = {
+  reactions?: Reaction[];
   onPomodoroStart?: (config: PomodoroConfig) => void;
   onToggleMic?: () => void;
   onToggleCam?: () => void;
@@ -19,6 +21,7 @@ type BottomBarProps = {
 };
 
 export default function BottomBar({
+  reactions = [],
   onPomodoroStart,
   onToggleMic,
   onToggleCam,
@@ -96,8 +99,9 @@ export default function BottomBar({
       {/* 이모지 모달 */}
       <EmojiModal
         open={emojiOpen}
-        onSelect={(emoji) => {
-          console.log(emoji, "를 선택하였습니다.");
+        reactions={reactions}
+        onSelect={(reaction) => {
+          console.log(reaction.name, reaction.emoji, "를 선택하였습니다.");
         }}
         onClose={() => setEmojiOpen(false)}
       />

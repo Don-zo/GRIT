@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATHS } from "@/routes/path";
 import BottomBar from "@/pages/Room/components/BottomBar/BottomBar";
@@ -8,7 +9,8 @@ import CamLayout from "@/pages/Room/components/Cam/CamLayout";
 import TodoCamCard from "@/pages/Room/components/todo/TodoCamCard";
 import VideoTile from "@/pages/Room/components/Cam/VideoTile";
 
-import { getLiveKitToken } from "@/apis/domains/livekit/api";
+import { getLiveKitToken, getReactions } from "@/apis/domains/livekit/api";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { useLiveKit } from "@/hooks/useLiveKit";
 import { LIVEKIT_URL } from "@/apis/constants/endpoints";
 
@@ -22,6 +24,12 @@ type PomodoroConfig = {
 const RoomPage = () => {
   const navigate = useNavigate();
   const { groupCode } = useParams();
+
+  const { data: reactions = [] } = useQuery({
+    queryKey: QUERY_KEYS.livekit.reactions(groupCode ?? ""),
+    queryFn: () => getReactions(groupCode!),
+    enabled: !!groupCode,
+  });
 
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [, setLivekitTestStatus] = useState(""); //테스트 상태메세지
@@ -153,6 +161,7 @@ const RoomPage = () => {
         </div>
       </div>
       <BottomBar
+        reactions={reactions}
         onPomodoroStart={(config) => {
           setPomodoroConfig(config);
         }}
