@@ -6,6 +6,7 @@ import SettingsModal from "@/pages/Home/components/Modals/ProfileSettingsModal";
 import { userApi } from "@/apis/domains/user/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { formatDisplayDate, getDaysUntilDDay } from "@/utils/date";
+import { formatStudyGoalDisplay } from "@/utils/studyGoalTime";
 
 interface ProfileCardProps {
   initialSettingsOpen: boolean;
@@ -41,7 +42,7 @@ const ProfileCard = ({
   const examName = member?.dDayTitle?.trim() || "미설정";
   const displayName = member?.nickname?.trim() || member?.email || "—";
   const motivation = member?.introduction?.trim() || "소개를 입력해주세요";
-  const goalTimeLabel = member?.weeklyStudyTimeGoal?.trim() || "미설정";
+  const goalTimeLabel = formatStudyGoalDisplay(member?.weeklyStudyTimeGoal);
 
   return (
     <div className="w-full lg:w-1/2 h-64 bg-green-dark rounded-2xl p-6">

@@ -11,11 +11,9 @@ import { ImageUploader } from "@/components/ImageUploader";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import WeeklyStudyGoalPicker from "@/pages/Home/components/Modals/WeeklyStudyGoalPicker";
 import {
-  detectStudyGoalFormat,
   normalizeStudyGoalMinutes,
   parseStudyGoal,
   serializeStudyGoal,
-  type StudyGoalApiFormat,
 } from "@/utils/studyGoalTime";
 
 type ProfileSettingsModalProps = {
@@ -37,9 +35,6 @@ export default function ProfileSettingsModal({
   const [dDayTitle, setDDayTitle] = useState("");
   const [studyGoalHours, setStudyGoalHours] = useState(0);
   const [studyGoalMinutes, setStudyGoalMinutes] = useState(0);
-  const [studyGoalApiFormat, setStudyGoalApiFormat] =
-    useState<StudyGoalApiFormat>("korean");
-
   const { notify } = useToastContext();
 
   const {
@@ -63,7 +58,6 @@ export default function ProfileSettingsModal({
     setIntroduction(member.introduction);
     setDDayDate(member.dDayDate ?? "");
     setDDayTitle(member.dDayTitle ?? "");
-    setStudyGoalApiFormat(detectStudyGoalFormat(rawGoal));
     setStudyGoalHours(hours);
     setStudyGoalMinutes(normalizeStudyGoalMinutes(minutes));
     setImageFile(null);
@@ -82,7 +76,6 @@ export default function ProfileSettingsModal({
       const weeklyStudyTimeGoal = serializeStudyGoal(
         studyGoalHours,
         studyGoalMinutes,
-        studyGoalApiFormat,
       );
 
       const profilePayload = {
