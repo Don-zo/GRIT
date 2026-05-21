@@ -61,7 +61,7 @@ export default function GroupCard({
                 }}
                 className="pointer-events-none flex h-4 w-4 shrink-0 items-center justify-center opacity-0 transition-opacity group-hover/card:pointer-events-auto group-hover/card:opacity-100 focus:pointer-events-auto focus:opacity-100"
               >
-                <Pencil className="h-4 w-4 text-green-light transition-transform group-hover/card:scale-110" />
+                <Pencil className="h-4 w-4 text-green-light transition-transform hover:scale-110" />
               </button>
             </div>
             <span className="flex shrink-0 text-[15px] font-thin opacity-90">
