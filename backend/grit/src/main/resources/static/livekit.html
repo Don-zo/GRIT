@@ -837,8 +837,8 @@
             phase: null,
             serverNow: null,
             serverSyncedAt: null,
-            phaseStartedAt: null,
-            phaseEndsAt: null,
+에            focusEndsAt: null,
+            breakEndsAt: null,
             pausedAt: null,
             focusMinutes: 25,
             breakMinutes: 35,
@@ -1034,16 +1034,18 @@
 
         function getPomodoroViewState() {
             const status = pomodoroState.status || 'IDLE';
-            const phase = pomodoroState.phase || getPhaseFromStatus(status);
             const focusMinutes = pomodoroState.focusMinutes || Number(document.getElementById('pomodoro-focus-minutes').value) || 25;
             const breakMinutes = pomodoroState.breakMinutes ?? Math.max(0, 60 - focusMinutes);
             const totalRounds = pomodoroState.totalRounds || Number(document.getElementById('pomodoro-total-rounds').value) || 1;
             const currentRound = pomodoroState.currentRound || 1;
+            const fallbackPhase = pomodoroState.phase || getPhaseFromStatus(status);
+            const focusEndsAt = parsePomodoroTime(pomodoroState.focusEndsAt);
+            const breakEndsAt = parsePomodoroTime(pomodoroState.breakEndsAt);
 
-            if (status === 'IDLE' || status === 'FINISHED' || !pomodoroState.phaseEndsAt) {
+            if (status === 'IDLE' || status === 'FINISHED' || breakEndsAt === null) {
                 return {
                     status,
-                    phase,
+                    phase: fallbackPhase,
                     focusMinutes,
                     breakMinutes,
                     totalRounds,
@@ -1054,8 +1056,25 @@
             }
 
             const phaseReferenceTime = status === 'PAUSED' ? getPomodoroSyncedServerNow() : getPomodoroNow();
-            const phaseEndsAt = new Date(pomodoroState.phaseEndsAt).getTime();
-            const remainingSeconds = Math.max(0, Math.ceil((phaseEndsAt - phaseReferenceTime) / 1000));
+            const phase = getPomodoroPhaseByTime(status, fallbackPhase, phaseReferenceTime, focusEndsAt, breakEndsAt, breakMinutes);
+            const currentPhaseEndsAt = getPomodoroPhaseEndsAt(phase, focusEndsAt, breakEndsAt);
+            if (currentPhaseEndsAt === null) {
+                return {
+                    status,
+                    phase,
+                    focusMinutes,
+                    breakMinutes,
+                    totalRounds,
+                    currentRound,
+                    remainingSeconds: null,
+                    shouldRefresh: false,
+                };
+            }
+
+            const remainingSeconds = Math.max(0, Math.ceil((currentPhaseEndsAt - phaseReferenceTime) / 1000));
+            const shouldRefresh = breakEndsAt !== null
+                ? phaseReferenceTime >= breakEndsAt
+                : remainingSeconds <= 0;
 
             return {
                 status,
@@ -1065,8 +1084,32 @@
                 totalRounds,
                 currentRound,
                 remainingSeconds,
-                shouldRefresh: status !== 'PAUSED' && remainingSeconds <= 0,
+                shouldRefresh: status !== 'PAUSED' && shouldRefresh,
             };
+        }
+
+        function parsePomodoroTime(value) {
+            if (!value) return null;
+
+            const time = new Date(value).getTime();
+            return Number.isNaN(time) ? null : time;
+        }
+
+        function getPomodoroPhaseByTime(status, fallbackPhase, now, focusEndsAt, breakEndsAt, breakMinutes) {
+            if (status === 'PAUSED') return fallbackPhase;
+
+            if (focusEndsAt !== null && breakEndsAt !== null) {
+                if (now < focusEndsAt) return 'FOCUS';
+                if (breakMinutes > 0 && now < breakEndsAt) return 'BREAK';
+            }
+
+            return fallbackPhase;
+        }
+
+        function getPomodoroPhaseEndsAt(phase, focusEndsAt, breakEndsAt) {
+            if (phase === 'BREAK' && breakEndsAt !== null) return breakEndsAt;
+            if (phase === 'FOCUS' && focusEndsAt !== null) return focusEndsAt;
+            return null;
         }
 
         function getPomodoroProgressPercent(viewState) {
