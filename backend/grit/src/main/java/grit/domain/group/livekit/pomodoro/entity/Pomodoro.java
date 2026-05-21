@@ -18,7 +18,7 @@ import jakarta.persistence.Version;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -48,9 +48,9 @@ public class Pomodoro extends BaseEntity {
     private PomodoroStatus status = PomodoroStatus.IDLE;
 
     @Column(nullable = false)
-    private LocalDateTime startedAt;
+    private Instant startedAt;
 
-    private LocalDateTime pausedAt;
+    private Instant pausedAt;
 
     @Column(nullable = false)
     private long accumulatedPausedSeconds;
@@ -68,7 +68,7 @@ public class Pomodoro extends BaseEntity {
     @Version
     private Long version;
 
-    public void start(LocalDateTime startedAt, int focusMinutes, int totalRounds) {
+    public void start(Instant startedAt, int focusMinutes, int totalRounds) {
         this.status = PomodoroStatus.RUNNING;
         this.startedAt = startedAt;
         this.pausedAt = null;
@@ -77,7 +77,7 @@ public class Pomodoro extends BaseEntity {
         this.totalRounds = totalRounds;
     }
 
-    public void pause(LocalDateTime pausedAt) {
+    public void pause(Instant pausedAt) {
         PomodoroStatus currentStatus = getCurrentStatus(pausedAt);
         if (currentStatus != PomodoroStatus.RUNNING && currentStatus != PomodoroStatus.BREAK) {
             throw new InvalidInputException("일시정지할 수 없는 뽀모도로 상태입니다.");
@@ -87,7 +87,7 @@ public class Pomodoro extends BaseEntity {
         this.pausedAt = pausedAt;
     }
 
-    public void resume(LocalDateTime resumedAt) {
+    public void resume(Instant resumedAt) {
         if (this.status != PomodoroStatus.PAUSED) {
             throw new InvalidInputException("재개할 수 없는 뽀모도로 상태입니다.");
         }
@@ -105,7 +105,7 @@ public class Pomodoro extends BaseEntity {
         this.accumulatedPausedSeconds = 0;
     }
 
-    public PomodoroStatus getCurrentStatus(LocalDateTime now) {
+    public PomodoroStatus getCurrentStatus(Instant now) {
         if (status == PomodoroStatus.IDLE || status == PomodoroStatus.PAUSED) {
             return status;
         }
@@ -120,7 +120,7 @@ public class Pomodoro extends BaseEntity {
                 : PomodoroStatus.BREAK;
     }
 
-    public PomodoroPhase getCurrentPhase(LocalDateTime now) {
+    public PomodoroPhase getCurrentPhase(Instant now) {
         if (status == PomodoroStatus.IDLE || startedAt == null) {
             return null;
         }
@@ -135,7 +135,7 @@ public class Pomodoro extends BaseEntity {
                 : PomodoroPhase.BREAK;
     }
 
-    public int getCurrentRound(LocalDateTime now) {
+    public int getCurrentRound(Instant now) {
         if (status == PomodoroStatus.IDLE || startedAt == null) {
             return 1;
         }
@@ -152,7 +152,7 @@ public class Pomodoro extends BaseEntity {
         return 60 - focusMinutes;
     }
 
-    public LocalDateTime getPhaseStartedAt(LocalDateTime now) {
+    public Instant getPhaseStartedAt(Instant now) {
         if (isIdleOrFinished(now)) {
             return null;
         }
@@ -160,7 +160,7 @@ public class Pomodoro extends BaseEntity {
         return toActualTime(getPhaseStartElapsedSeconds(now));
     }
 
-    public LocalDateTime getPhaseEndsAt(LocalDateTime now) {
+    public Instant getPhaseEndsAt(Instant now) {
         if (isIdleOrFinished(now)) {
             return null;
         }
@@ -168,12 +168,12 @@ public class Pomodoro extends BaseEntity {
         return toActualTime(getPhaseEndElapsedSeconds(now)).plusSeconds(getCurrentPauseSeconds(now));
     }
 
-    private boolean isIdleOrFinished(LocalDateTime now) {
+    private boolean isIdleOrFinished(Instant now) {
         PomodoroStatus currentStatus = getCurrentStatus(now);
         return currentStatus == PomodoroStatus.IDLE || currentStatus == PomodoroStatus.FINISHED || startedAt == null;
     }
 
-    private long getPhaseStartElapsedSeconds(LocalDateTime now) {
+    private long getPhaseStartElapsedSeconds(Instant now) {
         long elapsedSeconds = getElapsedSeconds(now);
         long roundElapsedSeconds = getRoundElapsedSeconds(elapsedSeconds);
         long focusSeconds = focusMinutes * 60L;
@@ -184,7 +184,7 @@ public class Pomodoro extends BaseEntity {
                 : roundStartSeconds + focusSeconds;
     }
 
-    private long getPhaseEndElapsedSeconds(LocalDateTime now) {
+    private long getPhaseEndElapsedSeconds(Instant now) {
         long elapsedSeconds = getElapsedSeconds(now);
         long roundElapsedSeconds = getRoundElapsedSeconds(elapsedSeconds);
         long focusSeconds = focusMinutes * 60L;
@@ -195,11 +195,11 @@ public class Pomodoro extends BaseEntity {
                 : roundStartSeconds + ROUND_SECONDS;
     }
 
-    private LocalDateTime toActualTime(long elapsedSeconds) {
+    private Instant toActualTime(long elapsedSeconds) {
         return startedAt.plusSeconds(accumulatedPausedSeconds + elapsedSeconds);
     }
 
-    private long getCurrentPauseSeconds(LocalDateTime now) {
+    private long getCurrentPauseSeconds(Instant now) {
         if (status != PomodoroStatus.PAUSED || pausedAt == null) {
             return 0;
         }
@@ -207,8 +207,8 @@ public class Pomodoro extends BaseEntity {
         return Math.max(0, Duration.between(pausedAt, now).getSeconds());
     }
 
-    private long getElapsedSeconds(LocalDateTime now) {
-        LocalDateTime effectiveNow = status == PomodoroStatus.PAUSED && pausedAt != null ? pausedAt : now;
+    private long getElapsedSeconds(Instant now) {
+        Instant effectiveNow = status == PomodoroStatus.PAUSED && pausedAt != null ? pausedAt : now;
         long rawElapsedSeconds = Math.max(0, Duration.between(startedAt, effectiveNow).getSeconds());
 
         return Math.max(0, rawElapsedSeconds - accumulatedPausedSeconds);

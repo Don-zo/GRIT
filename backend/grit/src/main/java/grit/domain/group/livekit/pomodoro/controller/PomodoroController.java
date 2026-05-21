@@ -9,7 +9,7 @@ import grit.domain.member.service.MemberService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -100,7 +100,7 @@ public class PomodoroController {
         ));
     }
 
-    private LocalDateTime now() {
-        return LocalDateTime.now(clock);
+    private Instant now() {
+        return Instant.now(clock);
     }
 }

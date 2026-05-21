@@ -3,22 +3,22 @@ package grit.domain.group.livekit.pomodoro.dto;
 import grit.domain.group.livekit.pomodoro.entity.Pomodoro;
 import grit.domain.group.livekit.pomodoro.entity.PomodoroPhase;
 import grit.domain.group.livekit.pomodoro.entity.PomodoroStatus;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record PomodoroResponseDto(
         PomodoroStatus status,
         PomodoroPhase phase,
-        LocalDateTime serverNow,
-        LocalDateTime phaseStartedAt,
-        LocalDateTime phaseEndsAt,
-        LocalDateTime pausedAt,
+        Instant serverNow,
+        Instant phaseStartedAt,
+        Instant phaseEndsAt,
+        Instant pausedAt,
         Integer focusMinutes,
         Integer breakMinutes,
         Integer currentRound,
         Integer totalRounds
 ) {
 
-    public static PomodoroResponseDto from(Pomodoro pomodoro, LocalDateTime serverNow) {
+    public static PomodoroResponseDto from(Pomodoro pomodoro, Instant serverNow) {
         return new PomodoroResponseDto(
                 pomodoro.getCurrentStatus(serverNow),
                 pomodoro.getCurrentPhase(serverNow),
@@ -33,7 +33,7 @@ public record PomodoroResponseDto(
         );
     }
 
-    public static PomodoroResponseDto fromNullable(Pomodoro pomodoro, LocalDateTime serverNow) {
+    public static PomodoroResponseDto fromNullable(Pomodoro pomodoro, Instant serverNow) {
         if (pomodoro == null) {
             return idle(serverNow);
         }
@@ -41,7 +41,7 @@ public record PomodoroResponseDto(
         return from(pomodoro, serverNow);
     }
 
-    public static PomodoroResponseDto idle(LocalDateTime serverNow) {
+    public static PomodoroResponseDto idle(Instant serverNow) {
         return new PomodoroResponseDto(
                 PomodoroStatus.IDLE,
                 null,

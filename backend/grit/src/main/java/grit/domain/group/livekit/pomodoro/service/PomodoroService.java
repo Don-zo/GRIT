@@ -9,7 +9,7 @@ import grit.domain.member.entity.Member;
 import grit.global.exception.AccessDeniedException;
 import grit.global.exception.EntityNotFoundException;
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -45,7 +45,7 @@ public class PomodoroService {
                     .build();
         }
 
-        pomodoro.start(LocalDateTime.now(clock), focusMinutes, totalRounds);
+        pomodoro.start(Instant.now(clock), focusMinutes, totalRounds);
 
         Pomodoro savedPomodoro = pomodoroRepository.saveAndFlush(pomodoro);
         sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
@@ -59,7 +59,7 @@ public class PomodoroService {
         checkPermission(member, group);
 
         Pomodoro pomodoro = findByGroup(group);
-        pomodoro.pause(LocalDateTime.now(clock));
+        pomodoro.pause(Instant.now(clock));
         Pomodoro savedPomodoro = pomodoroRepository.saveAndFlush(pomodoro);
         sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
 
@@ -72,7 +72,7 @@ public class PomodoroService {
         checkPermission(member, group);
 
         Pomodoro pomodoro = findByGroup(group);
-        pomodoro.resume(LocalDateTime.now(clock));
+        pomodoro.resume(Instant.now(clock));
         Pomodoro savedPomodoro = pomodoroRepository.saveAndFlush(pomodoro);
         sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
 

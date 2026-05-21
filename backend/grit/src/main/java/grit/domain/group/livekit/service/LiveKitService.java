@@ -15,7 +15,7 @@ import io.livekit.server.RoomName;
 import io.livekit.server.RoomServiceClient;
 import jakarta.annotation.PostConstruct;
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import livekit.LivekitModels.DataPacket.Kind;
@@ -77,7 +77,7 @@ public class LiveKitService {
     }
 
     public void sendPomodoroSync(Member member, Group group, Pomodoro pomodoro) {
-        LocalDateTime serverNow = LocalDateTime.now(clock);
+        Instant serverNow = Instant.now(clock);
         Map<String, Object> timer = new LinkedHashMap<>();
         timer.put("status", pomodoro.getCurrentStatus(serverNow).name());
         timer.put("phase", pomodoro.getCurrentPhase(serverNow));
