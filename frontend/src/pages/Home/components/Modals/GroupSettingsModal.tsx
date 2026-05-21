@@ -26,6 +26,7 @@ export default function GroupSettingsModal({
   const [baseGroupImage, setBaseGroupImage] = useState(initialImage);
   const [groupName, setGroupName] = useState(initialName);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
 
   const { notify } = useToastContext();
 
@@ -42,11 +43,13 @@ export default function GroupSettingsModal({
     setBaseGroupImage(groupInfo.imageUrl ?? "");
     setGroupName(groupInfo.name);
     setImageFile(null);
+    setIsImageRemoved(false);
   }, [open, groupInfo]);
 
   const handleClose = () => {
     setGroupName(baseGroupName);
     setImageFile(null);
+    setIsImageRemoved(false);
     onClose();
   };
 
@@ -66,9 +69,13 @@ export default function GroupSettingsModal({
             imageName,
           });
         }
-        return groupApi.update(groupCode, {
+        const payload: { name: string; imageName?: string | null } = {
           name: trimmedGroupName,
-        });
+        };
+        if (isImageRemoved) {
+          payload.imageName = null;
+        }
+        return groupApi.update(groupCode, payload);
       },
 
       onSuccess: async () => {
@@ -123,56 +130,61 @@ export default function GroupSettingsModal({
     <Modal isOpen={open} onClose={handleClose}>
       <Modal.Overlay />
       <Modal.Content>
-        <Modal.CloseButton />
+        <div onClick={(e) => e.stopPropagation()}>
+          <Modal.CloseButton />
 
-        <Modal.Header className="flex flex-col items-center">
-          <Modal.Title />
-        </Modal.Header>
+          <Modal.Header className="flex flex-col items-center">
+            <Modal.Title />
+          </Modal.Header>
 
-        <Modal.Body className="flex flex-col items-center pb-6">
-          <ImageUploader
-            size={140}
-            initialImage={baseGroupImage}
-            onImageChange={(file) => setImageFile(file)}
-          />
-
-          <div className="mx-auto mt-6 w-full max-w-[320px]">
-            <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
-              그룹 이름
-            </label>
-
-            <input
-              type="text"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              className="h-12 w-full rounded-lg bg-white px-4 text-sm text-gray-900 outline-none"
-              placeholder="그룹 이름을 입력하세요"
+          <Modal.Body className="flex flex-col items-center pb-6">
+            <ImageUploader
+              size={140}
+              initialImage={baseGroupImage}
+              onImageChange={(file) => {
+                setImageFile(file);
+                setIsImageRemoved(file === null);
+              }}
             />
 
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isGroupInfoSaving || isGroupSignoutPending}
-                className="h-12 w-full rounded-lg bg-[#3E7358] text-sm font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
-              >
-                {isGroupInfoSaving ? "저장 중..." : "그룹 정보 저장하기"}
-              </button>
-              <button
-                type="button"
-                onClick={handleSignoutGroup}
-                disabled={isGroupInfoSaving || isGroupSignoutPending}
-                className="h-12 w-full rounded-lg bg-red-600 text-sm font-semibold text-white hover:bg-red-700 transition disabled:opacity-50"
-              >
-                {isGroupSignoutPending ? "탈퇴 중..." : "탈퇴하기"}
-              </button>
-            </div>
+            <div className="mx-auto mt-6 w-full max-w-[320px]">
+              <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
+                그룹 이름
+              </label>
 
-            <p className="mt-4 text-center text-xs text-[#D6FDE5]">
-              그룹에 참여 가능한 인원은 최대 8명입니다.
-            </p>
-          </div>
-        </Modal.Body>
+              <input
+                type="text"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                className="h-12 w-full rounded-lg bg-white px-4 text-sm text-gray-900 outline-none"
+                placeholder="그룹 이름을 입력하세요"
+              />
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isGroupInfoSaving || isGroupSignoutPending}
+                  className="h-12 w-full rounded-lg bg-[#3E7358] text-sm font-semibold text-[#EDFFF4] hover:bg-emerald-800 transition disabled:opacity-50"
+                >
+                  {isGroupInfoSaving ? "저장 중..." : "그룹 정보 저장하기"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSignoutGroup}
+                  disabled={isGroupInfoSaving || isGroupSignoutPending}
+                  className="h-12 w-full rounded-lg bg-red-600 text-sm font-semibold text-white hover:bg-red-700 transition disabled:opacity-50"
+                >
+                  {isGroupSignoutPending ? "탈퇴 중..." : "탈퇴하기"}
+                </button>
+              </div>
+
+              <p className="mt-4 text-center text-xs text-[#D6FDE5]">
+                그룹에 참여 가능한 인원은 최대 8명입니다.
+              </p>
+            </div>
+          </Modal.Body>
+        </div>
       </Modal.Content>
     </Modal>
   );

@@ -57,8 +57,8 @@ const SignupPage = () => {
                   provider="google"
                   onClick={handleGoogleLogin}
                 />
-                <SocialLoginButton provider="naver" />
-                <SocialLoginButton provider="kakao" />
+                {/* <SocialLoginButton provider="naver" />
+                <SocialLoginButton provider="kakao" /> */}
               </div>
 
               {/* <p className="mt-6 w-[320px] max-w-[92vw] text-center text-[11px] text-[#6b8a7a]">

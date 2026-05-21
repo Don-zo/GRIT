@@ -25,30 +25,28 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
       case 1:
         return "grid-cols-1";
       case 2:
-        return "grid-cols-2 grid-rows-1 py-20";
+        return "grid-cols-2 grid-rows-1 py-10";
       case 3:
-        return "grid-cols-8";
+        return "grid-cols-8 grid-rows-2";
       case 4:
         return "grid-cols-2 grid-rows-2";
       case 5:
-        return "grid-cols-6";
+        return "grid-cols-6 grid-rows-2";
       case 6:
         return "grid-cols-6 grid-rows-3";
-      case 7:
-        return "grid-cols-5 grid-rows-6";
-      case 8:
-        return "grid-cols-9 grid-rows-3";
+      // case 7:
+      //   return "grid-cols-5 grid-rows-6";
+      // case 8:
+      //   return "grid-cols-9 grid-rows-3";
       default:
         return "grid-cols-3";
     }
   })();
 
-  const verticalPadding = count === 5 ? "py-18" : "py-8";
-
   const pomodoroPositionClass = (() => {
     switch (count) {
       case 1:
-        return "bottom-1 right-12";
+        return "-bottom-5 -right-5";
       case 2:
         return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
       case 3:
@@ -58,21 +56,19 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
       case 5:
         return "bottom-25 left-1/2 -translate-x-1/2";
       case 6:
-        return "bottom-55 right-115";
-      case 7:
-        return "top-1/2 left-113 -translate-y-1/2";
-      case 8:
-        return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
+        return "bottom-48 right-88";
+      // case 7:
+      //   return "top-1/2 left-113 -translate-y-1/2";
+      // case 8:
+      //   return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
       default:
         return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
     }
   })();
 
   return (
-    <div
-      className={`relative w-full h-full bg-gray-darkest px-18 ${verticalPadding}`}
-    >
-      <div className={`grid ${gridClass} gap-7 w-full h-full`}>
+    <div className={`relative w-full h-full bg-gray-darkest py-2`}>
+      <div className={`grid ${gridClass} gap-4 w-full h-full`}>
         {layout.map((box, index) => {
           const participant = participants[index];
 
