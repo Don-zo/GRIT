@@ -1,35 +1,53 @@
 package grit.domain.group.livekit.pomodoro.dto;
 
 import grit.domain.group.livekit.pomodoro.entity.Pomodoro;
+import grit.domain.group.livekit.pomodoro.entity.PomodoroPhase;
 import grit.domain.group.livekit.pomodoro.entity.PomodoroStatus;
 import java.time.LocalDateTime;
 
 public record PomodoroResponseDto(
-        Long id,
         PomodoroStatus status,
-        LocalDateTime startedAt,
+        PomodoroPhase phase,
+        LocalDateTime serverNow,
+        LocalDateTime phaseStartedAt,
+        LocalDateTime phaseEndsAt,
+        LocalDateTime pausedAt,
         Integer focusMinutes,
-        Integer totalRounds,
+        Integer breakMinutes,
         Integer currentRound,
-        Long version
+        Integer totalRounds
 ) {
 
-    public static PomodoroResponseDto from(Pomodoro pomodoro) {
+    public static PomodoroResponseDto from(Pomodoro pomodoro, LocalDateTime serverNow) {
         return new PomodoroResponseDto(
-                pomodoro.getId(),
-                pomodoro.getStatus(),
-                pomodoro.getStartedAt(),
+                pomodoro.getCurrentStatus(serverNow),
+                pomodoro.getCurrentPhase(serverNow),
+                serverNow,
+                pomodoro.getPhaseStartedAt(serverNow),
+                pomodoro.getPhaseEndsAt(serverNow),
+                pomodoro.getPausedAt(),
                 pomodoro.getFocusMinutes(),
-                pomodoro.getTotalRounds(),
-                pomodoro.getCurrentRound(),
-                pomodoro.getVersion()
+                pomodoro.getBreakMinutes(),
+                pomodoro.getCurrentRound(serverNow),
+                pomodoro.getTotalRounds()
         );
     }
 
-    public static PomodoroResponseDto idle() {
+    public static PomodoroResponseDto fromNullable(Pomodoro pomodoro, LocalDateTime serverNow) {
+        if (pomodoro == null) {
+            return idle(serverNow);
+        }
+
+        return from(pomodoro, serverNow);
+    }
+
+    public static PomodoroResponseDto idle(LocalDateTime serverNow) {
         return new PomodoroResponseDto(
-                null,
                 PomodoroStatus.IDLE,
+                null,
+                serverNow,
+                null,
+                null,
                 null,
                 null,
                 null,
