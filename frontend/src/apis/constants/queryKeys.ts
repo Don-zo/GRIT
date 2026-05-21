@@ -27,4 +27,8 @@ export const QUERY_KEYS = {
     all: ["todoCategories"] as const,
     byUser: (userId: number) => ["todoCategories", "user", userId] as const,
   },
+  livekit: {
+    reactions: (groupCode: string) =>
+      ["livekit", "reactions", groupCode] as const,
+  },
 } as const;

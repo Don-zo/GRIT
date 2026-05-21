@@ -26,6 +26,10 @@ export const ENDPOINTS = {
   },
   LIVEKIT: {
     TOKEN: (groupCode: string) => `/api/group/${groupCode}/livekit/token`,
+    REACTIONS: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/reactions`,
+    REACTION: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/reaction`,
   },
   TODO: {
     BY_ID: (todoId: number) => `/api/members/me/todos/${todoId}`,
