@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.time.Duration;
@@ -68,9 +67,6 @@ public class Pomodoro extends BaseEntity {
     @Max(6)
     @Column(nullable = false)
     private int totalRounds;
-
-    @Version
-    private Long version;
 
     public void start(Instant startedAt, int focusMinutes, int totalRounds) {
         this.status = PomodoroStatus.RUNNING;

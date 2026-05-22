@@ -55,7 +55,7 @@ public class PomodoroService {
 
     @Transactional
     public Pomodoro pause(Member member, String groupCode) {
-        Group group = groupService.findGroupByCode(groupCode);
+        Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
         Pomodoro pomodoro = findByGroup(group);
@@ -68,7 +68,7 @@ public class PomodoroService {
 
     @Transactional
     public Pomodoro resume(Member member, String groupCode) {
-        Group group = groupService.findGroupByCode(groupCode);
+        Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
         Pomodoro pomodoro = findByGroup(group);
@@ -81,7 +81,7 @@ public class PomodoroService {
 
     @Transactional
     public Pomodoro stop(Member member, String groupCode) {
-        Group group = groupService.findGroupByCode(groupCode);
+        Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
         Pomodoro pomodoro = findByGroup(group);
