@@ -131,6 +131,12 @@ public class GroupService {
                 .orElseThrow(() -> new EntityNotFoundException("유효하지 않은 그룹 코드입니다."));
     }
 
+    @Transactional
+    public Group findGroupByCodeForUpdate(String groupCode) {
+        return groupRepository.findLockedByCode(groupCode)
+                .orElseThrow(() -> new EntityNotFoundException("유효하지 않은 그룹 코드입니다."));
+    }
+
     @Transactional(readOnly = true)
     public List<Group> getMyGroups(Member member) {
         return memberGroupRepository.findAllByMember(member).stream()

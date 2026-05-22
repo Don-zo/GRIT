@@ -60,6 +60,148 @@
             color: var(--text-secondary);
         }
 
+        .pomodoro-panel {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        .pomodoro-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 132px;
+        }
+
+        .pomodoro-progress {
+            --pomodoro-progress: 0;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            padding: 3px;
+            background:
+                conic-gradient(var(--accent) calc(var(--pomodoro-progress) * 1%), rgba(255, 255, 255, 0.1) 0);
+            flex-shrink: 0;
+        }
+
+        .pomodoro-progress.break {
+            background:
+                conic-gradient(var(--success) calc(var(--pomodoro-progress) * 1%), rgba(255, 255, 255, 0.1) 0);
+        }
+
+        .pomodoro-progress.paused {
+            background:
+                conic-gradient(var(--warning) calc(var(--pomodoro-progress) * 1%), rgba(255, 255, 255, 0.1) 0);
+        }
+
+        .pomodoro-progress-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+        }
+
+        .pomodoro-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 66px;
+        }
+
+        .pomodoro-time {
+            font-size: 15px;
+            line-height: 1;
+            font-weight: 800;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .pomodoro-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .pomodoro-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pomodoro-field {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .pomodoro-field input {
+            width: 54px;
+            height: 30px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: rgba(0, 0, 0, 0.18);
+            color: var(--text-primary);
+            font: inherit;
+            text-align: center;
+            outline: none;
+        }
+
+        .pomodoro-field input:focus {
+            border-color: rgba(99, 102, 241, 0.7);
+        }
+
+        .pomodoro-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pomodoro-btn {
+            height: 30px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            font: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .pomodoro-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .pomodoro-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pomodoro-btn.primary {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--accent);
+            border-color: rgba(99, 102, 241, 0.35);
+        }
+
+        .pomodoro-btn.danger {
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
         .status-dot {
             width: 8px;
             height: 8px;
@@ -524,6 +666,40 @@
         .error-box.show {
             display: block;
         }
+
+        @media (max-width: 900px) {
+            .top-bar {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pomodoro-panel {
+                order: 3;
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 620px) {
+            .pomodoro-panel,
+            .pomodoro-form {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .pomodoro-display {
+                width: 100%;
+            }
+
+            .pomodoro-form,
+            .pomodoro-actions {
+                width: 100%;
+            }
+
+            .pomodoro-actions button {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 
@@ -552,6 +728,36 @@
         <div class="top-bar-left">
             <h1>GRIT</h1>
             <span class="room-badge" id="room-badge">Room: -</span>
+        </div>
+        <div class="pomodoro-panel" id="pomodoro-panel">
+            <div class="pomodoro-display">
+                <div class="pomodoro-progress" id="pomodoro-progress" aria-hidden="true">
+                    <div class="pomodoro-progress-inner">
+                        <div class="pomodoro-time" id="pomodoro-time">--:--</div>
+                    </div>
+                </div>
+                <div class="pomodoro-text">
+                    <div class="pomodoro-meta" id="pomodoro-meta">대기 · 1/1</div>
+                </div>
+            </div>
+            <div class="pomodoro-form">
+                <label class="pomodoro-field">
+                    집중
+                    <input id="pomodoro-focus-minutes" type="number" min="1" max="60" step="1" value="25">
+                </label>
+                <label class="pomodoro-field">
+                    횟수
+                    <input id="pomodoro-total-rounds" type="number" min="1" max="6" step="1" value="4">
+                </label>
+                <div class="pomodoro-actions">
+                    <button class="pomodoro-btn primary" id="pomodoro-start-btn" type="button"
+                        onclick="startPomodoro()">시작</button>
+                    <button class="pomodoro-btn" id="pomodoro-pause-btn" type="button"
+                        onclick="pausePomodoro()">일시정지</button>
+                    <button class="pomodoro-btn danger" id="pomodoro-stop-btn" type="button"
+                        onclick="stopPomodoro()">정지</button>
+                </div>
+            </div>
         </div>
         <div class="status-bar">
             <div class="status-dot" id="status-dot"></div>
@@ -626,6 +832,21 @@
 
         // 리액션 타이머 관리 (참가자별 중복 방지)
         const reactionTimers = new Map();
+        let pomodoroState = {
+            status: 'IDLE',
+            phase: null,
+            serverNow: null,
+            serverSyncedAt: null,
+            focusEndsAt: null,
+            breakEndsAt: null,
+            pausedAt: null,
+            focusMinutes: 25,
+            breakMinutes: 35,
+            totalRounds: 4,
+            currentRound: 1,
+        };
+        let pomodoroPhaseRefreshInFlight = false;
+        let pomodoroTicker = null;
 
         const urlParams = new URLSearchParams(window.location.search);
         const groupCode = urlParams.get('groupCode');
@@ -667,6 +888,7 @@
 
             await fetchSupportedReactions();
             buildReactionPicker();
+            renderPomodoro();
         }
 
         // ────────────────────────────────────────
@@ -729,18 +951,354 @@
         // ────────────────────────────────────────
         // 리액션 수신 (LiveKit DataReceived)
         // ────────────────────────────────────────
-        function handleReactionReceived(payload) {
+        function handleRoomDataReceived(payload) {
             try {
                 const text = new TextDecoder().decode(payload);
                 const data = JSON.parse(text);
 
-                if (data.type !== 'reaction') return;
-                if (!data.emojiChar || !data.senderIdentity) return;
+                if (data.type === 'reaction') {
+                    handleReactionReceived(data);
+                    return;
+                }
 
-                showReactionOnTile(data.senderIdentity, data.emojiChar);
+                if (data.type === 'pomodoro.sync') {
+                    applyPomodoroState(data.timer);
+                }
             } catch (err) {
-                console.error('리액션 수신 파싱 오류:', err);
+                console.error('LiveKit 데이터 수신 파싱 오류:', err);
             }
+        }
+
+        function handleReactionReceived(data) {
+            const sender = data.senderIdentity || data.senderNickname;
+            if (!data.emojiChar || !sender) return;
+
+            showReactionOnTile(sender, data.emojiChar);
+        }
+
+        // ────────────────────────────────────────
+        // 뽀모도로 테스트 UI
+        // ────────────────────────────────────────
+        function applyPomodoroState(timer) {
+            if (!timer || !timer.status) return;
+
+            pomodoroState = {
+                ...pomodoroState,
+                ...timer,
+            };
+            if (timer.serverNow) {
+                pomodoroState.serverSyncedAt = Date.now();
+            }
+
+            const focusInput = document.getElementById('pomodoro-focus-minutes');
+            const roundsInput = document.getElementById('pomodoro-total-rounds');
+            if (timer.focusMinutes) focusInput.value = timer.focusMinutes;
+            if (timer.totalRounds) roundsInput.value = timer.totalRounds;
+
+            renderPomodoro();
+        }
+
+        function renderPomodoro() {
+            const timeEl = document.getElementById('pomodoro-time');
+            const metaEl = document.getElementById('pomodoro-meta');
+            const progressEl = document.getElementById('pomodoro-progress');
+            const startBtn = document.getElementById('pomodoro-start-btn');
+            const pauseBtn = document.getElementById('pomodoro-pause-btn');
+            const stopBtn = document.getElementById('pomodoro-stop-btn');
+
+            const viewState = getPomodoroViewState();
+            const status = viewState.status;
+
+            timeEl.textContent = getPomodoroTimeText(viewState);
+            metaEl.textContent = `${getPomodoroStatusLabel(status, viewState.phase)} · ${viewState.currentRound}/${viewState.totalRounds}`;
+            progressEl.style.setProperty('--pomodoro-progress', getPomodoroProgressPercent(viewState));
+            progressEl.classList.toggle('break', viewState.phase === 'BREAK');
+            progressEl.classList.toggle('paused', status === 'PAUSED');
+            if (viewState.shouldRefresh) {
+                refreshPomodoroAtPhaseEnd();
+            }
+
+            startBtn.disabled = !room || (status !== 'IDLE' && status !== 'FINISHED');
+            pauseBtn.textContent = status === 'PAUSED' ? '재개' : '일시정지';
+            pauseBtn.disabled = !room || (status !== 'RUNNING' && status !== 'BREAK' && status !== 'PAUSED');
+            stopBtn.disabled = !room || status === 'IDLE';
+
+            if ((status === 'RUNNING' || status === 'BREAK') && !pomodoroTicker) {
+                pomodoroTicker = setInterval(renderPomodoro, 1000);
+            }
+            if (status !== 'RUNNING' && status !== 'BREAK' && pomodoroTicker) {
+                clearInterval(pomodoroTicker);
+                pomodoroTicker = null;
+            }
+        }
+
+        function getPomodoroViewState() {
+            const status = pomodoroState.status || 'IDLE';
+            const focusMinutes = pomodoroState.focusMinutes || Number(document.getElementById('pomodoro-focus-minutes').value) || 25;
+            const breakMinutes = pomodoroState.breakMinutes ?? Math.max(0, 60 - focusMinutes);
+            const totalRounds = pomodoroState.totalRounds || Number(document.getElementById('pomodoro-total-rounds').value) || 1;
+            const currentRound = pomodoroState.currentRound || 1;
+            const fallbackPhase = pomodoroState.phase || getPhaseFromStatus(status);
+            const focusEndsAt = parsePomodoroTime(pomodoroState.focusEndsAt);
+            const breakEndsAt = parsePomodoroTime(pomodoroState.breakEndsAt);
+
+            if (status === 'IDLE' || status === 'FINISHED' || breakEndsAt === null) {
+                return {
+                    status,
+                    phase: fallbackPhase,
+                    focusMinutes,
+                    breakMinutes,
+                    totalRounds,
+                    currentRound: status === 'FINISHED' ? totalRounds : currentRound,
+                    remainingSeconds: null,
+                    shouldRefresh: false,
+                };
+            }
+
+            const phaseReferenceTime = status === 'PAUSED' ? getPomodoroSyncedServerNow() : getPomodoroNow();
+            const phase = getPomodoroPhaseByTime(status, fallbackPhase, phaseReferenceTime, focusEndsAt, breakEndsAt, breakMinutes);
+            const currentPhaseEndsAt = getPomodoroPhaseEndsAt(phase, focusEndsAt, breakEndsAt);
+            if (currentPhaseEndsAt === null) {
+                return {
+                    status,
+                    phase,
+                    focusMinutes,
+                    breakMinutes,
+                    totalRounds,
+                    currentRound,
+                    remainingSeconds: null,
+                    shouldRefresh: false,
+                };
+            }
+
+            const remainingSeconds = Math.max(0, Math.ceil((currentPhaseEndsAt - phaseReferenceTime) / 1000));
+            const shouldRefresh = breakEndsAt !== null
+                ? phaseReferenceTime >= breakEndsAt
+                : remainingSeconds <= 0;
+
+            return {
+                status,
+                phase,
+                focusMinutes,
+                breakMinutes,
+                totalRounds,
+                currentRound,
+                remainingSeconds,
+                shouldRefresh: status !== 'PAUSED' && shouldRefresh,
+            };
+        }
+
+        function parsePomodoroTime(value) {
+            if (!value) return null;
+
+            const time = new Date(value).getTime();
+            return Number.isNaN(time) ? null : time;
+        }
+
+        function getPomodoroPhaseByTime(status, fallbackPhase, now, focusEndsAt, breakEndsAt, breakMinutes) {
+            if (status === 'PAUSED') return fallbackPhase;
+
+            if (focusEndsAt !== null && breakEndsAt !== null) {
+                if (now < focusEndsAt) return 'FOCUS';
+                if (breakMinutes > 0 && now < breakEndsAt) return 'BREAK';
+            }
+
+            return fallbackPhase;
+        }
+
+        function getPomodoroPhaseEndsAt(phase, focusEndsAt, breakEndsAt) {
+            if (phase === 'BREAK' && breakEndsAt !== null) return breakEndsAt;
+            if (phase === 'FOCUS' && focusEndsAt !== null) return focusEndsAt;
+            return null;
+        }
+
+        function getPomodoroProgressPercent(viewState) {
+            const { status, phase, focusMinutes, breakMinutes, remainingSeconds } = viewState;
+
+            if (status === 'FINISHED') return 100;
+            if (status === 'IDLE' || remainingSeconds === null) return 0;
+
+            const durationSeconds = getPomodoroPhaseDurationSeconds(phase, focusMinutes, breakMinutes);
+            if (durationSeconds <= 0) return 100;
+
+            const boundedRemainingSeconds = Math.min(durationSeconds, Math.max(0, remainingSeconds));
+            return Math.round((boundedRemainingSeconds / durationSeconds) * 100);
+        }
+
+        function getPomodoroPhaseDurationSeconds(phase, focusMinutes, breakMinutes) {
+            if (phase === 'BREAK') {
+                return Math.max(0, breakMinutes * 60);
+            }
+
+            return focusMinutes * 60;
+        }
+
+        function getPomodoroTimeText(viewState) {
+            const { status, focusMinutes, remainingSeconds } = viewState;
+
+            if (status === 'IDLE') return '--:--';
+            if (status === 'FINISHED') return '완료';
+
+            if (remainingSeconds === null) {
+                return status === 'PAUSED' ? '일시정지' : `${String(focusMinutes).padStart(2, '0')}:00`;
+            }
+
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function getPomodoroNow() {
+            if (!pomodoroState.serverNow || !pomodoroState.serverSyncedAt) {
+                return Date.now();
+            }
+
+            const serverNow = new Date(pomodoroState.serverNow).getTime();
+            return serverNow + (Date.now() - pomodoroState.serverSyncedAt);
+        }
+
+        function getPomodoroSyncedServerNow() {
+            if (!pomodoroState.serverNow) {
+                return Date.now();
+            }
+
+            return new Date(pomodoroState.serverNow).getTime();
+        }
+
+        function getPomodoroStatusLabel(status, phase) {
+            if (status === 'PAUSED') {
+                const phaseLabel = getPomodoroPhaseLabel(phase);
+                return phaseLabel ? `${phaseLabel} 일시정지` : '일시정지';
+            }
+
+            if (status === 'RUNNING' || status === 'BREAK') {
+                return getPomodoroPhaseLabel(phase) || getPomodoroPhaseLabel(getPhaseFromStatus(status));
+            }
+
+            const labels = {
+                IDLE: '대기',
+                FINISHED: '완료',
+            };
+            return labels[status] || status;
+        }
+
+        function getPhaseFromStatus(status) {
+            if (status === 'RUNNING') return 'FOCUS';
+            if (status === 'BREAK') return 'BREAK';
+            return null;
+        }
+
+        function getPomodoroPhaseLabel(phase) {
+            const labels = {
+                FOCUS: '집중',
+                BREAK: '휴식',
+            };
+            return labels[phase] || '';
+        }
+
+        function getPomodoroRequestBody() {
+            const focusMinutes = Number(document.getElementById('pomodoro-focus-minutes').value);
+            const totalRounds = Number(document.getElementById('pomodoro-total-rounds').value);
+
+            if (!Number.isInteger(focusMinutes) || focusMinutes < 1 || focusMinutes > 60) {
+                throw new Error('집중 시간은 1~60분 사이여야 합니다.');
+            }
+            if (!Number.isInteger(totalRounds) || totalRounds < 1 || totalRounds > 6) {
+                throw new Error('횟수는 1~6회 사이여야 합니다.');
+            }
+
+            return { focusMinutes, totalRounds };
+        }
+
+        async function startPomodoro() {
+            if (!room) return;
+
+            try {
+                await requestPomodoro('/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(getPomodoroRequestBody()),
+                });
+            } catch (err) {
+                toast.error(err.message);
+            }
+        }
+
+        async function pausePomodoro() {
+            if (!room) return;
+
+            try {
+                const status = getPomodoroViewState().status;
+                await requestPomodoro(status === 'PAUSED' ? '/resume' : '/pause', { method: 'POST' });
+            } catch (err) {
+                toast.error(err.message);
+            }
+        }
+
+        async function stopPomodoro() {
+            if (!room) return;
+
+            try {
+                await requestPomodoro('/stop', { method: 'POST' });
+            } catch (err) {
+                toast.error(err.message);
+            }
+        }
+
+        async function requestPomodoro(path, options) {
+            setPomodoroControlsDisabled(true);
+            try {
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/pomodoro${path}`, options);
+                if (!res.ok) {
+                    const error = await readErrorMessage(res);
+                    throw new Error(error || '뽀모도로 요청에 실패했습니다.');
+                }
+
+                const data = await res.json();
+                applyPomodoroState(data);
+            } finally {
+                setPomodoroControlsDisabled(false);
+                renderPomodoro();
+            }
+        }
+
+        async function fetchPomodoroState() {
+            try {
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/pomodoro`);
+                if (!res.ok) return;
+
+                const data = await res.json();
+                applyPomodoroState(data);
+            } catch (err) {
+                console.error('뽀모도로 상태 조회 오류:', err);
+            }
+        }
+
+        async function refreshPomodoroAtPhaseEnd() {
+            if (pomodoroPhaseRefreshInFlight) return;
+
+            pomodoroPhaseRefreshInFlight = true;
+            try {
+                await fetchPomodoroState();
+            } finally {
+                pomodoroPhaseRefreshInFlight = false;
+            }
+        }
+
+        async function readErrorMessage(res) {
+            try {
+                const data = await res.json();
+                return data.message;
+            } catch (err) {
+                return '';
+            }
+        }
+
+        function setPomodoroControlsDisabled(disabled) {
+            document.getElementById('pomodoro-start-btn').disabled = disabled;
+            document.getElementById('pomodoro-pause-btn').disabled = disabled;
+            document.getElementById('pomodoro-stop-btn').disabled = disabled;
         }
 
         // ────────────────────────────────────────
@@ -835,7 +1393,9 @@
                 })
                 .on(RoomEvent.Disconnected, () => {
                     updateStatus('연결 끊김', '');
+                    room = null;
                     clearVideoGrid();
+                    renderPomodoro();
                 })
                 .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
                     if (track.kind === 'video' || track.kind === 'audio') {
@@ -857,10 +1417,12 @@
                     checkEmptyGrid();
                 })
                 .on(RoomEvent.DataReceived, (payload, participant, kind) => {
-                    handleReactionReceived(payload);
+                    handleRoomDataReceived(payload);
                 });
 
             await room.connect(WS_URL, token);
+            await fetchPomodoroState();
+            renderPomodoro();
         }
 
         // ────────────────────────────────────────
