@@ -18,8 +18,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String LIVEKIT_WEBHOOK_PATH = "/api/livekit/webhook";
+
     private final JwtProvider jwtProvider;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        return LIVEKIT_WEBHOOK_PATH.equals(request.getServletPath());
+    }
 
     @Override
     protected void doFilterInternal(
