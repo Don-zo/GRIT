@@ -837,6 +837,17 @@ textarea.form-input {
     color: var(--text-secondary);
 }
 
+.group-live-status {
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.group-live-status.is-live {
+    color: #fca5a5;
+}
+
 .detail-row {
     display: flex;
     justify-content: space-between;
@@ -1624,6 +1635,34 @@ textarea.form-input {
     justify-content: center;
     overflow: hidden;
     position: relative;
+}
+
+.live-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 24px;
+    padding: 4px 9px;
+    border-radius: var(--radius-full);
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.live-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: white;
 }
 
 .group-card-image img {

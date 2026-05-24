@@ -203,9 +203,15 @@ function renderGroupList(groups) {
         return;
     }
 
-    container.innerHTML = groups.map(group => `
-        <div class="group-card" onclick="openDetailModal('${escapeAttr(group.groupCode)}', '${escapeAttr(group.name)}', ${group.memberCount}, '${escapeAttr(group.imageUrl || '')}')">
+    container.innerHTML = groups.map(group => {
+        const liveParticipantCount = Number(group.liveParticipantCount || 0);
+        const memberCount = Number(group.memberCount || 0);
+        const isLive = Boolean(group.isLive);
+
+        return `
+        <div class="group-card" onclick="openDetailModal('${escapeAttr(group.groupCode)}', '${escapeAttr(group.name)}', ${memberCount}, '${escapeAttr(group.imageUrl || '')}', ${isLive}, ${liveParticipantCount})">
             <div class="group-card-image">
+                ${isLive ? `<span class="live-badge">LIVE ${liveParticipantCount}/${memberCount}</span>` : ''}
                 ${group.imageUrl
                     ? `<img src="${escapeAttr(group.imageUrl)}" alt="${escapeAttr(group.name)}" onerror="this.outerHTML='<div class=\\'group-card-placeholder\\'>${escapeHtml(group.name.charAt(0))}</div>'" />`
                     : `<div class="group-card-placeholder">${escapeHtml(group.name.charAt(0))}</div>`
@@ -221,13 +227,14 @@ function renderGroupList(groups) {
                             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         </svg>
-                        <span>${group.memberCount}명</span>
+                        <span>${liveParticipantCount}/${memberCount}</span>
                     </div>
                     <span class="invite-code">${escapeHtml(group.groupCode)}</span>
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function escapeHtml(str) {
@@ -354,13 +361,14 @@ document.getElementById('invite-code').addEventListener('keydown', (e) => {
 
 let currentGroupCode = null;
 
-function openDetailModal(groupCode, name, memberCount, imageUrl) {
+function openDetailModal(groupCode, name, memberCount, imageUrl, isLive, liveParticipantCount) {
     currentGroupCode = groupCode;
     hideError('detail-error');
 
     document.getElementById('detail-name').textContent = name;
     document.getElementById('detail-member-count').textContent = `멤버 ${memberCount}명`;
     document.getElementById('detail-invite-code').textContent = groupCode;
+    renderDetailLiveStatus(Boolean(isLive), Number(liveParticipantCount || 0), Number(memberCount || 0));
 
     const imageEl = document.getElementById('detail-image');
     // Save raw image URL for Edit modal
@@ -373,6 +381,12 @@ function openDetailModal(groupCode, name, memberCount, imageUrl) {
     }
 
     openModal('detail-modal');
+}
+
+function renderDetailLiveStatus(isLive, liveParticipantCount, memberCount) {
+    const statusEl = document.getElementById('detail-live-status');
+    statusEl.className = `group-live-status${isLive ? ' is-live' : ''}`;
+    statusEl.textContent = isLive ? `Live ${liveParticipantCount}/${memberCount} 참여 중` : `Live 아님 0/${memberCount}`;
 }
 
 document.getElementById('detail-close-btn').addEventListener('click', () => closeModal('detail-modal'));
