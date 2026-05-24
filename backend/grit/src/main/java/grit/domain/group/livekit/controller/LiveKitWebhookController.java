@@ -44,13 +44,8 @@ public class LiveKitWebhookController {
         WebhookEvent event;
         try {
             event = receiveWebhook(body, authorizationHeader);
-        } catch (IllegalArgumentException | InvalidProtocolBufferException e) {
+        } catch (InvalidProtocolBufferException | RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (RuntimeException e) {
-            if (isJwtVerificationException(e)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-            throw e;
         }
 
         liveKitRoomStatusService.applyWebhookEvent(event);
@@ -59,9 +54,5 @@ public class LiveKitWebhookController {
 
     private WebhookEvent receiveWebhook(String body, String authorizationHeader) throws InvalidProtocolBufferException {
         return webhookReceiver.receive(body, authorizationHeader);
-    }
-
-    private boolean isJwtVerificationException(RuntimeException e) {
-        return e.getClass().getName().startsWith("com.auth0.jwt.exceptions.");
     }
 }
