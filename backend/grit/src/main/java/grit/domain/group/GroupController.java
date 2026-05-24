@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -96,11 +97,16 @@ public class GroupController {
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
-        List<GroupInfoResponseDto> response = groupService.getMyGroups(member)
-                .stream()
-                .map(this::toResponseDto)
-                .toList();
-        return ResponseEntity.ok(response);
+        List<Group> groups = groupService.getMyGroups(member);
+        Map<String, Integer> liveParticipantCounts = liveKitRoomStatusService.getParticipantCounts(
+                groups.stream()
+                        .map(Group::getCode)
+                        .toList()
+        );
+
+        return ResponseEntity.ok(groups.stream()
+                .map(group -> toResponseDto(group, liveParticipantCounts.getOrDefault(group.getCode(), 0)))
+                .toList());
     }
 
     @Operation(summary = "그룹 정보 수정", description = "그룹의 정보(이름, 이미지 경로)를 수정합니다.")
@@ -147,11 +153,15 @@ public class GroupController {
     }
 
     private GroupInfoResponseDto toResponseDto(Group group) {
+        return toResponseDto(group, liveKitRoomStatusService.getParticipantCount(group.getCode()));
+    }
+
+    private GroupInfoResponseDto toResponseDto(Group group, int liveParticipantCount) {
         String imageUrl = null;
         if (group.getImageName() != null) {
             imageUrl = s3Service.resolveUrl(S3Directory.GROUP_IMAGES, group.getImageName().toString());
         }
-        int liveParticipantCount = liveKitRoomStatusService.getParticipantCount(group.getCode());
+
         return new GroupInfoResponseDto(
                 group.getName(),
                 group.getCode(),

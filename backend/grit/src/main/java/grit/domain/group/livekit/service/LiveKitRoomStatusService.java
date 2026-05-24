@@ -1,8 +1,15 @@
 package grit.domain.group.livekit.service;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import livekit.LivekitWebhook.WebhookEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +23,7 @@ public class LiveKitRoomStatusService {
     private static final String EVENT_PARTICIPANT_JOINED = "participant_joined";
     private static final String EVENT_PARTICIPANT_LEFT = "participant_left";
     private static final String EVENT_ROOM_FINISHED = "room_finished";
+    private static final Duration STATUS_TTL = Duration.ofHours(24);
 
     private final StringRedisTemplate redisTemplate;
 
@@ -25,16 +33,19 @@ public class LiveKitRoomStatusService {
         }
 
         String roomName = event.getRoom().getName();
-        if (!roomName.startsWith(ROOM_NAME_PREFIX)) {
+        if (!roomName.startsWith(ROOM_NAME_PREFIX) || roomName.length() == ROOM_NAME_PREFIX.length()) {
             return;
         }
 
-        switch (event.getEvent()) {
-            case EVENT_PARTICIPANT_JOINED -> addParticipant(roomName, event);
-            case EVENT_PARTICIPANT_LEFT -> removeParticipant(roomName, event);
-            case EVENT_ROOM_FINISHED -> redisTemplate.delete(participantsKey(roomName));
-            default -> {
+        try {
+            switch (event.getEvent()) {
+                case EVENT_PARTICIPANT_JOINED -> addParticipant(roomName, event);
+                case EVENT_PARTICIPANT_LEFT -> removeParticipant(roomName, event);
+                case EVENT_ROOM_FINISHED -> redisTemplate.delete(participantsKey(roomName));
+                default -> {
+                }
             }
+        } catch (DataAccessException ignored) {
         }
     }
 
@@ -42,9 +53,37 @@ public class LiveKitRoomStatusService {
         try {
             Long count = redisTemplate.opsForSet().size(participantsKey(roomName(groupCode)));
             return count == null ? 0 : count.intValue();
-        } catch (DataAccessException e) {
+        } catch (DataAccessException ignored) {
             return 0;
         }
+    }
+
+    public Map<String, Integer> getParticipantCounts(Collection<String> groupCodes) {
+        Map<String, Integer> participantCounts = new LinkedHashMap<>();
+        if (groupCodes.isEmpty()) {
+            return participantCounts;
+        }
+
+        List<String> codes = groupCodes.stream().toList();
+        try {
+            List<Object> results = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+                for (String groupCode : codes) {
+                    String key = participantsKey(roomName(groupCode));
+                    connection.setCommands().sCard(key.getBytes(StandardCharsets.UTF_8));
+                }
+                return null;
+            });
+
+            for (int i = 0; i < codes.size(); i++) {
+                Object result = results.get(i);
+                int count = result instanceof Number number ? number.intValue() : 0;
+                participantCounts.put(codes.get(i), count);
+            }
+        } catch (DataAccessException ignored) {
+            codes.forEach(groupCode -> participantCounts.put(groupCode, 0));
+        }
+
+        return participantCounts;
     }
 
     private void addParticipant(String roomName, WebhookEvent event) {
@@ -52,7 +91,13 @@ public class LiveKitRoomStatusService {
             return;
         }
 
-        redisTemplate.opsForSet().add(participantsKey(roomName), event.getParticipant().getIdentity());
+        String identity = event.getParticipant().getIdentity();
+        if (identity.isBlank()) {
+            return;
+        }
+
+        redisTemplate.opsForSet().add(participantsKey(roomName), identity);
+        redisTemplate.expire(participantsKey(roomName), STATUS_TTL);
     }
 
     private void removeParticipant(String roomName, WebhookEvent event) {
@@ -60,13 +105,12 @@ public class LiveKitRoomStatusService {
             return;
         }
 
-        String key = participantsKey(roomName);
-        redisTemplate.opsForSet().remove(key, event.getParticipant().getIdentity());
-        Long count = redisTemplate.opsForSet().size(key);
-
-        if (count == null || count <= 0) {
-            redisTemplate.delete(key);
+        String identity = event.getParticipant().getIdentity();
+        if (identity.isBlank()) {
+            return;
         }
+
+        redisTemplate.opsForSet().remove(participantsKey(roomName), identity);
     }
 
     private String roomName(String groupCode) {
