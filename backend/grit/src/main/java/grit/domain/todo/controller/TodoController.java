@@ -7,7 +7,6 @@ import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
 import grit.domain.todo.dto.TodoRangeResponseDTO;
-import grit.domain.todo.entity.Todo;
 import grit.domain.todo.service.TodoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,7 +27,6 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.List;
 
 @Tag(name = "Todo", description = "투두 관련 API")
 @RestController
@@ -68,25 +66,6 @@ public class TodoController {
         TodoRangeResponseDTO response = todoService.findByUserIdInRange(
                 principal.id(), resolvedStartDate, resolvedDayCount);
         return ResponseEntity.ok(response);
-    }
-
-    @Operation(summary = "그룹 투두 목록 (조회 전용)", description = "해당 그룹 멤버가 작성한 투두 전체를 반환합니다. query userId(그룹 멤버 PK) 작성자의 투두가 먼저 오고, 이후 미완료→카테고리 순서→내용(가나다)→id 순으로 정렬됩니다. 완료된 항목은 같은 그룹 내에서 아래쪽에 둡니다. userId는 필수. 요청자는 그룹 멤버여야 합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "userId가 그룹 멤버가 아님", content = @Content),
-            @ApiResponse(responseCode = "403", description = "그룹 멤버가 아님", content = @Content),
-            @ApiResponse(responseCode = "404", description = "그룹 코드 오류", content = @Content)
-    })
-    @GetMapping("/api/groups/{groupCode}/todos")
-    public ResponseEntity<List<TodoResponseDTO>> findForGroup(
-            @AuthenticationPrincipal MemberPrincipal principal,
-            @Parameter(description = "그룹 코드", example = "ABCD12") @PathVariable String groupCode,
-            @Parameter(description = "맨 위에 둘 작성자 회원 PK (반드시 그 그룹 멤버)", example = "1", required = true) @RequestParam Long userId) {
-        List<Todo> todos = todoService.findForGroup(groupCode, principal.id(), userId);
-        List<TodoResponseDTO> responses = todos.stream()
-                .map(TodoResponseDTO::from)
-                .toList();
-        return ResponseEntity.ok(responses);
     }
 
     @Operation(summary = "투두 생성", description = "본인 계정으로만 생성 가능합니다. 내용·마감일 필수, 카테고리 선택. 그룹 투두 목록은 멤버십 기준으로 조회되며 투두에 그룹 필드를 두지 않습니다.")
