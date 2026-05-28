@@ -2036,3 +2036,135 @@ textarea.form-input {
         width: 100%;
     }
 }
+
+/* Group Todo Test Page */
+.group-todo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr;
+    gap: 16px;
+}
+
+.group-todo-panel {
+    padding: 16px;
+    min-height: 520px;
+}
+
+.group-todo-panel-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.group-todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.group-todo-item-btn {
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.group-todo-item-btn span {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.group-todo-item-btn:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-card-hover);
+}
+
+.group-todo-item-btn.active {
+    border-color: rgba(99, 102, 241, 0.7);
+    box-shadow: var(--shadow-glow);
+}
+
+.group-todo-range {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.group-todo-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.group-todo-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    background: var(--bg-surface);
+}
+
+.group-todo-section h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.group-todo-todo-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.group-todo-todo-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.group-todo-todo-item.done {
+    opacity: 0.7;
+}
+
+.group-todo-todo-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.group-todo-status {
+    font-size: 11px;
+    color: var(--accent-hover);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: var(--radius-full);
+    padding: 1px 8px;
+}
+
+.group-todo-todo-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.group-todo-empty {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 1200px) {
+    .group-todo-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .group-todo-panel {
+        min-height: auto;
+    }
+}

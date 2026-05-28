@@ -1,12 +1,13 @@
 package grit.domain.todo.service;
+import grit.domain.group.GroupService;
 import grit.domain.group.entity.Group;
-import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
 import grit.domain.todo.dto.CreateTodoRequestDTO;
 import grit.domain.todo.dto.AchievementOverviewResponseDTO;
 import grit.domain.todo.dto.DailyAchievementDTO;
+import grit.domain.todo.dto.GroupMemberTodosResponseDto;
 import grit.domain.todo.dto.MoveTodoDueDateRequestDTO;
 import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
@@ -27,6 +28,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,7 +44,7 @@ public class TodoService {
     private final TodoRepository todoRepository;
     private final TodoCategoryRepository todoCategoryRepository;
     private final MemberRepository memberRepository;
-    private final GroupRepository groupRepository;
+    private final GroupService groupService;
     private final MemberGroupRepository memberGroupRepository;
     private final Clock clock;
 
@@ -64,31 +66,99 @@ public class TodoService {
         );
     }
 
-    public List<Todo> findForGroup(String groupCode, Long requesterUserId, Long focusUserId) {
-        Member requester = memberRepository.findById(requesterUserId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+    public GroupMemberTodosResponseDto findGroupMemberTodos(String groupCode, Long requesterUserId, Long memberId, String view) {
+        Group group = groupService.validateGroupMembership(groupCode, requesterUserId);
 
-        Group group = groupRepository.findByCode(groupCode)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유효하지 않은 그룹 코드입니다."));
-
-        if (!memberGroupRepository.existsByMemberAndGroup(requester, group)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
-        }
-
-        if (!memberGroupRepository.existsByMember_IdAndGroup_Id(focusUserId, group.getId())) {
+        if (!memberGroupRepository.existsByMember_IdAndGroup_Id(memberId, group.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 그룹에 속하지 않은 사용자입니다.");
         }
 
-        return todoRepository.findByGroupMembersTodosWithRelations(group.getId()).stream()
-                .sorted(Comparator.comparing((Todo t) -> !t.getOwner().getId().equals(focusUserId))
-                        .thenComparing(todoDisplayComparator()))
-                .toList();
+        LocalDate startDate = LocalDate.now(clock);
+        LocalDate endDate = startDate.plusDays(2);
+        List<Todo> todos = todoRepository.findByOwnerIdAndDueDateBetweenWithRelationsUnsorted(memberId, startDate, endDate);
+
+        String normalizedView = view == null ? "day" : view.toLowerCase(Locale.ROOT);
+        List<GroupMemberTodosResponseDto.SectionDto> sections = switch (normalizedView) {
+            case "category" -> buildCategorySections(todos, memberId);
+            case "day" -> buildDaySections(todos, startDate);
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "view는 category 또는 day만 가능합니다.");
+        };
+
+        return new GroupMemberTodosResponseDto(normalizedView, startDate, endDate, sections);
     }
 
-    private Comparator<Todo> todoDisplayComparator() {
-        return Comparator.comparing(Todo::isDone)
-                .thenComparing(
-                        t -> t.getCategory() == null ? null : t.getCategory().getSortOrder(),
+    private List<GroupMemberTodosResponseDto.SectionDto> buildCategorySections(List<Todo> todos, Long memberId) {
+        List<TodoCategory> categories = todoCategoryRepository.findByOwner_IdOrderBySortOrderAscIdAsc(memberId);
+        Map<Long, GroupMemberTodosResponseDto.SectionDto> sectionMap = new LinkedHashMap<>();
+        for (TodoCategory category : categories) {
+            sectionMap.put(
+                    category.getId(),
+                    new GroupMemberTodosResponseDto.SectionDto(
+                            "category:" + category.getId(),
+                            category.getName(),
+                            new ArrayList<>()
+                    )
+            );
+        }
+        GroupMemberTodosResponseDto.SectionDto uncategorized =
+                new GroupMemberTodosResponseDto.SectionDto("uncategorized", "미분류", new ArrayList<>());
+
+        List<TodoResponseDTO> sortedTodos = todos.stream()
+                .sorted(categoryViewComparator())
+                .map(TodoResponseDTO::from)
+                .toList();
+
+        for (TodoResponseDTO todo : sortedTodos) {
+            if (todo.getCategoryId() == null) {
+                uncategorized.todos().add(todo);
+                continue;
+            }
+            GroupMemberTodosResponseDto.SectionDto section = sectionMap.get(todo.getCategoryId());
+            if (section == null) {
+                uncategorized.todos().add(todo);
+            } else {
+                section.todos().add(todo);
+            }
+        }
+
+        List<GroupMemberTodosResponseDto.SectionDto> sections = sectionMap.values().stream()
+                .filter(section -> !section.todos().isEmpty())
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (!uncategorized.todos().isEmpty()) {
+            sections.add(uncategorized);
+        }
+        return sections;
+    }
+
+    private List<GroupMemberTodosResponseDto.SectionDto> buildDaySections(List<Todo> todos, LocalDate startDate) {
+        Map<LocalDate, GroupMemberTodosResponseDto.SectionDto> sectionsByDate = new LinkedHashMap<>();
+        sectionsByDate.put(startDate, new GroupMemberTodosResponseDto.SectionDto("today", "오늘", new ArrayList<>()));
+        sectionsByDate.put(startDate.plusDays(1), new GroupMemberTodosResponseDto.SectionDto("tomorrow", "내일", new ArrayList<>()));
+        sectionsByDate.put(startDate.plusDays(2), new GroupMemberTodosResponseDto.SectionDto("dayAfterTomorrow", "2일 후", new ArrayList<>()));
+
+        List<TodoResponseDTO> sortedTodos = todos.stream()
+                .sorted(dayViewComparator())
+                .map(TodoResponseDTO::from)
+                .toList();
+
+        for (TodoResponseDTO todo : sortedTodos) {
+            GroupMemberTodosResponseDto.SectionDto section = sectionsByDate.get(todo.getDueDate());
+            if (section != null) {
+                section.todos().add(todo);
+            }
+        }
+        return new ArrayList<>(sectionsByDate.values());
+    }
+
+    private Comparator<Todo> categoryViewComparator() {
+        return Comparator.comparing(Todo::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(Todo::getContent, KOREAN_TEXT_ORDER.get())
+                .thenComparing(Todo::getId);
+    }
+
+    private Comparator<Todo> dayViewComparator() {
+        return Comparator.comparing(
+                        (Todo t) -> t.getCategory() == null ? null : t.getCategory().getSortOrder(),
                         Comparator.nullsLast(Comparator.naturalOrder()))
                 .thenComparing(Todo::getContent, KOREAN_TEXT_ORDER.get())
                 .thenComparing(Todo::getId);
