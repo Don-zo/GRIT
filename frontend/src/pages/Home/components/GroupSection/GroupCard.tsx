@@ -5,18 +5,15 @@ import LiveBadge from "./LiveBadge";
 import GroupSettingsModal from "@/pages/Home/components/Modals/GroupSettingsModal";
 import type { Group } from "@/apis/domains/group/type";
 
-type GroupCardProps = Group & {
-  isLive?: boolean;
-  liveMembers?: number;
-};
+type GroupCardProps = Group;
 
 export default function GroupCard({
   groupCode,
   name,
   imageUrl,
   memberCount,
-  isLive = true,
-  liveMembers = 6,
+  isLive,
+  liveParticipantCount,
 }: GroupCardProps) {
   const navigate = useNavigate();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -39,7 +36,9 @@ export default function GroupCard({
         )}
 
         <div className="relative z-10 flex flex-col h-full pointer-events-none">
-          <div className="p-4">{isLive && <LiveBadge />}</div>
+          <div className="p-4">
+            <LiveBadge isLive={isLive} />
+          </div>
 
           <div className="mt-auto flex items-center justify-between bg-green-semidark px-5 py-3 text-white">
             <div className="flex min-w-0 items-center gap-2">
@@ -57,7 +56,7 @@ export default function GroupCard({
               </button>
             </div>
             <span className="flex shrink-0 text-[15px] font-thin opacity-90">
-              {memberCount}/{liveMembers}
+              {liveParticipantCount}/{memberCount}
             </span>
           </div>
         </div>

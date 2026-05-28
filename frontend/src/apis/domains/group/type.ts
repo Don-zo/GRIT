@@ -3,6 +3,8 @@ export interface Group {
   name: string;
   memberCount: number;
   imageUrl: string;
+  isLive: boolean;
+  liveParticipantCount: number;
 }
 
 export interface GroupInput {

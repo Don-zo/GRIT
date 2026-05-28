@@ -59,6 +59,8 @@ export default function GroupSection() {
               name={group.name}
               memberCount={group.memberCount}
               imageUrl={group.imageUrl}
+              isLive={group.isLive}
+              liveParticipantCount={group.liveParticipantCount}
             />
           ))}
       </div>
