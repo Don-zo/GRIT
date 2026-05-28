@@ -1,13 +1,7 @@
 import { addDays, toDateKey } from "./weeklyTodo";
 
-/**
- * 투두 주간 그리드 7일 → 5일 → 3일 전환 기준 (콘텐츠 영역 너비, px).
- * 이 객체 값만 수정하면 됩니다.
- */
 export const TODO_WEEK_LAYOUT_BREAKPOINTS = {
-  /** 이 너비 미만이면 5열 */
   fiveColumnsMaxWidth: 1200,
-  /** 이 너비 미만이면 3열 */
   threeColumnsMaxWidth: 900,
 } as const;
 
@@ -19,7 +13,6 @@ export function columnCountForContainerWidth(width: number): TodoWeekColumnCount
   return 7;
 }
 
-/** 3·5열일 때 오늘을 첫 열로, columnCount일 만큼 표시 (다음 주로 넘어갈 수 있음) */
 export function getVisibleWeekDays(
   weekDays: Date[],
   today: Date,
@@ -44,7 +37,6 @@ export type TodoListFetchParams = {
   dayCount: number;
 };
 
-/** GET /api/members/me/todos 쿼리 — 화면에 보이는 열과 동일한 범위 */
 export function getTodoListFetchParams(
   weekDays: Date[],
   today: Date,
