@@ -166,6 +166,7 @@ public class GroupController {
                 group.getName(),
                 group.getCode(),
                 group.getMemberCount(),
+                group.getImageName(),
                 imageUrl,
                 liveParticipantCount > 0,
                 liveParticipantCount

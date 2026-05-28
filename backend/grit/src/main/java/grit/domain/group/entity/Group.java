@@ -54,11 +54,10 @@ public class Group extends BaseEntity {
     }
 
     public void updateInfo(String name, UUID imageName) {
-        if (name != null) {
-            this.name = name;
+        if (name == null) {
+            throw new NullPointerException("Name is null");
         }
-        if (imageName != null) {
-            this.imageName = imageName;
-        }
+        this.name = name;
+        this.imageName = imageName;
     }
 }
