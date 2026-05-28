@@ -1,6 +1,7 @@
 package grit.domain.group.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
 
 public record GroupInfoResponseDto(
 
@@ -12,6 +13,8 @@ public record GroupInfoResponseDto(
 
     @Schema(description = "현재 그룹원 수", example = "5")
     int memberCount,
+
+    UUID imageName,
 
     @Schema(description = "이미지 URL", example = "https://grit-s3.ap-northeast-2.amazonaws.com/profile/default.png", nullable = true)
     String imageUrl,
