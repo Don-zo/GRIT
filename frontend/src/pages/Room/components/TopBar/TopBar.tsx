@@ -28,7 +28,6 @@ export default function TopBar({ isTodoOpen = false, onToggleTodo }: TopBarProps
   }, []);
 
   const totalTime = "4:00:00";
-  const playlistName = "[Playlist] 싸이월드 감성 BGM";
 
   return (
     <div className="flex items-center justify-between w-full h-20 gap-4 px-6">
@@ -55,15 +54,6 @@ export default function TopBar({ isTodoOpen = false, onToggleTodo }: TopBarProps
       </div>
 
       <div className="flex items-center">
-        <CustomBtn
-          isToggle
-          variant="ghost"
-          icon={<Disc3 />}
-          iconColor="text-green-normal"
-          spin
-          label={playlistName}
-        />
-
         <CustomBtn
           isToggle
           isActive={isTodoOpen}
