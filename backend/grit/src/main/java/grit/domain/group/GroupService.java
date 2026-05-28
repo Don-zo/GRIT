@@ -6,6 +6,7 @@ import grit.domain.group.entity.MemberGroup;
 import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.entity.Member;
+import grit.domain.member.repository.MemberRepository;
 import grit.global.exception.AccessDeniedException;
 import grit.global.exception.EntityAlreadyExistsException;
 import grit.global.exception.EntityNotFoundException;
@@ -17,16 +18,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Collator;
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
 public class GroupService {
+    private static final ThreadLocal<Collator> KOREAN_TEXT_ORDER =
+            ThreadLocal.withInitial(() -> Collator.getInstance(Locale.KOREA));
 
     private final GroupRepository groupRepository;
     private final MemberGroupRepository memberGroupRepository;
+    private final MemberRepository memberRepository;
     private final S3Service s3Service;
 
     @Transactional
@@ -147,6 +154,34 @@ public class GroupService {
     @Transactional(readOnly = true)
     public boolean isMemberInGroup(Member member, Group group) {
         return memberGroupRepository.existsByMemberAndGroup(member, group);
+    }
+
+    @Transactional(readOnly = true)
+    public Group validateGroupMembership(String groupCode, Long requesterUserId) {
+        Member requester = memberRepository.findById(requesterUserId)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+        Group group = findGroupByCode(groupCode);
+
+        if (!memberGroupRepository.existsByMemberAndGroup(requester, group)) {
+            throw new AccessDeniedException("해당 그룹의 멤버가 아닙니다.");
+        }
+        return group;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Member> findGroupMembers(String groupCode, Long requesterUserId) {
+        Group group = validateGroupMembership(groupCode, requesterUserId);
+
+        return memberGroupRepository.findAllByGroupIdWithMember(group.getId()).stream()
+                .map(MemberGroup::getMember)
+                .sorted(groupMemberComparator(requesterUserId))
+                .toList();
+    }
+
+    private Comparator<Member> groupMemberComparator(Long requesterUserId) {
+        return Comparator.comparing((Member member) -> !member.getId().equals(requesterUserId))
+                .thenComparing(Member::getNickname, KOREAN_TEXT_ORDER.get())
+                .thenComparing(Member::getId);
     }
 
     public GroupProfileImageUploadUrlResponseDto generateGroupImageUploadUrl() {

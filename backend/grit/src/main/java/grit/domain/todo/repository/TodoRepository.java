@@ -35,6 +35,22 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
             @Param("to") LocalDate to
     );
 
+    @Query(
+            value = """
+                    SELECT t FROM Todo t
+                    JOIN FETCH t.owner
+                    LEFT JOIN FETCH t.category
+                    WHERE t.owner.id = :ownerId
+                      AND t.dueDate >= :from
+                      AND t.dueDate <= :to
+                    """
+    )
+    List<Todo> findByOwnerIdAndDueDateBetweenWithRelationsUnsorted(
+            @Param("ownerId") Long ownerId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to
+    );
+
     @Query("SELECT DISTINCT t FROM Todo t JOIN FETCH t.owner LEFT JOIN FETCH t.category WHERE t.id = :id")
     Optional<Todo> findByIdWithRelations(@Param("id") Long id);
 

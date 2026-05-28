@@ -4,14 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRIT - 친구</title>
-    <meta name="description" content="GRIT 친구 관리 - 친구 추가 및 목록 관리">
+    <title>GRIT - 그룹 투두</title>
+    <meta name="description" content="그룹 멤버별 투두 조회 테스트 페이지">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <div class="app-layout">
-        <!-- Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-logo">G</div>
             <div class="sidebar-nav">
@@ -33,7 +32,7 @@
                     </svg>
                     <span class="tooltip">그룹</span>
                 </a>
-                <a href="/friends.html" class="sidebar-link active" id="nav-friends">
+                <a href="/friends.html" class="sidebar-link" id="nav-friends">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path
@@ -49,7 +48,7 @@
                     </svg>
                     <span class="tooltip">투두</span>
                 </a>
-                <a href="/group-todos.html" class="sidebar-link" id="nav-group-todo">
+                <a href="/group-todos.html" class="sidebar-link active" id="nav-group-todo">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M8 6h13" />
@@ -74,61 +73,45 @@
             </div>
         </nav>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="page-header">
                 <div class="page-header-left">
-                    <h1>친구</h1>
-                    <p>친구 목록 관리</p>
+                    <h1>그룹 투두 (테스트)</h1>
+                    <p>그룹 선택 → 멤버 선택 → 투두 확인</p>
+                </div>
+                <div class="page-header-right">
+                    <select id="view-select" class="form-input form-input-sm" style="min-width:140px;">
+                        <option value="day">day</option>
+                        <option value="category">category</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="action-row">
-                <button class="btn btn-primary btn-full" id="add-friend-btn">+ 친구 추가</button>
-            </div>
+            <div class="group-todo-layout">
+                <section class="glass-card group-todo-panel">
+                    <div class="group-todo-panel-title">그룹 목록</div>
+                    <div id="group-list" class="group-todo-list"></div>
+                </section>
 
-            <div id="friend-list" class="card-list">
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-avatar" style="border-radius:50%;width:46px;height:46px;"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton skeleton-title"></div>
-                        <div class="skeleton skeleton-meta"></div>
-                    </div>
-                </div>
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-avatar" style="border-radius:50%;width:46px;height:46px;"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton skeleton-title"></div>
-                        <div class="skeleton skeleton-meta"></div>
-                    </div>
-                </div>
+                <section class="glass-card group-todo-panel">
+                    <div class="group-todo-panel-title">멤버 목록</div>
+                    <div id="member-list" class="group-todo-list"></div>
+                </section>
+
+                <section class="glass-card group-todo-panel">
+                    <div class="group-todo-panel-title">투두 목록</div>
+                    <p id="todo-range" class="group-todo-range"></p>
+                    <div id="todo-sections" class="group-todo-sections"></div>
+                </section>
             </div>
 
             <div id="error-message" class="error-message"></div>
         </main>
     </div>
 
-    <!-- 친구 추가 모달 -->
-    <div class="modal-overlay" id="add-modal">
-        <div class="modal">
-            <h2>친구 추가</h2>
-            <p class="modal-subtitle">상대방의 닉네임을 입력하세요</p>
-            <div class="form-group">
-                <label for="friend-nickname">닉네임</label>
-                <input type="text" id="friend-nickname" class="form-input" placeholder="닉네임 입력" />
-            </div>
-            <div id="add-error" class="error-message"></div>
-            <div class="modal-actions">
-                <button class="btn btn-outline" id="add-cancel-btn">취소</button>
-                <button class="btn btn-primary" id="add-submit-btn">추가</button>
-            </div>
-        </div>
-    </div>
-
     <script src="config.js"></script>
-    <script src="icons.js"></script>
     <script src="utils.js"></script>
-    <script src="friends.js"></script>
+    <script src="group-todos.js"></script>
 </body>
 
 </html>
