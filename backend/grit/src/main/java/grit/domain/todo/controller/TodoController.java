@@ -7,6 +7,7 @@ import grit.domain.todo.dto.SetTodoDoneRequestDTO;
 import grit.domain.todo.dto.TodoResponseDTO;
 import grit.domain.todo.dto.UpdateTodoRequestDTO;
 import grit.domain.todo.dto.TodoRangeResponseDTO;
+import grit.domain.todo.entity.Todo;
 import grit.domain.todo.service.TodoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
