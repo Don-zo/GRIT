@@ -106,7 +106,7 @@ public class GroupController {
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @Parameter(description = "그룹 코드", example = "ABCD12")
             @PathVariable String groupCode) {
-        List<GroupMemberResponseDto> response = todoService.findGroupMembers(groupCode, memberPrincipal.id()).stream()
+        List<GroupMemberResponseDto> response = groupService.findGroupMembers(groupCode, memberPrincipal.id()).stream()
                 .map(member -> new GroupMemberResponseDto(
                         member.getId(),
                         member.getNickname(),

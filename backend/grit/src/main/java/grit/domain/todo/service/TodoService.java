@@ -1,7 +1,6 @@
 package grit.domain.todo.service;
+import grit.domain.group.GroupService;
 import grit.domain.group.entity.Group;
-import grit.domain.group.entity.MemberGroup;
-import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
@@ -45,7 +44,7 @@ public class TodoService {
     private final TodoRepository todoRepository;
     private final TodoCategoryRepository todoCategoryRepository;
     private final MemberRepository memberRepository;
-    private final GroupRepository groupRepository;
+    private final GroupService groupService;
     private final MemberGroupRepository memberGroupRepository;
     private final Clock clock;
 
@@ -67,17 +66,8 @@ public class TodoService {
         );
     }
 
-    public List<Member> findGroupMembers(String groupCode, Long requesterUserId) {
-        Group group = validateGroupMembership(groupCode, requesterUserId);
-
-        return memberGroupRepository.findAllByGroupIdWithMember(group.getId()).stream()
-                .map(MemberGroup::getMember)
-                .sorted(groupMemberComparator(requesterUserId))
-                .toList();
-    }
-
     public GroupMemberTodosResponseDto findGroupMemberTodos(String groupCode, Long requesterUserId, Long memberId, String view) {
-        Group group = validateGroupMembership(groupCode, requesterUserId);
+        Group group = groupService.validateGroupMembership(groupCode, requesterUserId);
 
         if (!memberGroupRepository.existsByMember_IdAndGroup_Id(memberId, group.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 그룹에 속하지 않은 사용자입니다.");
@@ -95,22 +85,6 @@ public class TodoService {
         };
 
         return new GroupMemberTodosResponseDto(normalizedView, startDate, endDate, sections);
-    }
-
-    private Group groupByCode(String groupCode) {
-        return groupRepository.findByCode(groupCode)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유효하지 않은 그룹 코드입니다."));
-    }
-
-    private Group validateGroupMembership(String groupCode, Long requesterUserId) {
-        Member requester = memberRepository.findById(requesterUserId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
-        Group group = groupByCode(groupCode);
-
-        if (!memberGroupRepository.existsByMemberAndGroup(requester, group)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 그룹의 멤버가 아닙니다.");
-        }
-        return group;
     }
 
     private List<GroupMemberTodosResponseDto.SectionDto> buildCategorySections(List<Todo> todos, Long memberId) {
@@ -174,12 +148,6 @@ public class TodoService {
             }
         }
         return new ArrayList<>(sectionsByDate.values());
-    }
-
-    private Comparator<Member> groupMemberComparator(Long requesterUserId) {
-        return Comparator.comparing((Member member) -> !member.getId().equals(requesterUserId))
-                .thenComparing(Member::getNickname, KOREAN_TEXT_ORDER.get())
-                .thenComparing(Member::getId);
     }
 
     private Comparator<Todo> categoryViewComparator() {
