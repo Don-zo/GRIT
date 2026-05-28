@@ -16,6 +16,27 @@ type ProfileSettingsModalProps = {
   isInitialProfile: boolean;
 };
 
+const getImageNameFromUrl = (imageUrl?: string | null): string | null => {
+  if (!imageUrl) return null;
+
+  try {
+    const { pathname } = new URL(imageUrl);
+    const imageName = decodeURIComponent(
+      pathname.startsWith("/") ? pathname.slice(1) : pathname,
+    );
+    return imageName || null;
+  } catch {
+    return null;
+  }
+};
+
+const stripProfileImagesPrefix = (imageName?: string | null): string | null => {
+  if (!imageName) return null;
+  return imageName.startsWith("profile-images/")
+    ? imageName.replace("profile-images/", "")
+    : imageName;
+};
+
 export default function ProfileSettingsModal({
   open,
   onClose,
@@ -61,54 +82,34 @@ export default function ProfileSettingsModal({
       if (!trimmedNickname) throw new Error("닉네임을 입력해주세요");
       if (!introduction) throw new Error("소개를 입력해주세요");
 
+      let imageName = stripProfileImagesPrefix(getImageNameFromUrl(member?.imageUrl));
+
+      if (isImageRemoved) {
+        imageName = null;
+      }
+
       if (imageFile) {
-        const imageName = await fileApi.uploadFileWithPresignedInfo(
+        const uploadedImageName = await fileApi.uploadFileWithPresignedInfo(
           imageFile,
           userApi.getPresignedInfo,
         );
-
-        if (isInitialProfile) {
-          return userApi.createInitialInfo({
-            nickname: trimmedNickname,
-            introduction: introduction,
-            imageName,
-            dDayDate: dDayDate || null,
-            dDayTitle: dDayTitle || null,
-            weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
-          });
-        }
-
-        return userApi.update({
-          nickname: trimmedNickname,
-          introduction: introduction,
-          imageName,
-          dDayDate: dDayDate || null,
-          dDayTitle: dDayTitle || null,
-          weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
-        });
+        imageName = stripProfileImagesPrefix(uploadedImageName);
       }
 
-      const imagePatch = isImageRemoved ? { imageName: null } : {};
-
-      if (isInitialProfile) {
-        return userApi.createInitialInfo({
-          nickname: trimmedNickname,
-          introduction: introduction,
-          ...imagePatch,
-          dDayDate: dDayDate || null,
-          dDayTitle: dDayTitle || null,
-          weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
-        });
-      }
-
-      return userApi.update({
+      const payload = {
         nickname: trimmedNickname,
         introduction: introduction,
-        ...imagePatch,
+        imageName,
         dDayDate: dDayDate || null,
         dDayTitle: dDayTitle || null,
         weeklyStudyTimeGoal: weeklyStudyTimeGoal || null,
-      });
+      };
+
+      if (isInitialProfile) {
+        return userApi.createInitialInfo(payload);
+      }
+
+      return userApi.update(payload);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.member.me });

@@ -19,12 +19,12 @@ export interface CreateMemberRequest {
 }
 
 export interface UpdateMemberRequest {
-  nickname?: string;
-  introduction?: string;
-  imageName?: string | null;
-  dDayDate?: string | null;
-  dDayTitle?: string | null;
-  weeklyStudyTimeGoal?: string | null;
+  nickname: string;
+  introduction: string;
+  imageName: string | null;
+  dDayDate: string | null;
+  dDayTitle: string | null;
+  weeklyStudyTimeGoal: string | null;
 }
 
 export interface NicknameAvailabilityResponse {
