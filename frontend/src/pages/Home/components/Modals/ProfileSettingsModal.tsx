@@ -22,6 +22,27 @@ type ProfileSettingsModalProps = {
   isInitialProfile: boolean;
 };
 
+const getImageNameFromUrl = (imageUrl?: string | null): string | null => {
+  if (!imageUrl) return null;
+
+  try {
+    const { pathname } = new URL(imageUrl);
+    const imageName = decodeURIComponent(
+      pathname.startsWith("/") ? pathname.slice(1) : pathname,
+    );
+    return imageName || null;
+  } catch {
+    return null;
+  }
+};
+
+const stripProfileImagesPrefix = (imageName?: string | null): string | null => {
+  if (!imageName) return null;
+  return imageName.startsWith("profile-images/")
+    ? imageName.replace("profile-images/", "")
+    : imageName;
+};
+
 export default function ProfileSettingsModal({
   open,
   onClose,
@@ -35,6 +56,7 @@ export default function ProfileSettingsModal({
   const [dDayTitle, setDDayTitle] = useState("");
   const [studyGoalHours, setStudyGoalHours] = useState(0);
   const [studyGoalMinutes, setStudyGoalMinutes] = useState(0);
+
   const { notify } = useToastContext();
 
   const {
@@ -78,46 +100,34 @@ export default function ProfileSettingsModal({
         studyGoalMinutes,
       );
 
-      const profilePayload = {
+      let imageName = stripProfileImagesPrefix(getImageNameFromUrl(member?.imageUrl));
+
+      if (isImageRemoved) {
+        imageName = null;
+      }
+
+      if (imageFile) {
+        const uploadedImageName = await fileApi.uploadFileWithPresignedInfo(
+          imageFile,
+          userApi.getPresignedInfo,
+        );
+        imageName = stripProfileImagesPrefix(uploadedImageName);
+      }
+
+      const payload = {
         nickname: trimmedNickname,
         introduction,
+        imageName,
         dDayDate: dDayDate || null,
         dDayTitle: dDayTitle || null,
         weeklyStudyTimeGoal,
       };
 
-      if (imageFile) {
-        const imageName = await fileApi.uploadFileWithPresignedInfo(
-          imageFile,
-          userApi.getPresignedInfo,
-        );
-
-        if (isInitialProfile) {
-          return userApi.createInitialInfo({
-            ...profilePayload,
-            imageName,
-          });
-        }
-
-        return userApi.update({
-          ...profilePayload,
-          imageName,
-        });
-      }
-
-      const imagePatch = isImageRemoved ? { imageName: null } : {};
-
       if (isInitialProfile) {
-        return userApi.createInitialInfo({
-          ...profilePayload,
-          ...imagePatch,
-        });
+        return userApi.createInitialInfo(payload);
       }
 
-      return userApi.update({
-        ...profilePayload,
-        ...imagePatch,
-      });
+      return userApi.update(payload);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.member.me });

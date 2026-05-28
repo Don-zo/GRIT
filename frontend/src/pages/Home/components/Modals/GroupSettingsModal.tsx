@@ -38,13 +38,13 @@ export default function GroupSettingsModal({
 
   useEffect(() => {
     if (!open || !groupInfo) return;
+    if (imageFile || isImageRemoved) return;
 
     setBaseGroupName(groupInfo.name);
     setBaseGroupImage(groupInfo.imageUrl ?? "");
     setGroupName(groupInfo.name);
     setImageFile(null);
-    setIsImageRemoved(false);
-  }, [open, groupInfo]);
+  }, [open, groupInfo, imageFile, isImageRemoved]);
 
   const handleClose = () => {
     setGroupName(baseGroupName);

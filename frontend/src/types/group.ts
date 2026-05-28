@@ -3,6 +3,6 @@ export interface Group {
   name: string;
   memberCount: number;
   imageUrl?: string;
-  isLive?: boolean;
-  liveMembers?: number;
+  isLive: boolean;
+  liveParticipantCount: number;
 }
