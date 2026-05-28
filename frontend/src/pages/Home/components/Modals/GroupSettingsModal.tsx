@@ -179,8 +179,8 @@ export default function GroupSettingsModal({
                 </button>
               </div>
 
-              <p className="mt-4 text-center text-xs text-[#D6FDE5]">
-                그룹에 참여 가능한 인원은 최대 8명입니다.
+              <p className="mt-4 text-center text-sm font-medium text-[#D6FDE5]">
+                그룹에 참여 가능한 인원은 최대 6명입니다.
               </p>
             </div>
           </Modal.Body>
