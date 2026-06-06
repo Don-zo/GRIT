@@ -6,6 +6,12 @@ export const QUERY_KEYS = {
     all: ["groups"] as const,
     my: ["groups", "my"] as const,
     detail: (groupCode: string) => ["groups", "detail", groupCode] as const,
+    members: (groupCode: string) => ["groups", "members", groupCode] as const,
+    memberTodos: (
+      groupCode: string,
+      memberId: number,
+      view: "category" | "day",
+    ) => ["groups", "memberTodos", groupCode, memberId, view] as const,
   },
   friend: {
     all: ["friends"] as const,

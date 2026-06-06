@@ -13,6 +13,7 @@ import { getLiveKitToken, getReactions } from "@/apis/domains/livekit/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { useLiveKit } from "@/hooks/useLiveKit";
 import { LIVEKIT_URL } from "@/apis/constants/endpoints";
+import { groupApi } from "@/apis/domains/group/api";
 
 type PomodoroConfig = {
   studyMinutes: number;
@@ -28,6 +29,12 @@ const RoomPage = () => {
   const { data: reactions = [] } = useQuery({
     queryKey: QUERY_KEYS.livekit.reactions(groupCode ?? ""),
     queryFn: () => getReactions(groupCode!),
+    enabled: !!groupCode,
+  });
+
+  const { data: groupMembers = [] } = useQuery({
+    queryKey: QUERY_KEYS.groups.members(groupCode ?? ""),
+    queryFn: () => groupApi.getGroupMembers(groupCode!),
     enabled: !!groupCode,
   });
 
@@ -156,7 +163,11 @@ const RoomPage = () => {
           }`}
         >
           <div className="w-[480px] h-full py-6 pl-4 pr-20">
-            <TodoCamCard variant="panel" />
+            <TodoCamCard
+              variant="panel"
+              groupCode={groupCode}
+              members={groupMembers}
+            />
           </div>
         </div>
       </div>

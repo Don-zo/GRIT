@@ -53,9 +53,13 @@ const TodoPage = () => {
   }, [b.userId, b.isTodosError, b.isCategoriesError, b.isTodosLoading, b.isCategoriesLoading]);
 
   const categoryLabelForTodo = (todo: TodoItem) => {
-    if (todo.categoryName) return todo.categoryName;
+    if (todo.categoryName && todo.categoryName !== "미분류") {
+      return todo.categoryName;
+    }
     if (!todo.categoryId?.trim()) return "";
-    return b.categories.find((c) => c.id === todo.categoryId)?.label ?? "기타";
+    const label =
+      b.categories.find((c) => c.id === todo.categoryId)?.label ?? "";
+    return label === "미분류" ? "" : label;
   };
 
   const prevWeek = () => setAnchor((d) => addDays(d, -7));

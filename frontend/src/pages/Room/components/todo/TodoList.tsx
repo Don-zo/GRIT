@@ -6,12 +6,18 @@ import type { TodoItem } from "@/types/todo";
 
 interface TodoListProps {
   title: string;
-  initialItems: TodoItem[];
+  items: TodoItem[];
+  canToggle?: boolean;
+  onToggleItem?: (id: number, nextDone: boolean) => void;
 }
 
-export default function TodoList({ title, initialItems }: TodoListProps) {
+export default function TodoList({
+  title,
+  items,
+  canToggle = false,
+  onToggleItem,
+}: TodoListProps) {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<TodoItem[]>(() => initialItems);
 
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [maxHeight, setMaxHeight] = useState(0);
@@ -21,12 +27,9 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
   const left = total - completed;
   const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
 
-  const toggleItem = (id: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, done: !item.done } : item
-      )
-    );
+  const handleToggleItem = (id: number, nextDone: boolean) => {
+    if (!canToggle || !onToggleItem) return;
+    onToggleItem(id, nextDone);
   };
 
   const handleToggle = () => {
@@ -38,12 +41,13 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
 
   return (
     <div className="flex flex-col w-full mb-4">
-      {/* 상단 카드 */}
       <div className="flex justify-between w-full h-20 gap-4 p-4 bg-gray-normal rounded-xl">
         <div className="flex items-center gap-4">
           <CircularProgress value={progress} />
           <div>
-            <div className="font-bold text-h5 text-green-darkest select-none">{title}</div>
+            <div className="font-bold text-h5 text-green-darkest select-none">
+              {title}
+            </div>
             <div className="text-caption text-gray-semidark select-none">
               {total}개 중 {left}개가 남았어요!
             </div>
@@ -65,7 +69,6 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
         </button>
       </div>
 
-      {/* 펼쳐지는 영역 (애니메이션) */}
       <div
         ref={contentRef}
         style={{
@@ -88,8 +91,15 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
             <div key={item.id} className="px-3 py-2 bg-gray-normal rounded-xl">
               <CustomCheckbox
                 checked={item.done}
-                onChange={() => toggleItem(item.id)}
+                onChange={(nextDone) => handleToggleItem(item.id, nextDone)}
                 label={item.label}
+                ariaLabel={
+                  canToggle
+                    ? item.done
+                      ? "완료 해제"
+                      : "완료"
+                    : item.label
+                }
               />
             </div>
           ))}

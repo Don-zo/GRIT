@@ -1,6 +1,13 @@
 import apiClient from "@/apis/client/apiClient";
 import { ENDPOINTS } from "@/apis/constants/endpoints";
-import type { CreateGroupRequest, UpdateGroupRequest, Group } from "./type";
+import type {
+  CreateGroupRequest,
+  UpdateGroupRequest,
+  Group,
+  GroupMember,
+  GroupMemberTodoView,
+  GroupMemberTodosResponse,
+} from "./type";
 import type { S3uploadResponse } from "../file/type";
 
 export const groupApi = {
@@ -18,6 +25,25 @@ export const groupApi = {
 
   getMyGroupList: async (): Promise<Group[]> => {
     const response = await apiClient.get<Group[]>(ENDPOINTS.GROUP.MY);
+    return response.data;
+  },
+
+  getGroupMembers: async (groupCode: string): Promise<GroupMember[]> => {
+    const response = await apiClient.get<GroupMember[]>(
+      ENDPOINTS.GROUP.MEMBERS(groupCode),
+    );
+    return response.data;
+  },
+
+  getMemberTodos: async (
+    groupCode: string,
+    memberId: number,
+    view: GroupMemberTodoView = "day",
+  ): Promise<GroupMemberTodosResponse> => {
+    const response = await apiClient.get<GroupMemberTodosResponse>(
+      ENDPOINTS.GROUP.MEMBER_TODOS(groupCode, memberId),
+      { params: { view } },
+    );
     return response.data;
   },
 
