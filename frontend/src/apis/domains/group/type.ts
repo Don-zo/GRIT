@@ -32,6 +32,8 @@ export interface GroupMemberTodo {
 export interface GroupMemberTodoSection {
   key: string;
   label: string;
+  totalCount: number;
+  doneCount: number;
   todos: GroupMemberTodo[];
 }
 

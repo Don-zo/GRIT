@@ -215,6 +215,8 @@ export default function TodoCamCard({
                   key={`${selectedMemberId}-${view}-${group.id}`}
                   title={group.title}
                   items={group.items}
+                  totalCount={group.totalCount}
+                  doneCount={group.doneCount}
                   canToggle={canToggleTodos}
                   onToggleItem={handleToggleItem}
                 />

@@ -7,6 +7,8 @@ import type { TodoItem } from "@/types/todo";
 interface TodoListProps {
   title: string;
   items: TodoItem[];
+  totalCount: number;
+  doneCount: number;
   canToggle?: boolean;
   onToggleItem?: (id: number, nextDone: boolean) => void;
 }
@@ -14,6 +16,8 @@ interface TodoListProps {
 export default function TodoList({
   title,
   items,
+  totalCount,
+  doneCount,
   canToggle = false,
   onToggleItem,
 }: TodoListProps) {
@@ -22,10 +26,9 @@ export default function TodoList({
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [maxHeight, setMaxHeight] = useState(0);
 
-  const total = items.length;
-  const completed = items.filter((item) => item.done).length;
-  const left = total - completed;
-  const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const left = Math.max(0, totalCount - doneCount);
+  const progress =
+    totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
 
   const handleToggleItem = (id: number, nextDone: boolean) => {
     if (!canToggle || !onToggleItem) return;
@@ -49,7 +52,7 @@ export default function TodoList({
               {title}
             </div>
             <div className="text-caption text-gray-semidark select-none">
-              {total}개 중 {left}개가 남았어요!
+              {totalCount}개 중 {left}개가 남았어요!
             </div>
           </div>
         </div>

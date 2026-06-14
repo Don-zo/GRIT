@@ -16,6 +16,8 @@ export function mapGroupMemberTodosToTodoGroups(
   return sections.map((section) => ({
     id: section.key,
     title: normalizeSectionLabel(section.label),
+    totalCount: section.totalCount,
+    doneCount: section.doneCount,
     items: section.todos.map((todo) => ({
       id: todo.id,
       label: todo.content,
@@ -40,11 +42,21 @@ export function updateGroupMemberTodoDoneInCache(
 ): GroupMemberTodosResponse {
   return {
     ...data,
-    sections: data.sections.map((section) => ({
-      ...section,
-      todos: section.todos.map((todo) =>
-        todo.id === todoId ? { ...todo, isDone } : todo,
-      ),
-    })),
+    sections: data.sections.map((section) => {
+      const targetTodo = section.todos.find((todo) => todo.id === todoId);
+      if (!targetTodo || targetTodo.isDone === isDone) {
+        return section;
+      }
+
+      const doneDelta = isDone ? 1 : -1;
+
+      return {
+        ...section,
+        doneCount: Math.max(0, section.doneCount + doneDelta),
+        todos: section.todos.map((todo) =>
+          todo.id === todoId ? { ...todo, isDone } : todo,
+        ),
+      };
+    }),
   };
 }
