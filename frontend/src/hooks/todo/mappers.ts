@@ -19,7 +19,8 @@ export function mapTodoApiToItem(row: TodoApiItem): TodoItem {
     completed: row.isDone,
     dueDate: row.dueDate,
     categoryId: row.categoryId != null ? String(row.categoryId) : "",
-    categoryName: row.categoryName,
+    categoryName:
+      row.categoryName === "미분류" ? null : row.categoryName,
     categorySortOrder: row.categorySortOrder ?? null,
   };
 }
