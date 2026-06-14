@@ -20,6 +20,10 @@ public record GroupMemberTodosResponseDto(
             String key,
             @Schema(description = "섹션 라벨", example = "오늘")
             String label,
+            @Schema(description = "섹션 내 투두 총 개수", example = "3")
+            long totalCount,
+            @Schema(description = "섹션 내 완료 투두 개수", example = "1")
+            long doneCount,
             @Schema(description = "해당 섹션 투두 목록")
             List<TodoResponseDTO> todos
     ) {

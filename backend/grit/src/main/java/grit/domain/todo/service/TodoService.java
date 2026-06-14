@@ -89,19 +89,11 @@ public class TodoService {
 
     private List<GroupMemberTodosResponseDto.SectionDto> buildCategorySections(List<Todo> todos, Long memberId) {
         List<TodoCategory> categories = todoCategoryRepository.findByOwner_IdOrderBySortOrderAscIdAsc(memberId);
-        Map<Long, GroupMemberTodosResponseDto.SectionDto> sectionMap = new LinkedHashMap<>();
+        Map<Long, List<TodoResponseDTO>> todosByCategoryId = new LinkedHashMap<>();
         for (TodoCategory category : categories) {
-            sectionMap.put(
-                    category.getId(),
-                    new GroupMemberTodosResponseDto.SectionDto(
-                            "category:" + category.getId(),
-                            category.getName(),
-                            new ArrayList<>()
-                    )
-            );
+            todosByCategoryId.put(category.getId(), new ArrayList<>());
         }
-        GroupMemberTodosResponseDto.SectionDto uncategorized =
-                new GroupMemberTodosResponseDto.SectionDto("uncategorized", "미분류", new ArrayList<>());
+        List<TodoResponseDTO> uncategorizedTodos = new ArrayList<>();
 
         List<TodoResponseDTO> sortedTodos = todos.stream()
                 .sorted(categoryViewComparator())
@@ -110,44 +102,67 @@ public class TodoService {
 
         for (TodoResponseDTO todo : sortedTodos) {
             if (todo.getCategoryId() == null) {
-                uncategorized.todos().add(todo);
+                uncategorizedTodos.add(todo);
                 continue;
             }
-            GroupMemberTodosResponseDto.SectionDto section = sectionMap.get(todo.getCategoryId());
-            if (section == null) {
-                uncategorized.todos().add(todo);
+            List<TodoResponseDTO> categoryTodos = todosByCategoryId.get(todo.getCategoryId());
+            if (categoryTodos == null) {
+                uncategorizedTodos.add(todo);
             } else {
-                section.todos().add(todo);
+                categoryTodos.add(todo);
             }
         }
 
-        List<GroupMemberTodosResponseDto.SectionDto> sections = sectionMap.values().stream()
-                .filter(section -> !section.todos().isEmpty())
+        List<GroupMemberTodosResponseDto.SectionDto> sections = categories.stream()
+                .map(category -> {
+                    List<TodoResponseDTO> categoryTodos = todosByCategoryId.get(category.getId());
+                    if (categoryTodos.isEmpty()) {
+                        return null;
+                    }
+                    return buildSection("category:" + category.getId(), category.getName(), categoryTodos);
+                })
+                .filter(section -> section != null)
                 .collect(Collectors.toCollection(ArrayList::new));
-        if (!uncategorized.todos().isEmpty()) {
-            sections.add(uncategorized);
+
+        if (!uncategorizedTodos.isEmpty()) {
+            sections.add(buildSection("uncategorized", "미분류", uncategorizedTodos));
         }
         return sections;
     }
 
     private List<GroupMemberTodosResponseDto.SectionDto> buildDaySections(List<Todo> todos, LocalDate startDate) {
-        Map<LocalDate, GroupMemberTodosResponseDto.SectionDto> sectionsByDate = new LinkedHashMap<>();
-        sectionsByDate.put(startDate, new GroupMemberTodosResponseDto.SectionDto("today", "오늘", new ArrayList<>()));
-        sectionsByDate.put(startDate.plusDays(1), new GroupMemberTodosResponseDto.SectionDto("tomorrow", "내일", new ArrayList<>()));
-        sectionsByDate.put(startDate.plusDays(2), new GroupMemberTodosResponseDto.SectionDto("dayAfterTomorrow", "2일 후", new ArrayList<>()));
+        LocalDate tomorrow = startDate.plusDays(1);
+        LocalDate dayAfterTomorrow = startDate.plusDays(2);
 
-        List<TodoResponseDTO> sortedTodos = todos.stream()
+        Map<LocalDate, List<TodoResponseDTO>> todosByDate = new LinkedHashMap<>();
+        todosByDate.put(startDate, new ArrayList<>());
+        todosByDate.put(tomorrow, new ArrayList<>());
+        todosByDate.put(dayAfterTomorrow, new ArrayList<>());
+
+        todos.stream()
                 .sorted(dayViewComparator())
                 .map(TodoResponseDTO::from)
-                .toList();
+                .forEach(todo -> {
+                    List<TodoResponseDTO> sectionTodos = todosByDate.get(todo.getDueDate());
+                    if (sectionTodos != null) {
+                        sectionTodos.add(todo);
+                    }
+                });
 
-        for (TodoResponseDTO todo : sortedTodos) {
-            GroupMemberTodosResponseDto.SectionDto section = sectionsByDate.get(todo.getDueDate());
-            if (section != null) {
-                section.todos().add(todo);
-            }
-        }
-        return new ArrayList<>(sectionsByDate.values());
+        return List.of(
+                buildSection("today", "오늘", todosByDate.get(startDate)),
+                buildSection("tomorrow", "내일", todosByDate.get(tomorrow)),
+                buildSection("dayAfterTomorrow", "2일 후", todosByDate.get(dayAfterTomorrow))
+        );
+    }
+
+    private GroupMemberTodosResponseDto.SectionDto buildSection(
+            String key, String label, List<TodoResponseDTO> todos) {
+        long totalCount = todos.size();
+        long doneCount = todos.stream()
+                .filter(todo -> Boolean.TRUE.equals(todo.getIsDone()))
+                .count();
+        return new GroupMemberTodosResponseDto.SectionDto(key, label, totalCount, doneCount, todos);
     }
 
     private Comparator<Todo> categoryViewComparator() {
