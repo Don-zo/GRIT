@@ -6,7 +6,6 @@ import grit.domain.group.entity.MemberGroup;
 import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.entity.Member;
-import grit.domain.member.repository.MemberRepository;
 import grit.global.exception.AccessDeniedException;
 import grit.global.exception.EntityAlreadyExistsException;
 import grit.global.exception.EntityNotFoundException;
@@ -33,7 +32,6 @@ public class GroupService {
 
     private final GroupRepository groupRepository;
     private final MemberGroupRepository memberGroupRepository;
-    private final MemberRepository memberRepository;
     private final S3Service s3Service;
 
     @Transactional
@@ -158,11 +156,9 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public Group validateGroupMembership(String groupCode, Long requesterUserId) {
-        Member requester = memberRepository.findById(requesterUserId)
-                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
         Group group = findGroupByCode(groupCode);
 
-        if (!memberGroupRepository.existsByMemberAndGroup(requester, group)) {
+        if (!memberGroupRepository.existsByMember_IdAndGroup_Id(requesterUserId, group.getId())) {
             throw new AccessDeniedException("해당 그룹의 멤버가 아닙니다.");
         }
         return group;

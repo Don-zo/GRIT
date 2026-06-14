@@ -113,16 +113,13 @@ public class TodoService {
             }
         }
 
-        List<GroupMemberTodosResponseDto.SectionDto> sections = categories.stream()
-                .map(category -> {
-                    List<TodoResponseDTO> categoryTodos = todosByCategoryId.get(category.getId());
-                    if (categoryTodos.isEmpty()) {
-                        return null;
-                    }
-                    return buildSection("category:" + category.getId(), category.getName(), categoryTodos);
-                })
-                .filter(section -> section != null)
-                .collect(Collectors.toCollection(ArrayList::new));
+        List<GroupMemberTodosResponseDto.SectionDto> sections = new ArrayList<>();
+        for (TodoCategory category : categories) {
+            List<TodoResponseDTO> categoryTodos = todosByCategoryId.get(category.getId());
+            if (!categoryTodos.isEmpty()) {
+                sections.add(buildSection("category:" + category.getId(), category.getName(), categoryTodos));
+            }
+        }
 
         if (!uncategorizedTodos.isEmpty()) {
             sections.add(buildSection("uncategorized", "미분류", uncategorizedTodos));
