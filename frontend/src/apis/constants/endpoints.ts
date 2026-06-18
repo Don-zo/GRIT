@@ -17,6 +17,9 @@ export const ENDPOINTS = {
     CREATE: "/api/groups",
     MY: "/api/groups/my",
     INFO: (groupCode: string) => `/api/groups/${groupCode}`,
+    MEMBERS: (groupCode: string) => `/api/groups/${groupCode}/members`,
+    MEMBER_TODOS: (groupCode: string, memberId: number) =>
+      `/api/groups/${groupCode}/members/${memberId}/todos`,
     JOIN: (groupCode: string) => `/api/groups/${groupCode}/join`,
     IMAGE_UPLOAD: "/api/groups/image-upload-url",
   },

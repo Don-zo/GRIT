@@ -20,6 +20,7 @@ import type { ReactionItem } from "@/pages/Room/components/ReactionFloater";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { useLiveKit } from "@/hooks/useLiveKit";
 import { LIVEKIT_URL } from "@/apis/constants/endpoints";
+import { groupApi } from "@/apis/domains/group/api";
 
 type PomodoroConfig = {
   studyMinutes: number;
@@ -50,7 +51,11 @@ const RoomPage = () => {
     if (!groupCode) return;
     sendEmojiReaction(reaction);
   };
-
+  const { data: groupMembers = [] } = useQuery({
+    queryKey: QUERY_KEYS.groups.members(groupCode ?? ""),
+    queryFn: () => groupApi.getGroupMembers(groupCode!),
+    enabled: !!groupCode,
+  });
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [, setLivekitTestStatus] = useState(""); //테스트 상태메세지
   const [receivedReactions, setReceivedReactions] = useState<ReactionItem[]>([]);
@@ -192,7 +197,11 @@ const RoomPage = () => {
           }`}
         >
           <div className="w-[480px] h-full py-6 pl-4 pr-20">
-            <TodoCamCard variant="panel" />
+            <TodoCamCard
+              variant="panel"
+              groupCode={groupCode}
+              members={groupMembers}
+            />
           </div>
         </div>
       </div>

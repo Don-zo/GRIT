@@ -53,7 +53,6 @@ export default function CircularProgress({
       className="relative flex items-center justify-center"
       style={{ width: size, height: size }}
     >
-      {/* 진행 링 */}
       <div
         className="absolute inset-0 rounded-full"
         style={{
@@ -65,7 +64,6 @@ export default function CircularProgress({
         }}
       />
 
-      {/* 시작점 */}
       <div
         className="absolute rounded-full bg-green-semidark"
         style={{
@@ -78,7 +76,6 @@ export default function CircularProgress({
         }}
       />
 
-      {/* 끝 점 */}
       <div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
         style={{
@@ -100,7 +97,6 @@ export default function CircularProgress({
         </div>
       </div>
 
-      {/* 내부 원 */}
       <div
         className="flex items-center justify-center rounded-full bg-[#CBCDCD]"
         style={{
