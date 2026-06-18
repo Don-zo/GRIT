@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATHS } from "@/routes/path";
 import BottomBar from "@/pages/Room/components/BottomBar/BottomBar";
@@ -9,7 +9,14 @@ import CamLayout from "@/pages/Room/components/Cam/CamLayout";
 import TodoCamCard from "@/pages/Room/components/todo/TodoCamCard";
 import VideoTile from "@/pages/Room/components/Cam/VideoTile";
 
-import { getLiveKitToken, getReactions } from "@/apis/domains/livekit/api";
+import {
+  getLiveKitToken,
+  getReactions,
+  sendReaction,
+} from "@/apis/domains/livekit/api";
+import type { Reaction, LiveKitReactionMessage } from "@/apis/domains/livekit/type";
+import ReactionFloater from "@/pages/Room/components/ReactionFloater";
+import type { ReactionItem } from "@/pages/Room/components/ReactionFloater";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { useLiveKit } from "@/hooks/useLiveKit";
 import { LIVEKIT_URL } from "@/apis/constants/endpoints";
@@ -31,8 +38,37 @@ const RoomPage = () => {
     enabled: !!groupCode,
   });
 
+  const { mutate: sendEmojiReaction } = useMutation({
+    mutationFn: (reaction: Reaction) =>
+      sendReaction(groupCode!, { emoji: reaction.name }),
+    onError: (error) => {
+      console.error("이모지 전송 실패", error);
+    },
+  });
+
+  const handleSendReaction = (reaction: Reaction) => {
+    if (!groupCode) return;
+    sendEmojiReaction(reaction);
+  };
+
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [, setLivekitTestStatus] = useState(""); //테스트 상태메세지
+  const [receivedReactions, setReceivedReactions] = useState<ReactionItem[]>([]);
+
+  const handleDataReceived = useCallback((payload: Uint8Array) => {
+    try {
+      const text = new TextDecoder().decode(payload);
+      const data = JSON.parse(text) as LiveKitReactionMessage;
+      const id = Date.now() + Math.random();
+      const left = 10 + Math.random() * 70; // 10% ~ 80% 사이 랜덤 X
+      setReceivedReactions((prev) => [...prev, { ...data, id, left }]);
+      setTimeout(() => {
+        setReceivedReactions((prev) => prev.filter((r) => r.id !== id));
+      }, 3000);
+    } catch {
+      // 파싱 불가한 메시지는 무시
+    }
+  }, []);
 
   //token && serverUrl 있을 때만 연결
   const {
@@ -46,6 +82,7 @@ const RoomPage = () => {
   } = useLiveKit({
     serverUrl: token ? LIVEKIT_URL : "",
     token: token || "",
+    onDataReceived: handleDataReceived,
   });
 
   //나가기 핸들러
@@ -76,7 +113,6 @@ const RoomPage = () => {
   useEffect(() => {
     if (isConnected) {
       setLivekitTestStatus("livekit 연결 성공");
-      console.log("livekit 연결");
     }
   }, [isConnected, remoteParticipants]);
 
@@ -135,7 +171,7 @@ const RoomPage = () => {
   );
 
   return (
-    <div className="flex flex-col w-full h-screen bg-gray-darkest">
+    <div className="relative flex flex-col w-full h-screen bg-gray-darkest">
       <TopBar
         isTodoOpen={todoOpen}
         onToggleTodo={() => setTodoOpen((prev) => !prev)}
@@ -160,8 +196,11 @@ const RoomPage = () => {
           </div>
         </div>
       </div>
+      <ReactionFloater reactions={receivedReactions} />
+
       <BottomBar
         reactions={reactions}
+        onSendReaction={handleSendReaction}
         onPomodoroStart={(config) => {
           setPomodoroConfig(config);
         }}

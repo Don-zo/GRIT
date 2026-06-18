@@ -12,7 +12,7 @@ import {
 } from "livekit-client";
 import type { UseLiveKitProps, ParticipantData } from "@/types/livekit";
 
-export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
+export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps) => {
   const [room, setRoom] = useState<Room | null>(null);
   const [participants, setParticipants] = useState<
     Map<string, ParticipantData>
@@ -23,6 +23,7 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
   const [error, setError] = useState<Error | null>(null);
 
   const roomRef = useRef<Room | null>(null);
+  const pendingRoomRef = useRef<Room | null>(null);
 
   // 참가자 데이터 업데이트
   const updateParticipant = useCallback(
@@ -52,43 +53,28 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
     [],
   );
 
-  // LiveKit Room 연결
-  const connectToRoom = useCallback(async () => {
-    try {
-      const newRoom = new Room({
-        adaptiveStream: true,
-        dynacast: true,
-        videoCaptureDefaults: {
-          resolution: {
-            width: 1280,
-            height: 720,
-            frameRate: 30,
-          },
-        },
-      });
-
-      // 이벤트 리스너 설정
+  const setupRoomListeners = useCallback(
+    (newRoom: Room) => {
       newRoom
+        .on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {
+          onDataReceived?.(payload, participant, kind, topic);
+        })
         .on(RoomEvent.Connected, () => {
-          console.log("LiveKit Room에 연결됨"); //TODO: 테스트용 콘솔
           setIsConnected(true);
           setLocalParticipant(newRoom.localParticipant);
         })
         .on(RoomEvent.Disconnected, () => {
-          console.log("LiveKit Room 연결 해제됨"); //TODO: 테스트용 콘솔
           setIsConnected(false);
         })
         .on(
           RoomEvent.ParticipantConnected,
           (participant: RemoteParticipant) => {
-            console.log("참가자 입장:", participant.identity); //TODO: 테스트용 콘솔
             updateParticipant(participant);
           },
         )
         .on(
           RoomEvent.ParticipantDisconnected,
           (participant: RemoteParticipant) => {
-            console.log("참가자 퇴장:", participant.identity); //TODO: 테스트용 콘솔
             setParticipants((prev) => {
               const next = new Map(prev);
               next.delete(participant.identity);
@@ -103,7 +89,6 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
             _publication: RemoteTrackPublication,
             participant: RemoteParticipant,
           ) => {
-            console.log("트랙 구독:", participant.identity, track.kind); //TODO: 테스트용 콘솔
             updateParticipant(participant);
           },
         )
@@ -114,14 +99,12 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
             _publication: RemoteTrackPublication,
             participant: RemoteParticipant,
           ) => {
-            console.log("트랙 구독 해제:", participant.identity, track.kind); //TODO: 테스트용 콘솔
             updateParticipant(participant);
           },
         )
         .on(
           RoomEvent.TrackMuted,
           (_publication: TrackPublication, participant: Participant) => {
-            console.log("트랙 음소거:", participant.identity); //TODO: 테스트용 콘솔
             updateParticipant(
               participant as RemoteParticipant | LocalParticipant,
             );
@@ -130,24 +113,51 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
         .on(
           RoomEvent.TrackUnmuted,
           (_publication: TrackPublication, participant: Participant) => {
-            console.log("트랙 음소거 해제:", participant.identity); //TODO: 테스트용 콘솔
             updateParticipant(
               participant as RemoteParticipant | LocalParticipant,
             );
           },
         )
-
         .on(RoomEvent.LocalTrackPublished, () => {
           setLocalParticipant(newRoom.localParticipant);
         })
         .on(RoomEvent.LocalTrackUnpublished, () => {
           setLocalParticipant(newRoom.localParticipant);
         });
+    },
+    [updateParticipant, onDataReceived],
+  );
+
+  // LiveKit Room 연결
+  const connectToRoom = useCallback(async () => {
+    if (!serverUrl || !token) return;
+
+    try {
+      const newRoom = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+        videoCaptureDefaults: {
+          resolution: {
+            width: 1280,
+            height: 720,
+            frameRate: 30,
+          },
+        },
+      });
+
+      pendingRoomRef.current = newRoom;
+      setupRoomListeners(newRoom);
 
       await newRoom.connect(serverUrl, token);
 
+      if (pendingRoomRef.current !== newRoom) {
+        newRoom.disconnect();
+        return;
+      }
+
       setRoom(newRoom);
       roomRef.current = newRoom;
+      pendingRoomRef.current = null;
       setLocalParticipant(newRoom.localParticipant);
 
       await newRoom.localParticipant.setCameraEnabled(true);
@@ -157,10 +167,10 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
         updateParticipant(participant);
       });
     } catch (err) {
-      console.error("LiveKit 연결 실패:", err); //TODO: 테스트용 콘솔
+      console.error("LiveKit 연결 실패:", err);
       setError(err as Error);
     }
-  }, [serverUrl, token, updateParticipant]);
+  }, [serverUrl, token, setupRoomListeners, updateParticipant]);
 
   // 마이크 토글
   const toggleMicrophone = useCallback(async () => {
@@ -195,15 +205,16 @@ export const useLiveKit = ({ serverUrl, token }: UseLiveKitProps) => {
       connectToRoom();
     }
 
-    // cleanup 함수
     return () => {
-      if (roomRef.current) {
-        roomRef.current.disconnect();
-        roomRef.current = null;
-        setRoom(null);
-        setParticipants(new Map());
-        setIsConnected(false);
+      const roomToDisconnect = pendingRoomRef.current ?? roomRef.current;
+      if (roomToDisconnect) {
+        roomToDisconnect.disconnect();
       }
+      pendingRoomRef.current = null;
+      roomRef.current = null;
+      setRoom(null);
+      setParticipants(new Map());
+      setIsConnected(false);
     };
   }, [serverUrl, token, connectToRoom]);
 

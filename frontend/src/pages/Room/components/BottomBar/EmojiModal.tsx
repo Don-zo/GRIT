@@ -11,14 +11,15 @@ export default function EmojiModal({
     <div className="absolute bottom-25 left-1/2 -translate-x-1/2">
       <div
         className="
+                relative z-10
                 w-auto
                 bg-gray-dark/100
                 rounded-xl 
-                px-11 py-4
+                px-6 py-3
                 shadow-xl 
-                text-[40px]
+                text-[28px]
                 grid grid-rows-2 grid-flow-col auto-cols-max
-                gap-x-6 gap-y-1.5 justify-center
+                gap-x-3 gap-y-1 justify-center
             "
       >
         <div
@@ -29,6 +30,7 @@ export default function EmojiModal({
                     backdrop-inherit
                     rotate-45
                     rounded-md
+                    -z-10
                 "
         />
 
