@@ -7,7 +7,6 @@ interface Participant {
   id: string;
   name: string;
   isMuted?: boolean;
-  isVideoEnabled?: boolean;
   onToggleMute?: () => void;
   video?: React.ReactNode; // 실제 비디오 스트림 컴포넌트
 }
@@ -88,9 +87,7 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
               }
             >
               <div className="flex items-center justify-center w-full h-full">
-                {participant.isVideoEnabled && participant.video ? (
-                  participant.video
-                ) : (
+                {participant.video ?? (
                   <Avatar
                     size={
                       "avatarSize" in box && typeof box.avatarSize === "number"

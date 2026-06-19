@@ -107,7 +107,6 @@ const RoomPage = () => {
       id: p.identity,
       name: p.name,
       isMuted: p.isMuted,
-      isVideoEnabled: p.isVideoEnabled,
       video: (
         <VideoTile
           videoTrack={p.videoTrack ?? undefined}
