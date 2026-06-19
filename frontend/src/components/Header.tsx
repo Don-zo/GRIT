@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { PATHS } from "@/routes/path";
 import { logout, signout } from "@/apis/domains/auth/api";
@@ -97,7 +97,15 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
       }`}
     >
       <div className="mx-auto flex w-full items-center justify-between">
-        <h1 className={`text-3xl font-extrabold ${currentStyle.text}`}>GRIT</h1>
+        <h1 className="text-3xl font-extrabold">
+          <Link
+            to={PATHS.HOME}
+            className={`${currentStyle.text} cursor-pointer`}
+            aria-label="홈"
+          >
+            GRIT
+          </Link>
+        </h1>
 
         <div className="flex gap-3 items-center">
           {user ? (

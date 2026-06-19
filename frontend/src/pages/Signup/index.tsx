@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import SocialLoginButton from "@/components/auth/SocialLoginButton";
+import { PATHS } from "@/routes/path";
 import { redirectToGoogleAuth } from "@/utils/oauth";
 
 const SignupPage = () => {
@@ -38,7 +40,9 @@ const SignupPage = () => {
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="px-8 pt-6">
           <h1 className="text-4xl font-extrabold text-[var(--color-green-semidark)]/80">
-            GRIT
+            <Link to={PATHS.HOME} className="cursor-pointer" aria-label="홈">
+              GRIT
+            </Link>
           </h1>
         </header>
 
