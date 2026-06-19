@@ -93,7 +93,7 @@ export default function CreateGroupModal({
           <Modal.Title />
         </Modal.Header>
 
-        <Modal.Body className="flex flex-col items-center pb-6">
+        <Modal.Body className="flex flex-col items-center pb-8">
           <ImageUploader size={140} onImageChange={setImageFile} />
           <div className="mx-auto mt-6 w-full max-w-[320px]">
             <label className="mb-2 block text-sm font-medium text-[#D6FDE5]">
@@ -117,8 +117,8 @@ export default function CreateGroupModal({
               {isPending ? "생성 중..." : "그룹 생성하기"}
             </button>
 
-            <p className="mt-4 text-center text-xs text-[#D6FDE5]">
-              그룹에 참여 가능한 인원은 최대 8명입니다.
+            <p className="mt-4 text-center text-sm font-medium text-[#D6FDE5]">
+              그룹에 참여 가능한 인원은 최대 6명입니다.
             </p>
           </div>
 

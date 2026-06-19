@@ -14,6 +14,7 @@ type PomodoroConfig = {
 
 type BottomBarProps = {
   reactions?: Reaction[];
+  onSendReaction?: (reaction: Reaction) => void;
   onPomodoroStart?: (config: PomodoroConfig) => void;
   onToggleMic?: () => void;
   onToggleCam?: () => void;
@@ -22,6 +23,7 @@ type BottomBarProps = {
 
 export default function BottomBar({
   reactions = [],
+  onSendReaction,
   onPomodoroStart,
   onToggleMic,
   onToggleCam,
@@ -101,7 +103,7 @@ export default function BottomBar({
         open={emojiOpen}
         reactions={reactions}
         onSelect={(reaction) => {
-          console.log(reaction.name, reaction.emoji, "를 선택하였습니다.");
+          onSendReaction?.(reaction);
         }}
         onClose={() => setEmojiOpen(false)}
       />

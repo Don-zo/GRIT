@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { useToastContext } from "@/contexts/ToastContext";
 import Modal from "@/components/Modal";
 import { groupApi } from "@/apis/domains/group/api";
@@ -10,36 +11,53 @@ type JoinGroupModalProps = {
   onClose: () => void;
 };
 
+const GROUP_FULL_ERROR_MESSAGE = "그룹의 최대 가입 가능 인원은 6명입니다";
+
 export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
   const [inviteCode, setInviteCode] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const { notify } = useToastContext();
   const queryClient = useQueryClient();
 
-  const { mutateAsync: joinGroup, isPending } = useMutation({
+  const { mutate: joinGroup, isPending } = useMutation({
     mutationFn: (groupCode: string) => groupApi.join(groupCode),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups.my });
       setInviteCode("");
+      setErrorMessage("");
       onClose();
       notify("그룹 참여가 완료되었습니다", "success");
     },
     onError: (error) => {
       console.log("그룹 참여 실패", error);
+
+      if (isAxiosError(error) && error.response?.status === 409) {
+        setErrorMessage(GROUP_FULL_ERROR_MESSAGE);
+        return;
+      }
+
       notify("그룹 참여에 실패했습니다. 다시 시도해주세요.", "error");
     },
   });
 
-  const handleJoinNewGroup = async () => {
+  const handleJoinNewGroup = () => {
     const groupCode = inviteCode.trim();
     if (!groupCode) {
       return;
     }
-    await joinGroup(groupCode);
+    setErrorMessage("");
+    joinGroup(groupCode);
+  };
+
+  const handleClose = () => {
+    setInviteCode("");
+    setErrorMessage("");
+    onClose();
   };
 
   return (
-    <Modal isOpen={open} onClose={onClose}>
+    <Modal isOpen={open} onClose={handleClose}>
       <Modal.Overlay />
       <Modal.Content>
         <Modal.CloseButton />
@@ -55,7 +73,10 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
             <input
               type="text"
               value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value)}
+              onChange={(e) => {
+                setInviteCode(e.target.value);
+                setErrorMessage("");
+              }}
               className="h-12 w-full rounded-xl bg-white px-4 text-base text-gray-900 outline-none"
               aria-label="초대 코드"
               placeholder="초대 코드를 입력하세요"
@@ -71,6 +92,12 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
           >
             {isPending ? "참여 중..." : "참여하기"}
           </button>
+
+          {errorMessage && (
+            <p className="mt-4 text-center text-sm font-medium text-red-400">
+              {errorMessage}
+            </p>
+          )}
         </Modal.Body>
       </Modal.Content>
     </Modal>
