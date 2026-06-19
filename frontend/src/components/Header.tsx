@@ -97,7 +97,14 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
       }`}
     >
       <div className="mx-auto flex w-full items-center justify-between">
-        <h1 className={`text-3xl font-extrabold ${currentStyle.text}`}>GRIT</h1>
+        <button
+          type="button"
+          onClick={() => navigate(PATHS.HOME)}
+          className={`text-3xl font-extrabold ${currentStyle.text} cursor-pointer`}
+          aria-label="홈"
+        >
+          GRIT
+        </button>
 
         <div className="flex gap-3 items-center">
           {user ? (

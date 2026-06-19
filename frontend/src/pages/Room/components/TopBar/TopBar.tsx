@@ -1,6 +1,8 @@
 import CustomBtn from "@/pages/Room/components/CustomBtn";
-import { useState, useEffect } from 'react';
-import { Play, Disc3, ListChecks, Settings } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Play, ListChecks, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "@/routes/path";
 
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
@@ -15,6 +17,7 @@ type TopBarProps = {
 };
 
 export default function TopBar({ isTodoOpen = false, onToggleTodo }: TopBarProps) {
+  const navigate = useNavigate();
   const [dDay] = useState(23);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -33,9 +36,14 @@ export default function TopBar({ isTodoOpen = false, onToggleTodo }: TopBarProps
     <div className="flex items-center justify-between w-full h-20 gap-4 px-6">
 
       <div className="flex items-center h-full gap-5">
-        <div className="flex items-center h-full font-extrabold text-green-normal text-[50px]">
+        <button
+          type="button"
+          onClick={() => navigate(PATHS.HOME)}
+          className="flex items-center h-full font-extrabold text-green-normal text-[50px] cursor-pointer"
+          aria-label="홈"
+        >
           GRIT
-        </div>
+        </button>
 
         <div className="flex flex-col justify-center h-full leading-5.5 relative bottom-[2px] text-white">
           <div className="flex gap-1 ml-0.5 text-bodyMd items-center">
