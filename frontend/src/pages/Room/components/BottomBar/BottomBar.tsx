@@ -33,18 +33,18 @@ export default function BottomBar({
   const [pomodoroOpen, setPomodoroOpen] = useState(false);
 
   const handleMicToggle = () => {
+    setMicOn((prev) => !prev);
+
     if (onToggleMic) {
       onToggleMic();
-    } else {
-      setMicOn((prev) => !prev);
     }
   };
 
   const handleCamToggle = () => {
+    setCamOn((prev) => !prev);
+
     if (onToggleCam) {
       onToggleCam();
-    } else {
-      setCamOn((prev) => !prev);
     }
   };
 
@@ -64,7 +64,7 @@ export default function BottomBar({
         isActive={micOn}
         icon={<MicOff />}
         activeIcon={<Mic />}
-        bgColor="bg-gray-dark"
+        bgColor="bg-tomato"
         activeBgColor="bg-green-semidark"
         onClick={handleMicToggle}
       />
@@ -75,7 +75,7 @@ export default function BottomBar({
         isActive={camOn}
         icon={<VideoOff />}
         activeIcon={<Video />}
-        bgColor="bg-gray-dark"
+        bgColor="bg-tomato"
         activeBgColor="bg-green-semidark"
         onClick={handleCamToggle}
       />

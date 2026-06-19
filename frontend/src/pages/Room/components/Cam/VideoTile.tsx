@@ -8,13 +8,14 @@ type VideoTileProps = {
   audioTrack?: Track | null;
 };
 
+type AudioTileProps = Pick<VideoTileProps, "participant" | "audioTrack">;
+
 export default function VideoTile({
   participant,
   videoTrack,
   audioTrack,
 }: VideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     const track = participant
@@ -34,6 +35,20 @@ export default function VideoTile({
     };
   }, [participant, videoTrack]);
 
+  return (
+    <video
+      ref={videoRef}
+      autoPlay
+      playsInline
+      muted
+      className="w-full h-full object-cover"
+    />
+  );
+}
+
+export function AudioTile({ participant, audioTrack }: AudioTileProps) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
   useEffect(() => {
     const track = participant
       ? participant.getTrackPublication(Track.Source.Microphone)?.track
@@ -52,16 +67,5 @@ export default function VideoTile({
     };
   }, [participant, audioTrack]);
 
-  return (
-    <>
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-full h-full object-cover"
-      />
-      {!participant && <audio ref={audioRef} autoPlay />}
-    </>
-  );
+  return <audio ref={audioRef} autoPlay />;
 }
