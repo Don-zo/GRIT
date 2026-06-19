@@ -1,12 +1,10 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import SocialLoginButton from "@/components/auth/SocialLoginButton";
 import { PATHS } from "@/routes/path";
 import { redirectToGoogleAuth } from "@/utils/oauth";
 
 const SignupPage = () => {
-  const navigate = useNavigate();
-
   const handleGoogleLogin = () => {
     redirectToGoogleAuth();
   };
@@ -41,14 +39,11 @@ const SignupPage = () => {
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="px-8 pt-6">
-          <button
-            type="button"
-            onClick={() => navigate(PATHS.HOME)}
-            className="text-4xl font-extrabold text-[var(--color-green-semidark)]/80 cursor-pointer"
-            aria-label="홈"
-          >
-            GRIT
-          </button>
+          <h1 className="text-4xl font-extrabold text-[var(--color-green-semidark)]/80">
+            <Link to={PATHS.HOME} className="cursor-pointer" aria-label="홈">
+              GRIT
+            </Link>
+          </h1>
         </header>
 
         <main className="flex flex-1 text-center items-center sm:pl-16 md:pl-32 lg:pl-56 xl:pl-64">
