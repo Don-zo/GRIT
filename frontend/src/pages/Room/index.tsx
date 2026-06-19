@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATHS } from "@/routes/path";
@@ -27,6 +27,18 @@ type PomodoroConfig = {
   breakMinutes: number;
   repeat: number;
   enabled: boolean;
+};
+
+const isLiveKitReactionMessage = (
+  value: unknown,
+): value is LiveKitReactionMessage => {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<LiveKitReactionMessage>;
+  return (
+    typeof candidate.emoji === "string" &&
+    typeof candidate.emojiChar === "string" &&
+    typeof candidate.senderNickname === "string"
+  );
 };
 
 const RoomPage = () => {
@@ -59,17 +71,34 @@ const RoomPage = () => {
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [, setLivekitTestStatus] = useState(""); //테스트 상태메세지
   const [receivedReactions, setReceivedReactions] = useState<ReactionItem[]>([]);
+  const reactionTimeoutsRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    return () => {
+      reactionTimeoutsRef.current.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      reactionTimeoutsRef.current = [];
+    };
+  }, []);
 
   const handleDataReceived = useCallback((payload: Uint8Array) => {
     try {
       const text = new TextDecoder().decode(payload);
-      const data = JSON.parse(text) as LiveKitReactionMessage;
+      const data = JSON.parse(text);
+      if (!isLiveKitReactionMessage(data)) return;
+
       const id = Date.now() + Math.random();
       const left = 10 + Math.random() * 70; // 10% ~ 80% 사이 랜덤 X
       setReceivedReactions((prev) => [...prev, { ...data, id, left }]);
-      setTimeout(() => {
+
+      const timeoutId = window.setTimeout(() => {
         setReceivedReactions((prev) => prev.filter((r) => r.id !== id));
+        reactionTimeoutsRef.current = reactionTimeoutsRef.current.filter(
+          (savedId) => savedId !== timeoutId,
+        );
       }, 3000);
+      reactionTimeoutsRef.current.push(timeoutId);
     } catch {
       // 파싱 불가한 메시지는 무시
     }

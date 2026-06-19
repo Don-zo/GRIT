@@ -24,6 +24,11 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
 
   const roomRef = useRef<Room | null>(null);
   const pendingRoomRef = useRef<Room | null>(null);
+  const onDataReceivedRef = useRef(onDataReceived);
+
+  useEffect(() => {
+    onDataReceivedRef.current = onDataReceived;
+  }, [onDataReceived]);
 
   // 참가자 데이터 업데이트
   const updateParticipant = useCallback(
@@ -57,7 +62,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
     (newRoom: Room) => {
       newRoom
         .on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {
-          onDataReceived?.(payload, participant, kind, topic);
+          onDataReceivedRef.current?.(payload, participant, kind, topic);
         })
         .on(RoomEvent.Connected, () => {
           setIsConnected(true);
@@ -125,7 +130,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
           setLocalParticipant(newRoom.localParticipant);
         });
     },
-    [updateParticipant, onDataReceived],
+    [updateParticipant],
   );
 
   // LiveKit Room 연결
@@ -206,9 +211,14 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
     }
 
     return () => {
-      const roomToDisconnect = pendingRoomRef.current ?? roomRef.current;
-      if (roomToDisconnect) {
-        roomToDisconnect.disconnect();
+      const pendingRoom = pendingRoomRef.current;
+      const activeRoom = roomRef.current;
+
+      if (pendingRoom) {
+        pendingRoom.disconnect();
+      }
+      if (activeRoom && activeRoom !== pendingRoom) {
+        activeRoom.disconnect();
       }
       pendingRoomRef.current = null;
       roomRef.current = null;

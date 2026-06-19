@@ -20,7 +20,7 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
   const { notify } = useToastContext();
   const queryClient = useQueryClient();
 
-  const { mutateAsync: joinGroup, isPending } = useMutation({
+  const { mutate: joinGroup, isPending } = useMutation({
     mutationFn: (groupCode: string) => groupApi.join(groupCode),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups.my });
@@ -41,13 +41,13 @@ export default function JoinGroupModal({ open, onClose }: JoinGroupModalProps) {
     },
   });
 
-  const handleJoinNewGroup = async () => {
+  const handleJoinNewGroup = () => {
     const groupCode = inviteCode.trim();
     if (!groupCode) {
       return;
     }
     setErrorMessage("");
-    await joinGroup(groupCode);
+    joinGroup(groupCode);
   };
 
   const handleClose = () => {
