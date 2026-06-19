@@ -61,7 +61,7 @@ export default function VideoTile({
         muted
         className="w-full h-full object-cover"
       />
-      {!participant && <audio ref={audioRef} autoPlay />}
+      <audio ref={audioRef} autoPlay />
     </>
   );
 }
