@@ -17,11 +17,10 @@ export default function CircularProgress({
   const [displayAngle, setDisplayAngle] = useState(0);
   const rafRef = useRef<number | null>(null);
 
-  // ✨ 느리고 자연스러운 ease-out
   const easeOutQuad = (t: number) => 1 - (1 - t) * (1 - t);
 
   useEffect(() => {
-    const duration = 700; // 🔥 더 느리게
+    const duration = 700;
     const startTime = performance.now();
     const startAngle = displayAngle;
     const diff = targetAngle - startAngle;
@@ -44,7 +43,6 @@ export default function CircularProgress({
     };
   }, [targetAngle]);
 
-  // geometry
   const ringRadius = size / 2 - thickness / 2;
   const dotSize = thickness + 5;
   const innerCircleSize = size - thickness * 2;
@@ -55,21 +53,19 @@ export default function CircularProgress({
       className="relative flex items-center justify-center"
       style={{ width: size, height: size }}
     >
-      {/* 진행 링 */}
       <div
         className="absolute inset-0 rounded-full"
         style={{
           background: `conic-gradient(
             from -360deg,
-            #3E6D5B 0deg ${displayAngle}deg,
+            #3E7358 0deg ${displayAngle}deg,
             #C5C8C7 ${displayAngle}deg 360deg
           )`,
         }}
       />
 
-      {/* 시작점 */}
       <div
-        className="absolute rounded-full bg-[#3E6D5B]"
+        className="absolute rounded-full bg-green-semidark"
         style={{
           top: "50%",
           left: "50%",
@@ -80,7 +76,6 @@ export default function CircularProgress({
         }}
       />
 
-      {/* 끝 점 */}
       <div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
         style={{
@@ -90,7 +85,7 @@ export default function CircularProgress({
       >
         <div className="relative w-full h-full">
           <div
-            className="absolute rounded-full bg-[#3E6D5B]"
+            className="absolute rounded-full bg-green-semidark"
             style={{
               top: "50%",
               left: "50%",
@@ -102,7 +97,6 @@ export default function CircularProgress({
         </div>
       </div>
 
-      {/* 내부 원 */}
       <div
         className="flex items-center justify-center rounded-full bg-[#CBCDCD]"
         style={{
@@ -112,7 +106,7 @@ export default function CircularProgress({
         }}
       >
         <div
-          className="flex items-center justify-center rounded-full bg-[#3E6D5B] text-white font-semibold"
+          className="flex items-center justify-center font-semibold text-white rounded-full bg-green-semidark select-none"
           style={{
             width: centerCircleSize,
             height: centerCircleSize,

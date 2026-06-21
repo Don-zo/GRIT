@@ -3,6 +3,83 @@
 @import "./styles/tokens.css" layer(theme);
 @import "./styles/fonts.css" layer(theme);
 
+html {
+  scrollbar-gutter: stable;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  background-color: var(--color-gray-darkest);
+}
+
+.hero-bg-enter {
+  animation: hero-bg-fade-in 900ms ease-out forwards;
+}
+
+@keyframes hero-bg-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateX(80px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.hero-char {
+  opacity: 0;
+  display: inline-block;
+  animation: hero-char-fade 250ms ease-out forwards;
+}
+
+@keyframes hero-char-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.grit-logo-text {
+  opacity: 0;
+  animation: grit-logo-fade-in 0.5s ease-out forwards;
+}
+
+@keyframes grit-logo-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.hero-underline-mask-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: hero-underline-reveal 2000ms ease-out forwards;
+}
+
+@keyframes hero-underline-reveal {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.hero-g-cover-erase {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 0;
+  animation: hero-g-cover-erase 2000ms ease-out forwards;
+}
+
+@keyframes hero-g-cover-erase {
+  to {
+    stroke-dashoffset: -2000;
+  }
+}
+
 .round-except-tl {
   border-top-left-radius: 0;
   border-top-right-radius: 16px;
@@ -15,4 +92,17 @@
   border-top-right-radius: 16px;
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
+}
+
+.pomodoro-toggle {
+  display: inline-flex;
+}
+
+.pomodoro-toggle button {
+  height: 28px;
+  width: 52px;
+}
+
+.pomodoro-toggle--off button {
+  background-color: #c9c9c9 !important;
 }
