@@ -14,10 +14,13 @@ export default {
       },
       gray: {
         light: '#E5E5E5',
-        dark: '#383B42'
+        semidark: '#555555',
+        dark: '#383B42',
+        darker: '#2E3039',
+        darkest: '#1C1E27',
       },
       white: '#EEEEEE',
-      tomato: '#A43F3D'
+      tomato: '#A43F3D',
     },
     fontSize: {
       h1: ['32px', { lineHeight: '42px', fontWeight: '700' }],
@@ -31,4 +34,5 @@ export default {
     },
   },
   plugins: [],
+  safelist: ['grid-cols-3', 'grid-cols-5', 'grid-cols-7'],
 };
