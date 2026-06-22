@@ -6,32 +6,36 @@ import type { TodoItem } from "@/types/todo";
 
 interface TodoListProps {
   title: string;
-  initialItems: TodoItem[];
+  items: TodoItem[];
+  totalCount: number;
+  doneCount: number;
+  canToggle?: boolean;
+  onToggleItem?: (id: number, nextDone: boolean) => void;
 }
 
-export default function TodoList({ title, initialItems }: TodoListProps) {
+export default function TodoList({
+  title,
+  items,
+  totalCount,
+  doneCount,
+  canToggle = false,
+  onToggleItem,
+}: TodoListProps) {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<TodoItem[]>(() => initialItems);
 
-  // 🔥 애니메이션용 영역 높이
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [maxHeight, setMaxHeight] = useState(0);
 
-  const total = items.length;
-  const completed = items.filter((item) => item.done).length;
-  const left = total - completed;
-  const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const left = Math.max(0, totalCount - doneCount);
+  const progress =
+    totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
 
-  const toggleItem = (id: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, done: !item.done } : item
-      )
-    );
+  const handleToggleItem = (id: number, nextDone: boolean) => {
+    if (!canToggle || !onToggleItem) return;
+    onToggleItem(id, nextDone);
   };
 
   const handleToggle = () => {
-    // 열리는 순간에만 실제 높이를 한 번 측정해서 저장
     if (!open && contentRef.current) {
       setMaxHeight(contentRef.current.scrollHeight);
     }
@@ -40,14 +44,15 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
 
   return (
     <div className="flex flex-col w-full mb-4">
-      {/* 상단 카드 */}
-      <div className="bg-[#C5C8C7] w-full h-20 rounded-xl p-4 flex justify-between gap-4">
+      <div className="flex justify-between w-full h-20 gap-4 p-4 bg-gray-normal rounded-xl">
         <div className="flex items-center gap-4">
           <CircularProgress value={progress} />
           <div>
-            <div className="font-bold text-h5 text-[#183129]">{title}</div>
-            <div className="text-caption text-[#333333]">
-              {total}개 중 {left}개가 남았어요!
+            <div className="font-bold text-h5 text-green-darkest select-none">
+              {title}
+            </div>
+            <div className="text-caption text-gray-semidark select-none">
+              {totalCount}개 중 {left}개가 남았어요!
             </div>
           </div>
         </div>
@@ -67,7 +72,6 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
         </button>
       </div>
 
-      {/* 펼쳐지는 영역 (애니메이션) */}
       <div
         ref={contentRef}
         style={{
@@ -81,17 +85,24 @@ export default function TodoList({ title, initialItems }: TodoListProps) {
       >
         <div
           className={`
-            bg-[#E3E4E4] rounded-xl p-3 flex flex-col gap-2
+            bg-gray-light rounded-xl p-3 flex flex-col gap-2
             transition-all duration-500 ease-out
             ${open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"}
           `}
         >
           {items.map((item) => (
-            <div key={item.id} className="bg-[#C5C8C7] py-2 px-3 rounded-xl">
+            <div key={item.id} className="px-3 py-2 bg-gray-normal rounded-xl">
               <CustomCheckbox
                 checked={item.done}
-                onChange={() => toggleItem(item.id)}
+                onChange={(nextDone) => handleToggleItem(item.id, nextDone)}
                 label={item.label}
+                ariaLabel={
+                  canToggle
+                    ? item.done
+                      ? "완료 해제"
+                      : "완료"
+                    : item.label
+                }
               />
             </div>
           ))}

@@ -1,0 +1,53 @@
+import apiClient from "@/apis/client/apiClient";
+import type {
+  MemberResponse,
+  CreateMemberRequest,
+  UpdateMemberRequest,
+  NicknameAvailabilityResponse,
+} from "../auth/type";
+import type { S3uploadResponse } from "../file/type";
+import { ENDPOINTS } from "@/apis/constants/endpoints";
+
+export const userApi = {
+  createInitialInfo: async (
+    data: CreateMemberRequest,
+  ): Promise<MemberResponse> => {
+    const response = await apiClient.post<MemberResponse>(
+      ENDPOINTS.MY.PROFILE,
+      data,
+    );
+    return response.data;
+  },
+
+  get: async (): Promise<MemberResponse> => {
+    const response = await apiClient.get<MemberResponse>(ENDPOINTS.MY.INFO);
+    return response.data;
+  },
+
+  update: async (data: UpdateMemberRequest): Promise<MemberResponse> => {
+    const response = await apiClient.put<MemberResponse>(
+      ENDPOINTS.MY.PROFILE,
+      data,
+    );
+    return response.data;
+  },
+
+  checkNicknameAvailability: async (
+    nickname: string,
+  ): Promise<NicknameAvailabilityResponse> => {
+    const response = await apiClient.get<NicknameAvailabilityResponse>(
+      ENDPOINTS.MY.NICKNAME_CHECK,
+      {
+        params: { nickname },
+      },
+    );
+    return response.data;
+  },
+
+  getPresignedInfo: async (): Promise<S3uploadResponse> => {
+    const response = await apiClient.post<S3uploadResponse>(
+      ENDPOINTS.MY.IMAGE_UPLOAD,
+    );
+    return response.data;
+  },
+};
