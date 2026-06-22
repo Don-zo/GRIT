@@ -1,0 +1,52 @@
+<configuration>
+
+  <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+  <springProfile name="prod">
+
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+
+      <labels>
+        service = grit
+        application = grit
+        app = grit
+        level = %level
+      </labels>
+
+      <message>
+        <pattern>
+          %d{yyyy-MM-dd} %d{HH:mm:ss.SSS}
+          trace_id=%X{traceId:-NONE}
+          span_id=%X{spanId:-NONE}
+          trace_flags=%X{traceFlags:-NONE}
+          %-5level [%thread] --- %logger{36} - %msg%n
+        </pattern>
+      </message>
+
+      <http>
+        <url>http://192.168.32.152:3101/loki/api/v1/push</url>
+        <connectTimeoutMs>3000</connectTimeoutMs>
+        <requestTimeoutMs>5000</requestTimeoutMs>
+      </http>
+
+      <batch>
+        <maxItems>500</maxItems>
+        <timeoutMs>5000</timeoutMs>
+      </batch>
+
+    </appender>
+
+    <appender name="ASYNC_LOKI" class="ch.qos.logback.classic.AsyncAppender">
+      <appender-ref ref="LOKI"/>
+      <queueSize>10000</queueSize>
+      <discardingThreshold>0</discardingThreshold>
+      <neverBlock>true</neverBlock>
+    </appender>
+
+    <root level="INFO">
+      <appender-ref ref="ASYNC_LOKI"/>
+    </root>
+
+  </springProfile>
+
+</configuration>

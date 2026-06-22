@@ -1,0 +1,81 @@
+package grit.global.exception;
+
+import grit.global.exception.dto.ErrorResponseDto;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(OAuthLoginFailedException.class)
+    public ResponseEntity<ErrorResponseDto> handleOAuthLoginFailed(OAuthLoginFailedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponseDto> handleBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleEntityNotFound(EntityNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDto> handleEntityAlreadyExists(EntityAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ProfileAlreadyInitializedException.class)
+    public ResponseEntity<ErrorResponseDto> handleProfileAlreadyInitialized(ProfileAlreadyInitializedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ProfileNotInitializedException.class)
+    public ResponseEntity<ErrorResponseDto> handleProfileNotInitialized(ProfileNotInitializedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(NicknameConflictException.class)
+    public ResponseEntity<ErrorResponseDto> handleNicknameConflict(NicknameConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(SelfReferenceException.class)
+    public ResponseEntity<ErrorResponseDto> handleSelfReference(SelfReferenceException ex) {
+        return ResponseEntity.badRequest().body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidInputException.class)
+    public ResponseEntity<ErrorResponseDto> handleInvalidInput(InvalidInputException ex) {
+        return ResponseEntity.badRequest().body(ErrorResponseDto.of(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponseDto> handleConstraintValidation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining(", "));
+
+        return ResponseEntity.badRequest().body(ErrorResponseDto.of(message));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        return ResponseEntity.badRequest().body(ErrorResponseDto.of(message));
+    }
+
+}
