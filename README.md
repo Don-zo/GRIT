@@ -1,7 +1,10 @@
 <div align="center">
+  
+# <img width="250" alt="image" src="https://github.com/user-attachments/assets/2745b186-0083-493e-8479-7bc580b26436" />
 
-# GRIT
 
+
+  
 **공간을 넘어 이어지는 우리만의 독서실**
 
 그룹 기반 캠스터디, 뽀모도로, 투두 관리를 하나의 스터디룸에서 제공하는 온라인 집중 공간
