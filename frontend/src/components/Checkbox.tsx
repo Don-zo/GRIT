@@ -2,42 +2,33 @@ interface CustomCheckboxProps {
   checked: boolean;
   onChange: (v: boolean) => void;
   label?: string;
-  ariaLabel?: string;
-  size?: "md" | "sm";
 }
 
 export default function CustomCheckbox({
   checked,
   onChange,
   label,
-  ariaLabel,
-  size = "md",
 }: CustomCheckboxProps) {
   const weight = checked ? 700 : 400;
-  const isSm = size === "sm";
-  const boxClass = isSm
-    ? "h-4 w-4 rounded-full border-[0.5px] border-green-semidark bg-white"
-    : "h-5 w-5 rounded-full border-[0.5px] border-green-semidark bg-white";
-  const svgSize = isSm ? 14 : 18;
 
   return (
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      aria-label={ariaLabel}
-      className="flex cursor-pointer select-none items-center gap-2"
+      className="flex items-center gap-2 cursor-pointer select-none"
     >
+      {/* 동그라미 체크 박스 */}
       <div
         className={`
-          flex items-center justify-center
-          ${boxClass}
+          w-5 h-5 rounded-full flex items-center justify-center
+          border-[0.5px] border-green-semidark bg-[#f5f5f5]
           transition-all duration-200 ease-out
           ${checked ? "scale-110" : "scale-100"}
         `}
       >
         <svg
-          width={svgSize}
-          height={svgSize}
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke="#3E7358"
@@ -56,7 +47,10 @@ export default function CustomCheckbox({
       {/* 라벨 */}
       {label && (
         <span
-          className="transition-all duration-200 ease-out text-bodyMd text-gray-darkest"
+          className="
+            text-bodyMd text-[#2b2b2b]
+            transition-all duration-200 ease-out
+          "
           style={{
             fontFamily:
               '"Pretendard Variable", Pretendard, -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',

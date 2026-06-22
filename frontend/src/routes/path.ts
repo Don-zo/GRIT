@@ -1,9 +1,3 @@
 export const PATHS = {
-  HOME: "/",
-  LANDING: "/landing",
-  //LOGIN: "/login",
-  SIGNUP: "/signup",
-  ROOM: "/room/:groupCode",
-  GOOGLE_OAUTH_REDIRECT: "/auth/redirect/google",
-  TODO: "/todo",
+  ROOM: "/room",
 } as const;
