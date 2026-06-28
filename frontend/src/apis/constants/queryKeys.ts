@@ -37,4 +37,7 @@ export const QUERY_KEYS = {
     reactions: (groupCode: string) =>
       ["livekit", "reactions", groupCode] as const,
   },
+  pomodoro: {
+    status: (groupCode: string) => ["pomodoro", "status", groupCode] as const,
+  },
 } as const;

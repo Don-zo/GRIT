@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRIT - 투두</title>
+    <meta name="description" content="GRIT 투두 - 할일 관리 및 달성도 확인">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">G</div>
+            <div class="sidebar-nav">
+                <a href="/main.html" class="sidebar-link" id="nav-home">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span class="tooltip">홈</span>
+                </a>
+                <a href="/groups.html" class="sidebar-link" id="nav-groups">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span class="tooltip">그룹</span>
+                </a>
+                <a href="/friends.html" class="sidebar-link" id="nav-friends">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                    </svg>
+                    <span class="tooltip">친구</span>
+                </a>
+                <a href="/todo.html" class="sidebar-link active" id="nav-todo">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    <span class="tooltip">투두</span>
+                </a>
+                <a href="/group-todos.html" class="sidebar-link" id="nav-group-todo">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 6h13" />
+                        <path d="M8 12h13" />
+                        <path d="M8 18h13" />
+                        <path d="M3 6h.01" />
+                        <path d="M3 12h.01" />
+                        <path d="M3 18h.01" />
+                    </svg>
+                    <span class="tooltip">그룹 투두</span>
+                </a>
+                <div class="sidebar-separator"></div>
+                <a class="sidebar-link sidebar-logout" id="logout-link">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span class="tooltip">로그아웃</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content todo-page">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>투두</h1>
+                    <p>할일 관리 및 달성도 확인</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn btn-primary" id="add-todo-btn">+ 투두 추가</button>
+                </div>
+            </div>
+
+            <div class="todo-body-layout">
+                <!-- 왼쪽: 필터 + 목록 -->
+                <div class="todo-main-col">
+                    <div class="glass-card todo-category-manager" style="margin-bottom:1rem;padding:1rem 1.25rem;">
+                        <h3 style="margin:0 0 0.75rem;font-size:1rem;">내 카테고리</h3>
+                        <p style="margin:0 0 0.75rem;font-size:13px;color:var(--text-muted);">이름 변경은 불가합니다. 칩을 드래그하면 순서를 바꿀 수 있습니다. 삭제 시 해당 카테고리만 투두에서 해제됩니다.</p>
+                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;margin-bottom:0.75rem;">
+                            <input type="text" id="new-category-name" class="form-input form-input-sm" placeholder="새 카테고리 이름" maxlength="50" style="flex:1;min-width:140px;" />
+                            <button type="button" class="btn btn-outline btn-sm" id="add-category-btn">등록</button>
+                        </div>
+                        <ul id="category-manage-list" class="todo-category-chips" style="list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0.5rem;"></ul>
+                        <div id="category-manage-error" class="error-message" style="margin-top:0.5rem;"></div>
+                    </div>
+                    <!-- 필터 탭 -->
+                    <div class="todo-filter-row">
+                        <div class="filter-tabs">
+                            <button class="filter-tab active" data-filter="all">전체</button>
+                            <button class="filter-tab" data-filter="pending">미완료</button>
+                            <button class="filter-tab" data-filter="done">완료</button>
+                        </div>
+                        <div class="filter-category">
+                            <select class="form-input form-input-sm" id="category-filter">
+                                <option value="">모든 카테고리</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 투두 목록 -->
+                    <div id="todo-list" class="todo-list">
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-title"></div>
+                        </div>
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-title"></div>
+                        </div>
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-title"></div>
+                        </div>
+                    </div>
+
+                    <div id="error-message" class="error-message"></div>
+                </div>
+
+                <!-- 오른쪽: 달성도 -->
+                <div class="todo-side-col">
+                    <div class="glass-card todo-achievement-card" id="achievement-section">
+                        <div class="achievement-header">
+                            <h2>최근 달성도</h2>
+                        </div>
+                        <p id="achievement-today" style="margin:0 0 10px;font-size:13px;color:var(--text-muted);"></p>
+                        <div class="achievement-bars" id="achievement-bars">
+                            <div class="skeleton" style="height:100px;border-radius:8px;width:100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 투두 추가/수정 모달 -->
+    <div class="modal-overlay" id="todo-modal">
+        <div class="modal">
+            <h2 id="modal-title">투두 추가</h2>
+            <input type="hidden" id="edit-todo-id" />
+            <div class="form-group">
+                <label for="todo-content">내용 *</label>
+                <input type="text" id="todo-content" class="form-input" placeholder="할일을 입력하세요" maxlength="500" />
+            </div>
+            <div class="form-group">
+                <label for="todo-category">카테고리 (선택)</label>
+                <select id="todo-category" class="form-input">
+                    <option value="">선택 안함</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="todo-duedate">마감일 *</label>
+                <input type="date" id="todo-duedate" class="form-input" required />
+            </div>
+            <div id="todo-error" class="error-message"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="todo-cancel-btn">취소</button>
+                <button class="btn btn-primary" id="todo-submit-btn">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="icons.js"></script>
+    <script src="utils.js"></script>
+    <script src="todo.js"></script>
+</body>
+
+</html>

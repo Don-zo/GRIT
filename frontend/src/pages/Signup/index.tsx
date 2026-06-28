@@ -40,7 +40,11 @@ const SignupPage = () => {
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="px-8 pt-6">
           <h1 className="text-4xl font-extrabold text-[var(--color-green-semidark)]/80">
-            <Link to={PATHS.HOME} className="cursor-pointer" aria-label="홈">
+            <Link
+              to={PATHS.LANDING}
+              className="cursor-pointer"
+              aria-label="랜딩 페이지"
+            >
               GRIT
             </Link>
           </h1>

@@ -31,8 +31,18 @@ export const ENDPOINTS = {
     TOKEN: (groupCode: string) => `/api/group/${groupCode}/livekit/token`,
     REACTIONS: (groupCode: string) =>
       `/api/group/${groupCode}/livekit/reactions`,
-    REACTION: (groupCode: string) =>
-      `/api/group/${groupCode}/livekit/reaction`,
+    REACTION: (groupCode: string) => `/api/group/${groupCode}/livekit/reaction`,
+  },
+  POMODORO: {
+    STATUS: (groupCode: string) => `/api/group/${groupCode}/livekit/pomodoro`,
+    START: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/pomodoro/start`,
+    PAUSE: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/pomodoro/pause`,
+    RESUME: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/pomodoro/resume`,
+    STOP: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/pomodoro/stop`,
   },
   TODO: {
     BY_ID: (todoId: number) => `/api/members/me/todos/${todoId}`,
