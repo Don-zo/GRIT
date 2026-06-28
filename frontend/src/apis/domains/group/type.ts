@@ -10,6 +10,7 @@ export interface Group {
 export interface GroupMember {
   id: number;
   nickname: string;
+  imageUrl?: string | null;
   me: boolean;
 }
 
