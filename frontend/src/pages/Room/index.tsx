@@ -21,6 +21,7 @@ import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { useLiveKit } from "@/hooks/useLiveKit";
 import { LIVEKIT_URL } from "@/apis/constants/endpoints";
 import { groupApi } from "@/apis/domains/group/api";
+import { usePomodoroStatus } from "@/hooks/usePomodoroStatus";
 
 type PomodoroConfig = {
   studyMinutes: number;
@@ -68,6 +69,7 @@ const RoomPage = () => {
     queryFn: () => groupApi.getGroupMembers(groupCode!),
     enabled: !!groupCode,
   });
+  usePomodoroStatus({ groupCode, enabled: !!groupCode });
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [, setLivekitTestStatus] = useState(""); //테스트 상태메세지
   const [receivedReactions, setReceivedReactions] = useState<ReactionItem[]>([]);
