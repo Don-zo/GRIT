@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRIT - 화상회의</title>
+    <meta name="description" content="GRIT 화상회의 - 실시간 영상 통화">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+    <style>
+        /* LiveKit 전용 오버라이드 — 이 페이지만 사이드바 없이 풀스크린 */
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 헤더 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .top-bar h1 {
+            font-size: 20px;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .room-badge {
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 4px 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .pomodoro-panel {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        .pomodoro-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 132px;
+        }
+
+        .pomodoro-progress {
+            --pomodoro-progress: 0;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            padding: 3px;
+            background:
+                conic-gradient(var(--accent) calc(var(--pomodoro-progress) * 1%), rgba(255, 255, 255, 0.1) 0);
+            flex-shrink: 0;
+        }
+
+        .pomodoro-progress.break {
+            background:
+                conic-gradient(var(--success) calc(var(--pomodoro-progress) * 1%), rgba(255, 255, 255, 0.1) 0);
+        }
+
+        .pomodoro-progress.paused {
+            background:
+                conic-gradient(var(--warning) calc(var(--pomodoro-progress) * 1%), rgba(255, 255, 255, 0.1) 0);
+        }
+
+        .pomodoro-progress-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+        }
+
+        .pomodoro-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 66px;
+        }
+
+        .pomodoro-time {
+            font-size: 15px;
+            line-height: 1;
+            font-weight: 800;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .pomodoro-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .pomodoro-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pomodoro-field {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .pomodoro-field input {
+            width: 54px;
+            height: 30px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: rgba(0, 0, 0, 0.18);
+            color: var(--text-primary);
+            font: inherit;
+            text-align: center;
+            outline: none;
+        }
+
+        .pomodoro-field input:focus {
+            border-color: rgba(99, 102, 241, 0.7);
+        }
+
+        .pomodoro-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pomodoro-btn {
+            height: 30px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            font: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .pomodoro-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .pomodoro-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pomodoro-btn.primary {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--accent);
+            border-color: rgba(99, 102, 241, 0.35);
+        }
+
+        .pomodoro-btn.danger {
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .status-dot.connected {
+            background-color: var(--success);
+        }
+
+        .status-dot.connecting {
+            background-color: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        .status-dot.error {
+            background-color: var(--error);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* 비디오 그리드 */
+        .video-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+            padding: 20px;
+            align-content: start;
+        }
+
+        .participant-tile {
+            background: #000;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .participant-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .participant-tile audio {
+            display: none;
+        }
+
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            gap: 12px;
+        }
+
+        .avatar-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .avatar-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .participant-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mic-off-icon {
+            color: var(--error);
+            font-size: 11px;
+        }
+
+        /* 빈 상태 */
+        .empty-room {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+            gap: 12px;
+        }
+
+        .empty-room .icon {
+            font-size: 48px;
+            opacity: 0.5;
+        }
+
+        .empty-room p {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        /* ────────────────────────────────────
+           하단 컨트롤 바
+           ──────────────────────────────────── */
+        .control-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 24px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: relative;
+        }
+
+        .ctrl-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            min-width: 72px;
+            font-family: inherit;
+        }
+
+        .ctrl-btn .icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .ctrl-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .ctrl-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ctrl-btn.active {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--accent);
+        }
+
+        .ctrl-btn.off {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .ctrl-btn.connect-btn {
+            background: var(--gradient);
+            color: white;
+            padding: 12px 28px;
+            min-width: 100px;
+        }
+
+        .ctrl-btn.connect-btn:hover {
+            opacity: 0.9;
+        }
+
+        .ctrl-btn.disconnect-btn {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .ctrl-btn.disconnect-btn:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        /* ────────────────────────────────────
+           리액션 피커
+           ──────────────────────────────────── */
+        .reaction-picker-wrapper {
+            position: relative;
+        }
+
+        .reaction-picker {
+            position: absolute;
+            bottom: calc(100% + 14px);
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 14px;
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            width: 280px;
+            z-index: 60;
+        }
+
+        .reaction-picker.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) scale(1);
+        }
+
+        .reaction-picker button {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .reaction-picker button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.25);
+        }
+
+        .reaction-picker button:active {
+            transform: scale(0.95);
+        }
+
+        /* ────────────────────────────────────
+           플로팅 리액션 이모지
+           ──────────────────────────────────── */
+        .reaction-float {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.3);
+            font-size: 56px;
+            z-index: 10;
+            pointer-events: none;
+            line-height: 1;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+            animation: reactionBounceIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .reaction-float.hold {
+            animation: reactionFloat 2.4s ease-in-out forwards;
+        }
+
+        .reaction-float.out {
+            animation: reactionFadeOut 0.3s ease-out forwards;
+        }
+
+        @keyframes reactionBounceIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0.3);
+                opacity: 0;
+            }
+
+            70% {
+                transform: translate(-50%, -55%) scale(1.15);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -55%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes reactionFloat {
+            0% {
+                transform: translate(-50%, -55%) scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: translate(-50%, -60%) scale(1.05);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -55%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes reactionFadeOut {
+            0% {
+                transform: translate(-50%, -55%) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -75%) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        /* ────────────────────────────────────
+           접속 전 오버레이
+           ──────────────────────────────────── */
+        .connect-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .connect-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .connect-card h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .connect-card .subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+        }
+
+        .connect-card .group-info-box {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 28px;
+            text-align: left;
+        }
+
+        .connect-card .group-info-box .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .connect-card .group-info-box .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .connect-card .join-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .connect-card .join-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .connect-card .join-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .connect-card .back-link {
+            display: block;
+            margin-top: 14px;
+            color: var(--text-muted);
+            font-size: 13px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color var(--transition);
+        }
+
+        .connect-card .back-link:hover {
+            color: var(--text-primary);
+        }
+
+        .error-box {
+            margin-top: 16px;
+            padding: 10px 14px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: var(--radius-sm);
+            color: #f87171;
+            font-size: 13px;
+            display: none;
+        }
+
+        .error-box.show {
+            display: block;
+        }
+
+        @media (max-width: 900px) {
+            .top-bar {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pomodoro-panel {
+                order: 3;
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 620px) {
+            .pomodoro-panel,
+            .pomodoro-form {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .pomodoro-display {
+                width: 100%;
+            }
+
+            .pomodoro-form,
+            .pomodoro-actions {
+                width: 100%;
+            }
+
+            .pomodoro-actions button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 접속 전 오버레이 -->
+    <div class="connect-overlay" id="connect-overlay">
+        <div class="connect-card">
+            <h2>화상회의 참가</h2>
+            <p class="subtitle">그룹 방에 입장합니다</p>
+
+            <div class="group-info-box" id="group-info-box">
+                <div class="label">그룹</div>
+                <div class="value" id="group-id-display">-</div>
+            </div>
+
+            <button class="join-btn" id="join-btn">입장하기</button>
+            <a class="back-link" onclick="history.back()">← 뒤로 가기</a>
+
+            <div class="error-box" id="overlay-error"></div>
+        </div>
+    </div>
+
+    <!-- 메인 UI -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <h1>GRIT</h1>
+            <span class="room-badge" id="room-badge">Room: -</span>
+        </div>
+        <div class="pomodoro-panel" id="pomodoro-panel">
+            <div class="pomodoro-display">
+                <div class="pomodoro-progress" id="pomodoro-progress" aria-hidden="true">
+                    <div class="pomodoro-progress-inner">
+                        <div class="pomodoro-time" id="pomodoro-time">--:--</div>
+                    </div>
+                </div>
+                <div class="pomodoro-text">
+                    <div class="pomodoro-meta" id="pomodoro-meta">대기 · 1/1</div>
+                </div>
+            </div>
+            <div class="pomodoro-form">
+                <label class="pomodoro-field">
+                    집중
+                    <input id="pomodoro-focus-minutes" type="number" min="1" max="60" step="1" value="25">
+                </label>
+                <label class="pomodoro-field">
+                    횟수
+                    <input id="pomodoro-total-rounds" type="number" min="1" max="6" step="1" value="4">
+                </label>
+                <div class="pomodoro-actions">
+                    <button class="pomodoro-btn primary" id="pomodoro-start-btn" type="button"
+                        onclick="startPomodoro()">시작</button>
+                    <button class="pomodoro-btn" id="pomodoro-pause-btn" type="button"
+                        onclick="pausePomodoro()">일시정지</button>
+                    <button class="pomodoro-btn danger" id="pomodoro-stop-btn" type="button"
+                        onclick="stopPomodoro()">정지</button>
+                </div>
+            </div>
+        </div>
+        <div class="status-bar">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">연결 안됨</span>
+        </div>
+    </div>
+
+    <div class="video-grid" id="video-grid">
+        <div class="empty-room">
+            <div class="icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.934a.5.5 0 0 0-.752-.432L16 10.5" />
+                    <rect x="2" y="6" width="14" height="12" rx="2" />
+                </svg></div>
+            <p>참가자가 없습니다</p>
+        </div>
+    </div>
+
+    <div class="control-bar" id="control-bar">
+        <button class="ctrl-btn active" id="mic-btn" onclick="toggleMic()">
+            <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="22" />
+                </svg></span>
+            <span>마이크</span>
+        </button>
+        <button class="ctrl-btn active" id="cam-btn" onclick="toggleCamera()">
+            <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                </svg></span>
+            <span>카메라</span>
+        </button>
+
+        <!-- 리액션 버튼 -->
+        <div class="reaction-picker-wrapper">
+            <div class="reaction-picker" id="reaction-picker"></div>
+            <button class="ctrl-btn" id="reaction-btn" onclick="toggleReactionPicker()">
+                <span class="icon" style="font-size:22px;line-height:1;">😀</span>
+                <span>리액션</span>
+            </button>
+        </div>
+
+        <button class="ctrl-btn disconnect-btn" id="leave-btn" onclick="leaveRoom()">
+            <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
+                    <line x1="22" y1="2" x2="2" y2="22" />
+                </svg></span>
+            <span>나가기</span>
+        </button>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="icons.js"></script>
+    <script src="utils.js"></script>
+    <script>
+        const { Room, RoomEvent } = LivekitClient;
+        const WS_URL = 'wss://grit-livekit.jun0.dev:7880';
+
+        // 백엔드 API에서 동적으로 로드
+        let REACTION_EMOJIS = [];
+
+        let room = null;
+        let isMicOn = true;
+        let isCamOn = true;
+
+        // 리액션 타이머 관리 (참가자별 중복 방지)
+        const reactionTimers = new Map();
+        let pomodoroState = {
+            status: 'IDLE',
+            phase: null,
+            serverNow: null,
+            serverSyncedAt: null,
+            focusEndsAt: null,
+            breakEndsAt: null,
+            pausedAt: null,
+            focusMinutes: 25,
+            breakMinutes: 35,
+            totalRounds: 4,
+            currentRound: 1,
+        };
+        let pomodoroPhaseRefreshInFlight = false;
+        let pomodoroTicker = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupCode = urlParams.get('groupCode');
+        const groupName = urlParams.get('groupName') || groupCode;
+
+        // ────────────────────────────────────────
+        // 리액션 목록 API에서 가져오기
+        // ────────────────────────────────────────
+        async function fetchSupportedReactions() {
+            try {
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/reactions`);
+                if (!res.ok) throw new Error('리액션 목록 로드 실패');
+                const data = await res.json();
+                // API 응답: [{ name, emoji }]
+                REACTION_EMOJIS = data.map(r => ({ name: r.name, char: r.emoji }));
+            } catch (err) {
+                console.error('리액션 목록 로드 오류:', err);
+                REACTION_EMOJIS = [];
+            }
+        }
+
+        // ────────────────────────────────────────
+        // 초기화
+        // ────────────────────────────────────────
+        async function init() {
+            if (!localStorage.getItem('access_token')) {
+                window.location.href = '/index.html';
+                return;
+            }
+
+            if (!groupCode) {
+                showOverlayError('그룹 코드가 없습니다. 그룹 페이지에서 다시 접속해주세요.');
+                document.getElementById('join-btn').disabled = true;
+                return;
+            }
+
+            document.getElementById('group-id-display').textContent = groupName;
+            document.getElementById('connect-overlay').style.display = 'flex';
+
+            await fetchSupportedReactions();
+            buildReactionPicker();
+            renderPomodoro();
+        }
+
+        // ────────────────────────────────────────
+        // 리액션 피커 빌드
+        // ────────────────────────────────────────
+        function buildReactionPicker() {
+            const picker = document.getElementById('reaction-picker');
+            REACTION_EMOJIS.forEach(({ name, char }) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = char;
+                btn.title = name;
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sendReaction(name);
+                    closeReactionPicker();
+                });
+                picker.appendChild(btn);
+            });
+        }
+
+        function toggleReactionPicker() {
+            const picker = document.getElementById('reaction-picker');
+            picker.classList.toggle('show');
+        }
+
+        function closeReactionPicker() {
+            document.getElementById('reaction-picker').classList.remove('show');
+        }
+
+        // 바깥 클릭 시 닫기
+        document.addEventListener('click', (e) => {
+            const wrapper = document.querySelector('.reaction-picker-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                closeReactionPicker();
+            }
+        });
+
+        // ────────────────────────────────────────
+        // 리액션 전송 (Backend API)
+        // ────────────────────────────────────────
+        async function sendReaction(emojiName) {
+            if (!room) return;
+
+            try {
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/reaction`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emoji: emojiName }),
+                });
+
+                if (!res.ok) {
+                    console.error('리액션 전송 실패:', res.status);
+                }
+            } catch (err) {
+                console.error('리액션 전송 오류:', err);
+            }
+        }
+
+        // ────────────────────────────────────────
+        // 리액션 수신 (LiveKit DataReceived)
+        // ────────────────────────────────────────
+        function handleRoomDataReceived(payload) {
+            try {
+                const text = new TextDecoder().decode(payload);
+                const data = JSON.parse(text);
+
+                if (data.type === 'reaction') {
+                    handleReactionReceived(data);
+                    return;
+                }
+
+                if (data.type === 'pomodoro.sync') {
+                    applyPomodoroState(data.timer);
+                }
+            } catch (err) {
+                console.error('LiveKit 데이터 수신 파싱 오류:', err);
+            }
+        }
+
+        function handleReactionReceived(data) {
+            const sender = data.senderIdentity || data.senderNickname;
+            if (!data.emojiChar || !sender) return;
+
+            showReactionOnTile(sender, data.emojiChar);
+        }
+
+        // ────────────────────────────────────────
+        // 뽀모도로 테스트 UI
+        // ────────────────────────────────────────
+        function applyPomodoroState(timer) {
+            if (!timer || !timer.status) return;
+
+            pomodoroState = {
+                ...pomodoroState,
+                ...timer,
+            };
+            if (timer.serverNow) {
+                pomodoroState.serverSyncedAt = Date.now();
+            }
+
+            const focusInput = document.getElementById('pomodoro-focus-minutes');
+            const roundsInput = document.getElementById('pomodoro-total-rounds');
+            if (timer.focusMinutes) focusInput.value = timer.focusMinutes;
+            if (timer.totalRounds) roundsInput.value = timer.totalRounds;
+
+            renderPomodoro();
+        }
+
+        function renderPomodoro() {
+            const timeEl = document.getElementById('pomodoro-time');
+            const metaEl = document.getElementById('pomodoro-meta');
+            const progressEl = document.getElementById('pomodoro-progress');
+            const startBtn = document.getElementById('pomodoro-start-btn');
+            const pauseBtn = document.getElementById('pomodoro-pause-btn');
+            const stopBtn = document.getElementById('pomodoro-stop-btn');
+
+            const viewState = getPomodoroViewState();
+            const status = viewState.status;
+
+            timeEl.textContent = getPomodoroTimeText(viewState);
+            metaEl.textContent = `${getPomodoroStatusLabel(status, viewState.phase)} · ${viewState.currentRound}/${viewState.totalRounds}`;
+            progressEl.style.setProperty('--pomodoro-progress', getPomodoroProgressPercent(viewState));
+            progressEl.classList.toggle('break', viewState.phase === 'BREAK');
+            progressEl.classList.toggle('paused', status === 'PAUSED');
+            if (viewState.shouldRefresh) {
+                refreshPomodoroAtPhaseEnd();
+            }
+
+            startBtn.disabled = !room || (status !== 'IDLE' && status !== 'FINISHED');
+            pauseBtn.textContent = status === 'PAUSED' ? '재개' : '일시정지';
+            pauseBtn.disabled = !room || (status !== 'RUNNING' && status !== 'BREAK' && status !== 'PAUSED');
+            stopBtn.disabled = !room || status === 'IDLE';
+
+            if ((status === 'RUNNING' || status === 'BREAK') && !pomodoroTicker) {
+                pomodoroTicker = setInterval(renderPomodoro, 1000);
+            }
+            if (status !== 'RUNNING' && status !== 'BREAK' && pomodoroTicker) {
+                clearInterval(pomodoroTicker);
+                pomodoroTicker = null;
+            }
+        }
+
+        function getPomodoroViewState() {
+            const status = pomodoroState.status || 'IDLE';
+            const focusMinutes = pomodoroState.focusMinutes || Number(document.getElementById('pomodoro-focus-minutes').value) || 25;
+            const breakMinutes = pomodoroState.breakMinutes ?? Math.max(0, 60 - focusMinutes);
+            const totalRounds = pomodoroState.totalRounds || Number(document.getElementById('pomodoro-total-rounds').value) || 1;
+            const currentRound = pomodoroState.currentRound || 1;
+            const fallbackPhase = pomodoroState.phase || getPhaseFromStatus(status);
+            const focusEndsAt = parsePomodoroTime(pomodoroState.focusEndsAt);
+            const breakEndsAt = parsePomodoroTime(pomodoroState.breakEndsAt);
+
+            if (status === 'IDLE' || status === 'FINISHED' || breakEndsAt === null) {
+                return {
+                    status,
+                    phase: fallbackPhase,
+                    focusMinutes,
+                    breakMinutes,
+                    totalRounds,
+                    currentRound: status === 'FINISHED' ? totalRounds : currentRound,
+                    remainingSeconds: null,
+                    shouldRefresh: false,
+                };
+            }
+
+            const phaseReferenceTime = status === 'PAUSED' ? getPomodoroSyncedServerNow() : getPomodoroNow();
+            const phase = getPomodoroPhaseByTime(status, fallbackPhase, phaseReferenceTime, focusEndsAt, breakEndsAt, breakMinutes);
+            const currentPhaseEndsAt = getPomodoroPhaseEndsAt(phase, focusEndsAt, breakEndsAt);
+            if (currentPhaseEndsAt === null) {
+                return {
+                    status,
+                    phase,
+                    focusMinutes,
+                    breakMinutes,
+                    totalRounds,
+                    currentRound,
+                    remainingSeconds: null,
+                    shouldRefresh: false,
+                };
+            }
+
+            const remainingSeconds = Math.max(0, Math.ceil((currentPhaseEndsAt - phaseReferenceTime) / 1000));
+            const shouldRefresh = breakEndsAt !== null
+                ? phaseReferenceTime >= breakEndsAt
+                : remainingSeconds <= 0;
+
+            return {
+                status,
+                phase,
+                focusMinutes,
+                breakMinutes,
+                totalRounds,
+                currentRound,
+                remainingSeconds,
+                shouldRefresh: status !== 'PAUSED' && shouldRefresh,
+            };
+        }
+
+        function parsePomodoroTime(value) {
+            if (!value) return null;
+
+            const time = new Date(value).getTime();
+            return Number.isNaN(time) ? null : time;
+        }
+
+        function getPomodoroPhaseByTime(status, fallbackPhase, now, focusEndsAt, breakEndsAt, breakMinutes) {
+            if (status === 'PAUSED') return fallbackPhase;
+
+            if (focusEndsAt !== null && breakEndsAt !== null) {
+                if (now < focusEndsAt) return 'FOCUS';
+                if (breakMinutes > 0 && now < breakEndsAt) return 'BREAK';
+            }
+
+            return fallbackPhase;
+        }
+
+        function getPomodoroPhaseEndsAt(phase, focusEndsAt, breakEndsAt) {
+            if (phase === 'BREAK' && breakEndsAt !== null) return breakEndsAt;
+            if (phase === 'FOCUS' && focusEndsAt !== null) return focusEndsAt;
+            return null;
+        }
+
+        function getPomodoroProgressPercent(viewState) {
+            const { status, phase, focusMinutes, breakMinutes, remainingSeconds } = viewState;
+
+            if (status === 'FINISHED') return 100;
+            if (status === 'IDLE' || remainingSeconds === null) return 0;
+
+            const durationSeconds = getPomodoroPhaseDurationSeconds(phase, focusMinutes, breakMinutes);
+            if (durationSeconds <= 0) return 100;
+
+            const boundedRemainingSeconds = Math.min(durationSeconds, Math.max(0, remainingSeconds));
+            return Math.round((boundedRemainingSeconds / durationSeconds) * 100);
+        }
+
+        function getPomodoroPhaseDurationSeconds(phase, focusMinutes, breakMinutes) {
+            if (phase === 'BREAK') {
+                return Math.max(0, breakMinutes * 60);
+            }
+
+            return focusMinutes * 60;
+        }
+
+        function getPomodoroTimeText(viewState) {
+            const { status, focusMinutes, remainingSeconds } = viewState;
+
+            if (status === 'IDLE') return '--:--';
+            if (status === 'FINISHED') return '완료';
+
+            if (remainingSeconds === null) {
+                return status === 'PAUSED' ? '일시정지' : `${String(focusMinutes).padStart(2, '0')}:00`;
+            }
+
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function getPomodoroNow() {
+            if (!pomodoroState.serverNow || !pomodoroState.serverSyncedAt) {
+                return Date.now();
+            }
+
+            const serverNow = new Date(pomodoroState.serverNow).getTime();
+            return serverNow + (Date.now() - pomodoroState.serverSyncedAt);
+        }
+
+        function getPomodoroSyncedServerNow() {
+            if (!pomodoroState.serverNow) {
+                return Date.now();
+            }
+
+            return new Date(pomodoroState.serverNow).getTime();
+        }
+
+        function getPomodoroStatusLabel(status, phase) {
+            if (status === 'PAUSED') {
+                const phaseLabel = getPomodoroPhaseLabel(phase);
+                return phaseLabel ? `${phaseLabel} 일시정지` : '일시정지';
+            }
+
+            if (status === 'RUNNING' || status === 'BREAK') {
+                return getPomodoroPhaseLabel(phase) || getPomodoroPhaseLabel(getPhaseFromStatus(status));
+            }
+
+            const labels = {
+                IDLE: '대기',
+                FINISHED: '완료',
+            };
+            return labels[status] || status;
+        }
+
+        function getPhaseFromStatus(status) {
+            if (status === 'RUNNING') return 'FOCUS';
+            if (status === 'BREAK') return 'BREAK';
+            return null;
+        }
+
+        function getPomodoroPhaseLabel(phase) {
+            const labels = {
+                FOCUS: '집중',
+                BREAK: '휴식',
+            };
+            return labels[phase] || '';
+        }
+
+        function getPomodoroRequestBody() {
+            const focusMinutes = Number(document.getElementById('pomodoro-focus-minutes').value);
+            const totalRounds = Number(document.getElementById('pomodoro-total-rounds').value);
+
+            if (!Number.isInteger(focusMinutes) || focusMinutes < 1 || focusMinutes > 60) {
+                throw new Error('집중 시간은 1~60분 사이여야 합니다.');
+            }
+            if (!Number.isInteger(totalRounds) || totalRounds < 1 || totalRounds > 6) {
+                throw new Error('횟수는 1~6회 사이여야 합니다.');
+            }
+
+            return { focusMinutes, totalRounds };
+        }
+
+        async function startPomodoro() {
+            if (!room) return;
+
+            try {
+                await requestPomodoro('/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(getPomodoroRequestBody()),
+                });
+            } catch (err) {
+                toast.error(err.message);
+            }
+        }
+
+        async function pausePomodoro() {
+            if (!room) return;
+
+            try {
+                const status = getPomodoroViewState().status;
+                await requestPomodoro(status === 'PAUSED' ? '/resume' : '/pause', { method: 'POST' });
+            } catch (err) {
+                toast.error(err.message);
+            }
+        }
+
+        async function stopPomodoro() {
+            if (!room) return;
+
+            try {
+                await requestPomodoro('/stop', { method: 'POST' });
+            } catch (err) {
+                toast.error(err.message);
+            }
+        }
+
+        async function requestPomodoro(path, options) {
+            setPomodoroControlsDisabled(true);
+            try {
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/pomodoro${path}`, options);
+                if (!res.ok) {
+                    const error = await readErrorMessage(res);
+                    throw new Error(error || '뽀모도로 요청에 실패했습니다.');
+                }
+
+                const data = await res.json();
+                applyPomodoroState(data);
+            } finally {
+                setPomodoroControlsDisabled(false);
+                renderPomodoro();
+            }
+        }
+
+        async function fetchPomodoroState() {
+            try {
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/pomodoro`);
+                if (!res.ok) return;
+
+                const data = await res.json();
+                applyPomodoroState(data);
+            } catch (err) {
+                console.error('뽀모도로 상태 조회 오류:', err);
+            }
+        }
+
+        async function refreshPomodoroAtPhaseEnd() {
+            if (pomodoroPhaseRefreshInFlight) return;
+
+            pomodoroPhaseRefreshInFlight = true;
+            try {
+                await fetchPomodoroState();
+            } finally {
+                pomodoroPhaseRefreshInFlight = false;
+            }
+        }
+
+        async function readErrorMessage(res) {
+            try {
+                const data = await res.json();
+                return data.message;
+            } catch (err) {
+                return '';
+            }
+        }
+
+        function setPomodoroControlsDisabled(disabled) {
+            document.getElementById('pomodoro-start-btn').disabled = disabled;
+            document.getElementById('pomodoro-pause-btn').disabled = disabled;
+            document.getElementById('pomodoro-stop-btn').disabled = disabled;
+        }
+
+        // ────────────────────────────────────────
+        // 타일 위 리액션 표시 (3초 애니메이션)
+        // ────────────────────────────────────────
+        function showReactionOnTile(participantId, emojiChar) {
+            const tile = document.getElementById(`tile-${participantId}`);
+            if (!tile) return;
+
+            // 기존 리액션 즉시 제거 (중복 방지)
+            const existing = tile.querySelector('.reaction-float');
+            if (existing) {
+                existing.remove();
+            }
+            if (reactionTimers.has(participantId)) {
+                clearTimeout(reactionTimers.get(participantId).hold);
+                clearTimeout(reactionTimers.get(participantId).out);
+                reactionTimers.delete(participantId);
+            }
+
+            // 새 리액션 요소 생성
+            const el = document.createElement('span');
+            el.className = 'reaction-float';
+            el.textContent = emojiChar;
+            tile.appendChild(el);
+
+            // Phase 1: bounceIn (0.3s) — CSS animation 자동 실행
+            // Phase 2: hold + float (2.4s)
+            const holdTimer = setTimeout(() => {
+                el.classList.remove('reaction-float');
+                // reflow 강제
+                void el.offsetWidth;
+                el.classList.add('reaction-float', 'hold');
+            }, 300);
+
+            // Phase 3: fadeOut (0.3s) → 제거
+            const outTimer = setTimeout(() => {
+                el.classList.remove('hold');
+                void el.offsetWidth;
+                el.classList.add('out');
+
+                setTimeout(() => {
+                    el.remove();
+                    reactionTimers.delete(participantId);
+                }, 300);
+            }, 2700);
+
+            reactionTimers.set(participantId, { hold: holdTimer, out: outTimer });
+        }
+
+        // ────────────────────────────────────────
+        // 토큰 발급 및 입장
+        // ────────────────────────────────────────
+        document.getElementById('join-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('join-btn');
+            btn.disabled = true;
+            btn.textContent = '연결 중...';
+            hideOverlayError();
+
+            try {
+                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/livekit/token`);
+
+                if (res.status === 401) throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+                if (!res.ok) throw new Error('토큰 발급에 실패했습니다.');
+
+                const data = await res.json();
+
+                document.getElementById('connect-overlay').style.display = 'none';
+                document.getElementById('room-badge').textContent = groupName;
+
+                await connectToRoom(data.token);
+
+            } catch (error) {
+                showOverlayError(error.message);
+                btn.disabled = false;
+                btn.textContent = '입장하기';
+            }
+        });
+
+        async function connectToRoom(token) {
+            updateStatus('연결 중...', 'connecting');
+
+            room = new Room({
+                adaptiveStream: true,
+                dynacast: true,
+            });
+
+            room
+                .on(RoomEvent.Connected, () => {
+                    updateStatus('연결됨', 'connected');
+                    room.localParticipant.enableCameraAndMicrophone();
+                })
+                .on(RoomEvent.Disconnected, () => {
+                    updateStatus('연결 끊김', '');
+                    room = null;
+                    clearVideoGrid();
+                    renderPomodoro();
+                })
+                .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                    if (track.kind === 'video' || track.kind === 'audio') {
+                        attachTrack(track, participant, false);
+                    }
+                })
+                .on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+                    track.detach();
+                    const el = document.getElementById(`media-${participant.identity}-${track.kind}`);
+                    if (el) el.remove();
+                    if (track.kind === 'video') updateParticipantTile(participant, false);
+                })
+                .on(RoomEvent.LocalTrackPublished, (publication, participant) => {
+                    if (publication.track) attachTrack(publication.track, participant, true);
+                })
+                .on(RoomEvent.ParticipantDisconnected, (participant) => {
+                    const tile = document.getElementById(`tile-${participant.identity}`);
+                    if (tile) tile.remove();
+                    checkEmptyGrid();
+                })
+                .on(RoomEvent.DataReceived, (payload, participant, kind) => {
+                    handleRoomDataReceived(payload);
+                });
+
+            await room.connect(WS_URL, token);
+            await fetchPomodoroState();
+            renderPomodoro();
+        }
+
+        // ────────────────────────────────────────
+        // 트랙 처리
+        // ────────────────────────────────────────
+        function attachTrack(track, participant, isLocal) {
+            const grid = document.getElementById('video-grid');
+
+            const empty = grid.querySelector('.empty-room');
+            if (empty) empty.remove();
+
+            let tile = document.getElementById(`tile-${participant.identity}`);
+            if (!tile) {
+                tile = createTile(participant.identity, participant.name || participant.identity, isLocal);
+                grid.appendChild(tile);
+            }
+
+            const element = track.attach();
+            element.id = `media-${participant.identity}-${track.kind}`;
+
+            if (track.kind === 'video') {
+                const avatar = tile.querySelector('.avatar-placeholder');
+                if (avatar) avatar.style.display = 'none';
+
+                const existing = tile.querySelector('video');
+                if (existing) existing.remove();
+                tile.insertBefore(element, tile.querySelector('.participant-info'));
+            } else {
+                tile.appendChild(element);
+            }
+        }
+
+        function createTile(identity, name, isLocal) {
+            const displayName = name || identity;
+
+            const tile = document.createElement('div');
+            tile.className = 'participant-tile';
+            tile.id = `tile-${identity}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar-placeholder';
+            avatar.innerHTML = `
+                <div class="avatar-circle">${displayName.charAt(0).toUpperCase()}</div>
+                <div class="avatar-name">${isLocal ? '나' : displayName}</div>
+            `;
+            tile.appendChild(avatar);
+
+            const info = document.createElement('div');
+            info.className = 'participant-info';
+            info.id = `info-${identity}`;
+            info.textContent = isLocal ? `${displayName} (나)` : displayName;
+            tile.appendChild(info);
+
+            return tile;
+        }
+
+        function updateParticipantTile(participant, hasVideo) {
+            const tile = document.getElementById(`tile-${participant.identity}`);
+            if (!tile) return;
+            const avatar = tile.querySelector('.avatar-placeholder');
+            if (avatar) avatar.style.display = hasVideo ? 'none' : 'flex';
+        }
+
+        const VIDEO_ICON_LG = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.934a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>';
+        const MIC_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>';
+        const MIC_OFF_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/><path d="M5 10v2a7 7 0 0 0 12 5.3"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/><line x1="12" y1="19" x2="12" y2="22"/></svg>';
+        const CAM_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>';
+        const CAM_OFF_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16"/><path d="M9.5 4h5l2.5 3h3a2 2 0 0 1 2 2v7.5"/><path d="M14.12 15.12A3 3 0 1 1 9.88 10.88"/></svg>';
+
+        function checkEmptyGrid() {
+            const grid = document.getElementById('video-grid');
+            if (grid.querySelectorAll('.participant-tile').length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-room">
+                        <div class="icon">${VIDEO_ICON_LG}</div>
+                        <p>참가자가 없습니다</p>
+                    </div>`;
+            }
+        }
+
+        function clearVideoGrid() {
+            document.getElementById('video-grid').innerHTML = `
+                <div class="empty-room">
+                    <div class="icon">${VIDEO_ICON_LG}</div>
+                    <p>참가자가 없습니다</p>
+                </div>`;
+        }
+
+        // ────────────────────────────────────────
+        // 컨트롤
+        // ────────────────────────────────────────
+        async function toggleMic() {
+            if (!room) return;
+            isMicOn = !isMicOn;
+            await room.localParticipant.setMicrophoneEnabled(isMicOn);
+            const btn = document.getElementById('mic-btn');
+            btn.className = `ctrl-btn ${isMicOn ? 'active' : 'off'}`;
+            btn.innerHTML = `<span class="icon">${isMicOn ? MIC_ICON : MIC_OFF_ICON}</span><span>마이크</span>`;
+        }
+
+        async function toggleCamera() {
+            if (!room) return;
+            isCamOn = !isCamOn;
+            await room.localParticipant.setCameraEnabled(isCamOn);
+            const btn = document.getElementById('cam-btn');
+            btn.className = `ctrl-btn ${isCamOn ? 'active' : 'off'}`;
+            btn.innerHTML = `<span class="icon">${isCamOn ? CAM_ICON : CAM_OFF_ICON}</span><span>카메라</span>`;
+        }
+
+        async function leaveRoom() {
+            if (room) await room.disconnect();
+            window.location.href = '/groups.html';
+        }
+
+        // ────────────────────────────────────────
+        // 상태 / 에러
+        // ────────────────────────────────────────
+        function updateStatus(text, type) {
+            document.getElementById('status-text').textContent = text;
+            document.getElementById('status-dot').className = `status-dot ${type}`;
+        }
+
+        function showOverlayError(msg) {
+            const el = document.getElementById('overlay-error');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        function hideOverlayError() {
+            const el = document.getElementById('overlay-error');
+            el.textContent = '';
+            el.classList.remove('show');
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (room) room.disconnect();
+        });
+
+        // 시작
+        init();
+    </script>
+</body>
+
+</html>

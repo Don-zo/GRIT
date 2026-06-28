@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATHS } from "@/routes/path";
@@ -37,6 +37,40 @@ const isLiveKitReactionMessage = (
     typeof candidate.emojiChar === "string" &&
     typeof candidate.senderNickname === "string"
   );
+};
+
+const getProfileImageUrl = (value: unknown): string | null => {
+  if (!value || typeof value !== "object") return null;
+
+  const candidate = value as Record<string, unknown>;
+  const imageUrl =
+    candidate.imageUrl ??
+    candidate.profileImageUrl ??
+    candidate.profileImage ??
+    candidate.avatarUrl ??
+    candidate.picture;
+
+  return typeof imageUrl === "string" && imageUrl.trim() ? imageUrl : null;
+};
+
+const getParticipantMatchKeys = (value: unknown): string[] => {
+  if (!value || typeof value !== "object") return [];
+
+  const candidate = value as Record<string, unknown>;
+  return [
+    candidate.id,
+    candidate.memberId,
+    candidate.userId,
+    candidate.nickname,
+    candidate.name,
+    candidate.email,
+    candidate.identity,
+  ]
+    .filter(
+      (key): key is string | number =>
+        typeof key === "string" || typeof key === "number",
+    )
+    .map(String);
 };
 
 const RoomPage = () => {
@@ -120,9 +154,11 @@ const RoomPage = () => {
     participants: remoteParticipants,
     room,
     error,
+    isMicrophoneEnabled,
+    isCameraEnabled,
+    isMediaTogglePending,
     toggleMicrophone,
     toggleCamera,
-    enableCameraAndMicrophone,
   } = useLiveKit({
     serverUrl: token ? LIVEKIT_URL : "",
     token: token || "",
@@ -160,12 +196,6 @@ const RoomPage = () => {
     }
   }, [isConnected, remoteParticipants]);
 
-  useEffect(() => {
-    if (isConnected) {
-      enableCameraAndMicrophone();
-    }
-  }, [isConnected, enableCameraAndMicrophone]);
-
   //에러
   useEffect(() => {
     if (error) {
@@ -174,20 +204,50 @@ const RoomPage = () => {
     }
   }, [error]);
 
+  const groupMemberByKey = useMemo(() => {
+    const map = new Map<string, (typeof groupMembers)[number]>();
+
+    groupMembers.forEach((member) => {
+      getParticipantMatchKeys(member).forEach((key) => {
+        map.set(key, member);
+      });
+    });
+
+    return map;
+  }, [groupMembers]);
+
   // participants 참가자 목록
-  const allParticipants = [
-    ...remoteParticipants.map((p) => ({
+  const allParticipants = remoteParticipants.map((p) => {
+    const isCurrentParticipant =
+      p.identity === String(currentMember?.id) ||
+      p.identity === currentMember?.email ||
+      p.name === currentMember?.nickname;
+    const matchedGroupMember =
+      groupMemberByKey.get(p.identity) ??
+      groupMemberByKey.get(p.name) ??
+      (isCurrentParticipant ? currentMember : undefined);
+    const profileImageUrl =
+      p.imageUrl ??
+      getProfileImageUrl(matchedGroupMember) ??
+      (isCurrentParticipant ? getProfileImageUrl(currentMember) : null);
+    const hasVideo = p.isVideoEnabled && p.videoTrack;
+
+    return {
       id: p.identity,
       name: p.name,
       isMuted: p.isMuted,
-      video: (
+      profileImageUrl,
+      video: hasVideo ? (
         <VideoTile
           videoTrack={p.videoTrack ?? undefined}
           audioTrack={p.audioTrack ?? undefined}
         />
-      ),
-    })),
-  ];
+      ) : undefined,
+      audio: !hasVideo ? (
+        <VideoTile audioTrack={p.audioTrack ?? undefined} />
+      ) : undefined,
+    };
+  });
 
   const [todoOpen, setTodoOpen] = useState(false);
 
@@ -286,6 +346,9 @@ const RoomPage = () => {
         }}
         onToggleMic={toggleMicrophone}
         onToggleCam={toggleCamera}
+        isMicOn={isMicrophoneEnabled}
+        isCamOn={isCameraEnabled}
+        isMediaTogglePending={isMediaTogglePending}
         onLeaveRoom={handleLeaveRoom}
       />
     </div>

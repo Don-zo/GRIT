@@ -9,6 +9,8 @@ interface Participant {
   isMuted?: boolean;
   onToggleMute?: () => void;
   video?: React.ReactNode; // 실제 비디오 스트림 컴포넌트
+  audio?: React.ReactNode;
+  profileImageUrl?: string | null;
 }
 
 type CamLayoutProps = {
@@ -89,6 +91,7 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
               <div className="flex items-center justify-center w-full h-full">
                 {participant.video ?? (
                   <Avatar
+                    src={participant.profileImageUrl}
                     size={
                       "avatarSize" in box && typeof box.avatarSize === "number"
                         ? box.avatarSize
@@ -97,6 +100,7 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
                   />
                 )}
               </div>
+              {participant.audio}
 
               <div
                 className={`absolute left-4 bottom-4 flex ${"nameBadgeLeftSpacing" in box && box.nameBadgeLeftSpacing ? box.nameBadgeLeftSpacing : ""}`}

@@ -1,11 +1,15 @@
+import { Link } from "react-router-dom";
 import SocialLoginButton from "@/components/auth/SocialLoginButton";
+import { PATHS } from "@/routes/path";
 
 const LoginPage = () => {
   return (
     <div className="min-h-screen w-full bg-[linear-gradient(180deg,rgba(34,34,34,0)_0%,rgba(62,115,88,0.3)_100%)]">
       <div className="flex min-h-screen flex-col items-center justify-center px-4">
         <h1 className="mb-10 text-4xl font-extrabold tracking-wide text-[var(--color-green-semidark)]/80">
-          GRIT
+          <Link to={PATHS.LANDING} aria-label="랜딩 페이지">
+            GRIT
+          </Link>
         </h1>
 
         <div className="w-[420px] max-w-[92vw] rounded-md bg-[#f5f5f5] shadow-[0px_16px_48px_0px_#00000059]">

@@ -15,6 +15,7 @@ export default function VideoTile({
 }: VideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const shouldRenderVideo = Boolean(videoTrack || participant);
 
   useEffect(() => {
     const track = participant
@@ -54,14 +55,16 @@ export default function VideoTile({
 
   return (
     <>
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-full h-full object-cover"
-      />
-      <audio ref={audioRef} autoPlay />
+      {shouldRenderVideo && (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+        />
+      )}
+      <audio ref={audioRef} autoPlay className="hidden" />
     </>
   );
 }
