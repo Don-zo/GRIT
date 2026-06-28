@@ -21,11 +21,19 @@ import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { useLiveKit } from "@/hooks/useLiveKit";
 import { LIVEKIT_URL } from "@/apis/constants/endpoints";
 import { groupApi } from "@/apis/domains/group/api";
+import { userApi } from "@/apis/domains/user/api";
 import { usePomodoroStatus } from "@/hooks/usePomodoroStatus";
 import { useStartPomodoro } from "@/hooks/useStartPomodoro";
 import { usePausePomodoro } from "@/hooks/usePausePomodoro";
 import { useResumePomodoro } from "@/hooks/useResumePomodoro";
 import { useStopPomodoro } from "@/hooks/useStopPomodoro";
+
+type PomodoroConfig = {
+  studyMinutes: number;
+  breakMinutes: number;
+  repeat: number;
+  enabled: boolean;
+};
 
 const isLiveKitReactionMessage = (
   value: unknown,
@@ -100,6 +108,11 @@ const RoomPage = () => {
     queryFn: () => groupApi.getGroupMembers(groupCode!),
     enabled: !!groupCode,
   });
+  const { data: currentMember } = useQuery({
+    queryKey: QUERY_KEYS.member.me,
+    queryFn: userApi.get,
+  });
+
   const { data: pomodoroStatus } = usePomodoroStatus({
     groupCode,
     enabled: !!groupCode,
