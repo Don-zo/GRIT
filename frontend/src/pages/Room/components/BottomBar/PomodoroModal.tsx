@@ -7,7 +7,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Square } from "lucide-react";
 import ToggleBtn from "@/components/ToggleBtn";
 import {
   clampFocusMinutes,
@@ -22,10 +22,12 @@ type PomodoroModalProps = {
   onStart?: (body: StartPomodoroRequest) => void;
   onPause?: () => void;
   onResume?: () => void;
+  onStop?: () => void;
   status?: PomodoroStatus;
   isStarting?: boolean;
   isPausing?: boolean;
   isResuming?: boolean;
+  isStopping?: boolean;
   initialStudyMinutes?: number;
   initialRepeat?: number;
 };
@@ -171,10 +173,12 @@ export default function PomodoroModal({
   onStart,
   onPause,
   onResume,
+  onStop,
   status,
   isStarting = false,
   isPausing = false,
   isResuming = false,
+  isStopping = false,
   initialStudyMinutes = 45,
   initialRepeat = 1,
 }: PomodoroModalProps) {
@@ -182,6 +186,7 @@ export default function PomodoroModal({
 
   const canPause = status === "RUNNING";
   const canResume = status === "PAUSED";
+  const canStop = status === "RUNNING" || status === "PAUSED";
 
   const [studyMinutes, setStudyMinutes] = useState(
     clampDialFocusMinutes(initialStudyMinutes),
@@ -203,6 +208,11 @@ export default function PomodoroModal({
   const handleResume = () => {
     if (!canResume) return;
     onResume?.();
+  };
+
+  const handleStop = () => {
+    if (!canStop) return;
+    onStop?.();
   };
 
   const handleStart = () => {
@@ -280,12 +290,12 @@ export default function PomodoroModal({
             </div>
           </div>
         </div>
-        <div className="flex justify-center gap-3 mt-2">
+        <div className="grid grid-cols-2 gap-3 mt-2">
           <button
             type="button"
             onClick={handlePause}
             disabled={!canPause || isPausing}
-            className="flex items-center justify-center w-1/3 max-w-[120px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Pause size={14} fill="currentColor" />
             <span>일시정지</span>
@@ -294,16 +304,25 @@ export default function PomodoroModal({
             type="button"
             onClick={handleResume}
             disabled={!canResume || isResuming}
-            className="flex items-center justify-center w-1/3 max-w-[120px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Play size={14} fill="currentColor" stroke="none" />
             <span>재개</span>
           </button>
           <button
             type="button"
+            onClick={handleStop}
+            disabled={!canStop || isStopping}
+            className="flex items-center justify-center gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Square size={14} fill="currentColor" />
+            <span>정지</span>
+          </button>
+          <button
+            type="button"
             onClick={handleStart}
             disabled={isStarting}
-            className="flex items-center justify-center w-1/3 max-w-[120px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Play size={14} fill="currentColor" stroke="none" />
             <span>시작하기</span>

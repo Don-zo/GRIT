@@ -25,6 +25,7 @@ import { usePomodoroStatus } from "@/hooks/usePomodoroStatus";
 import { useStartPomodoro } from "@/hooks/useStartPomodoro";
 import { usePausePomodoro } from "@/hooks/usePausePomodoro";
 import { useResumePomodoro } from "@/hooks/useResumePomodoro";
+import { useStopPomodoro } from "@/hooks/useStopPomodoro";
 
 const isLiveKitReactionMessage = (
   value: unknown,
@@ -75,6 +76,8 @@ const RoomPage = () => {
     usePausePomodoro(groupCode);
   const { mutate: resumePomodoro, isPending: isResumingPomodoro } =
     useResumePomodoro(groupCode);
+  const { mutate: stopPomodoro, isPending: isStoppingPomodoro } =
+    useStopPomodoro(groupCode);
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [, setLivekitTestStatus] = useState(""); //테스트 상태메세지
   const [receivedReactions, setReceivedReactions] = useState<ReactionItem[]>([]);
@@ -264,6 +267,7 @@ const RoomPage = () => {
         isStartingPomodoro={isStartingPomodoro}
         isPausingPomodoro={isPausingPomodoro}
         isResumingPomodoro={isResumingPomodoro}
+        isStoppingPomodoro={isStoppingPomodoro}
         onPomodoroStart={(body) => {
           if (!groupCode) return;
           startPomodoro(body);
@@ -275,6 +279,10 @@ const RoomPage = () => {
         onPomodoroResume={() => {
           if (!groupCode) return;
           resumePomodoro();
+        }}
+        onPomodoroStop={() => {
+          if (!groupCode) return;
+          stopPomodoro();
         }}
         onToggleMic={toggleMicrophone}
         onToggleCam={toggleCamera}

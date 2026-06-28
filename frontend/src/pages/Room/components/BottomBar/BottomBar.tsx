@@ -15,10 +15,12 @@ type BottomBarProps = {
   onPomodoroStart?: (body: StartPomodoroRequest) => void;
   onPomodoroPause?: () => void;
   onPomodoroResume?: () => void;
+  onPomodoroStop?: () => void;
   pomodoroStatus?: PomodoroStatus;
   isStartingPomodoro?: boolean;
   isPausingPomodoro?: boolean;
   isResumingPomodoro?: boolean;
+  isStoppingPomodoro?: boolean;
   onToggleMic?: () => void;
   onToggleCam?: () => void;
   onLeaveRoom?: () => void;
@@ -30,10 +32,12 @@ export default function BottomBar({
   onPomodoroStart,
   onPomodoroPause,
   onPomodoroResume,
+  onPomodoroStop,
   pomodoroStatus,
   isStartingPomodoro = false,
   isPausingPomodoro = false,
   isResumingPomodoro = false,
+  isStoppingPomodoro = false,
   onToggleMic,
   onToggleCam,
   onLeaveRoom,
@@ -142,11 +146,15 @@ export default function BottomBar({
           isStarting={isStartingPomodoro}
           isPausing={isPausingPomodoro}
           isResuming={isResumingPomodoro}
+          isStopping={isStoppingPomodoro}
           onPause={() => {
             onPomodoroPause?.();
           }}
           onResume={() => {
             onPomodoroResume?.();
+          }}
+          onStop={() => {
+            onPomodoroStop?.();
           }}
           onStart={(body) => {
             onPomodoroStart?.(body);

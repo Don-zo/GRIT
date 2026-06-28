@@ -41,6 +41,8 @@ export const ENDPOINTS = {
       `/api/group/${groupCode}/livekit/pomodoro/pause`,
     RESUME: (groupCode: string) =>
       `/api/group/${groupCode}/livekit/pomodoro/resume`,
+    STOP: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/pomodoro/stop`,
   },
   TODO: {
     BY_ID: (todoId: number) => `/api/members/me/todos/${todoId}`,
