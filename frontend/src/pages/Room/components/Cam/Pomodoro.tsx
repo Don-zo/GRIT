@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import type { PomodoroPhase } from "@/apis/domains/pomodoro/type";
 
 type PomodoroProps = {
   studyMinutes: number;
@@ -11,6 +12,22 @@ type PomodoroProps = {
   strokeWidth?: number;
   className?: string;
   onFinish?: () => void;
+  serverNow?: string;
+  phase?: PomodoroPhase;
+  focusEndsAt?: string | null;
+  breakEndsAt?: string | null;
+  currentRound?: number;
+};
+
+const getRemainingSeconds = (
+  serverNow: string,
+  endsAt: string | null | undefined,
+) => {
+  if (!endsAt) return 0;
+  return Math.max(
+    0,
+    Math.floor((Date.parse(endsAt) - Date.parse(serverNow)) / 1000),
+  );
 };
 
 const Pomodoro: React.FC<PomodoroProps> = ({
@@ -22,26 +39,39 @@ const Pomodoro: React.FC<PomodoroProps> = ({
   strokeWidth,
   className = "",
   onFinish,
+  serverNow,
+  phase,
+  focusEndsAt,
+  breakEndsAt,
+  currentRound,
 }) => {
-  // strokeWidth가 제공되지 않으면 size에 비례하여 계산
   const calculatedStrokeWidth = strokeWidth ?? size * 0.15;
   const studySeconds = Math.max(studyMinutes, 0) * 60;
   const breakSeconds = Math.max(breakMinutes, 0) * 60;
   const cycleTotalSeconds = studySeconds + breakSeconds;
   const totalRepeats = Math.max(repeat, 1);
+  const isServerMode = serverNow != null;
+
+  const phaseEndsAt = phase === "FOCUS" ? focusEndsAt : breakEndsAt;
 
   const [secondsInCycle, setSecondsInCycle] = useState(0);
-
-  const [currentRepeat, setCurrentRepeat] = useState(1);
+  const [serverRemainingSeconds, setServerRemainingSeconds] = useState(() =>
+    isServerMode ? getRemainingSeconds(serverNow, phaseEndsAt) : 0,
+  );
+  const [currentRepeat, setCurrentRepeat] = useState(currentRound ?? 1);
   const [running, setRunning] = useState(autoStart);
 
-  const isStudy = secondsInCycle < studySeconds;
+  const isStudy = isServerMode ? phase === "FOCUS" : secondsInCycle < studySeconds;
 
   const phaseTotal = isStudy ? studySeconds : breakSeconds;
-  const phaseElapsed = isStudy
-    ? secondsInCycle
-    : Math.min(secondsInCycle - studySeconds, breakSeconds);
-  const remaining = Math.max(phaseTotal - phaseElapsed, 0);
+  const phaseElapsed = isServerMode
+    ? Math.max(phaseTotal - serverRemainingSeconds, 0)
+    : isStudy
+      ? secondsInCycle
+      : Math.min(secondsInCycle - studySeconds, breakSeconds);
+  const remaining = isServerMode
+    ? serverRemainingSeconds
+    : Math.max(phaseTotal - phaseElapsed, 0);
 
   const radius = (size - calculatedStrokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -52,13 +82,11 @@ const Pomodoro: React.FC<PomodoroProps> = ({
     cycleTotalSeconds > 0 ? breakSeconds / cycleTotalSeconds : 0;
 
   const redInnerProgress =
-    studySeconds > 0 ? Math.min(secondsInCycle, studySeconds) / studySeconds : 0;
+    studySeconds > 0 ? Math.min(phaseElapsed, studySeconds) / studySeconds : 0;
   const redVisibleLen = circumference * studyRatio * redInnerProgress;
 
   const blueInnerProgress =
-    !isStudy && breakSeconds > 0
-      ? Math.min(secondsInCycle - studySeconds, breakSeconds) / breakSeconds
-      : 0;
+    !isStudy && breakSeconds > 0 ? phaseElapsed / breakSeconds : 0;
   const blueVisibleLen = circumference * breakRatio * blueInnerProgress;
 
   const redAngle = -90;
@@ -71,7 +99,20 @@ const Pomodoro: React.FC<PomodoroProps> = ({
   };
 
   useEffect(() => {
-    if (!running || cycleTotalSeconds <= 0) return;
+    if (!isServerMode) return;
+    setServerRemainingSeconds(getRemainingSeconds(serverNow, phaseEndsAt));
+    setCurrentRepeat(currentRound ?? 1);
+    setRunning(autoStart);
+  }, [
+    autoStart,
+    currentRound,
+    isServerMode,
+    phaseEndsAt,
+    serverNow,
+  ]);
+
+  useEffect(() => {
+    if (isServerMode || !running || cycleTotalSeconds <= 0) return;
 
     const timer = setInterval(() => {
       setSecondsInCycle((prev) => {
@@ -81,12 +122,12 @@ const Pomodoro: React.FC<PomodoroProps> = ({
           if (currentRepeat < totalRepeats) {
             setCurrentRepeat((r) => r + 1);
             return 0;
-          } else {
-            clearInterval(timer);
-            setRunning(false);
-            onFinish?.();
-            return cycleTotalSeconds;
           }
+
+          clearInterval(timer);
+          setRunning(false);
+          onFinish?.();
+          return cycleTotalSeconds;
         }
 
         return next;
@@ -94,13 +135,24 @@ const Pomodoro: React.FC<PomodoroProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [running, cycleTotalSeconds, totalRepeats, currentRepeat, onFinish]);
+  }, [running, cycleTotalSeconds, totalRepeats, currentRepeat, onFinish, isServerMode]);
 
   useEffect(() => {
+    if (!isServerMode || !running) return;
+
+    const timer = setInterval(() => {
+      setServerRemainingSeconds((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isServerMode, running]);
+
+  useEffect(() => {
+    if (isServerMode) return;
     setSecondsInCycle(0);
     setCurrentRepeat(1);
     setRunning(autoStart);
-  }, [studyMinutes, breakMinutes, repeat, autoStart]);
+  }, [studyMinutes, breakMinutes, repeat, autoStart, isServerMode]);
 
   return (
     <div
@@ -160,20 +212,20 @@ const Pomodoro: React.FC<PomodoroProps> = ({
 
         <div className="absolute flex flex-col items-center">
           {!isStudy && (
-            <span 
+            <span
               className="text-[#555555] mb-1"
               style={{ fontSize: `${size * 0.07}px` }}
             >
               쉬는시간
             </span>
           )}
-          <span 
+          <span
             className="text-white font-semibold tracking-wide"
             style={{ fontSize: `${size * 0.14}px` }}
           >
             {formatTime(remaining)}
           </span>
-          <span 
+          <span
             className="mt-1 leading-none text-gray-400"
             style={{ fontSize: `${size * 0.05}px` }}
           >

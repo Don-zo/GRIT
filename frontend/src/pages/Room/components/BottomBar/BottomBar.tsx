@@ -4,18 +4,13 @@ import { Mic, MicOff, Video, VideoOff, Smile, X } from "lucide-react";
 import type { Reaction } from "@/apis/domains/livekit/type";
 import EmojiModal from "./EmojiModal";
 import PomodoroModal from "./PomodoroModal";
-
-type PomodoroConfig = {
-  studyMinutes: number;
-  breakMinutes: number;
-  repeat: number;
-  enabled: boolean;
-};
+import type { StartPomodoroRequest } from "@/apis/domains/pomodoro/type";
 
 type BottomBarProps = {
   reactions?: Reaction[];
   onSendReaction?: (reaction: Reaction) => void;
-  onPomodoroStart?: (config: PomodoroConfig) => void;
+  onPomodoroStart?: (body: StartPomodoroRequest) => void;
+  isStartingPomodoro?: boolean;
   onToggleMic?: () => void;
   onToggleCam?: () => void;
   onLeaveRoom?: () => void;
@@ -25,6 +20,7 @@ export default function BottomBar({
   reactions = [],
   onSendReaction,
   onPomodoroStart,
+  isStartingPomodoro = false,
   onToggleMic,
   onToggleCam,
   onLeaveRoom,
@@ -129,8 +125,9 @@ export default function BottomBar({
         <PomodoroModal
           open={pomodoroOpen}
           onClose={() => setPomodoroOpen(false)}
-          onStart={(config) => {
-            onPomodoroStart?.(config);
+          isStarting={isStartingPomodoro}
+          onStart={(body) => {
+            onPomodoroStart?.(body);
             setPomodoroOpen(false);
           }}
         />

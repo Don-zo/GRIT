@@ -9,27 +9,26 @@ import {
 } from "react";
 import { Play } from "lucide-react";
 import ToggleBtn from "@/components/ToggleBtn";
+import {
+  clampFocusMinutes,
+  clampTotalRounds,
+  type StartPomodoroRequest,
+} from "@/apis/domains/pomodoro/type";
 
 type PomodoroModalProps = {
   open: boolean;
   onClose?: () => void;
-  onStart?: (config: {
-    studyMinutes: number;
-    breakMinutes: number;
-    repeat: number;
-    enabled: boolean;
-  }) => void;
+  onStart?: (body: StartPomodoroRequest) => void;
+  isStarting?: boolean;
   initialStudyMinutes?: number;
   initialRepeat?: number;
 };
 
 const ONE_HOUR_MINUTES = 60;
 
-const clampStudyMinutes = (value: number) => {
+const clampDialFocusMinutes = (value: number) => {
   const rounded = Math.round(value / 5) * 5;
-  if (rounded < 5) return 5;
-  if (rounded > 55) return 55;
-  return rounded;
+  return clampFocusMinutes(rounded);
 };
 
 function PomodoroPreview({
@@ -69,7 +68,7 @@ function PomodoroPreview({
     const degreeFromXAxis = (Math.atan2(dy, dx) * 180) / Math.PI;
     const normalized = (degreeFromXAxis + 450) % 360; // rotate start to top
     const minutes = (normalized / 360) * ONE_HOUR_MINUTES;
-    return clampStudyMinutes(minutes);
+    return clampDialFocusMinutes(minutes);
   }, []);
 
   const handlePointerMove = useCallback(
@@ -164,26 +163,22 @@ export default function PomodoroModal({
   open,
   onClose,
   onStart,
+  isStarting = false,
   initialStudyMinutes = 45,
   initialRepeat = 1,
 }: PomodoroModalProps) {
   if (!open) return null;
 
   const [studyMinutes, setStudyMinutes] = useState(
-    clampStudyMinutes(initialStudyMinutes)
+    clampDialFocusMinutes(initialStudyMinutes),
   );
-  const [repeat, setRepeat] = useState(initialRepeat);
+  const [repeat, setRepeat] = useState(clampTotalRounds(initialRepeat));
   const [enabled, setEnabled] = useState(true);
 
   const breakMinutes = ONE_HOUR_MINUTES - studyMinutes;
 
   const handleChangeRepeat = (delta: number) => {
-    setRepeat((prev) => {
-      const next = prev + delta;
-      if (next < 1) return 1;
-      if (next > 12) return 12;
-      return next;
-    });
+    setRepeat((prev) => clampTotalRounds(prev + delta));
   };
 
   const handleStart = () => {
@@ -192,10 +187,8 @@ export default function PomodoroModal({
       return;
     }
     onStart?.({
-      studyMinutes,
-      breakMinutes,
-      repeat,
-      enabled,
+      focusMinutes: clampFocusMinutes(studyMinutes),
+      totalRounds: clampTotalRounds(repeat),
     });
     onClose?.();
   };
@@ -267,7 +260,8 @@ export default function PomodoroModal({
           <button
             type="button"
             onClick={handleStart}
-            className="flex items-center justify-center w-1/3 max-w-[160px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80"
+            disabled={isStarting}
+            className="flex items-center justify-center w-1/3 max-w-[160px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Play size={14} fill="currentColor" stroke="none" />
             <span>시작하기</span>
