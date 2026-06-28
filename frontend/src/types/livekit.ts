@@ -15,6 +15,7 @@ export interface UseLiveKitProps {
 export interface ParticipantData {
   identity: string;
   name: string;
+  imageUrl?: string | null;
   videoTrack?: Track | null;
   audioTrack?: Track | null;
   isMuted: boolean;

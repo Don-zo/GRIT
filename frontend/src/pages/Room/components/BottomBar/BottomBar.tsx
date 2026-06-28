@@ -16,9 +16,12 @@ type BottomBarProps = {
   reactions?: Reaction[];
   onSendReaction?: (reaction: Reaction) => void;
   onPomodoroStart?: (config: PomodoroConfig) => void;
-  onToggleMic?: () => void;
-  onToggleCam?: () => void;
+  onToggleMic?: () => void | Promise<void>;
+  onToggleCam?: () => void | Promise<void>;
   onLeaveRoom?: () => void;
+  isMicOn?: boolean;
+  isCamOn?: boolean;
+  isMediaTogglePending?: boolean;
 };
 
 export default function BottomBar({
@@ -28,26 +31,21 @@ export default function BottomBar({
   onToggleMic,
   onToggleCam,
   onLeaveRoom,
+  isMicOn = false,
+  isCamOn = false,
+  isMediaTogglePending = false,
 }: BottomBarProps) {
-  const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(true);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [pomodoroOpen, setPomodoroOpen] = useState(false);
 
   const handleMicToggle = () => {
-    setMicOn((prev) => !prev);
-
-    if (onToggleMic) {
-      onToggleMic();
-    }
+    if (isMediaTogglePending) return;
+    void onToggleMic?.();
   };
 
   const handleCamToggle = () => {
-    setCamOn((prev) => !prev);
-
-    if (onToggleCam) {
-      onToggleCam();
-    }
+    if (isMediaTogglePending) return;
+    void onToggleCam?.();
   };
 
   const handleLeaveRoom = () => {
@@ -63,7 +61,7 @@ export default function BottomBar({
       {/* 마이크 on/off */}
       <CustomBtn
         isToggle
-        isActive={micOn}
+        isActive={isMicOn}
         icon={<MicOff />}
         activeIcon={<Mic />}
         bgColor="bg-tomato"
@@ -74,7 +72,7 @@ export default function BottomBar({
       {/* 카메라 on/off */}
       <CustomBtn
         isToggle
-        isActive={camOn}
+        isActive={isCamOn}
         icon={<VideoOff />}
         activeIcon={<Video />}
         bgColor="bg-tomato"
