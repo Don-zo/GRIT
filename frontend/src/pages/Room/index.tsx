@@ -21,13 +21,11 @@ import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { useLiveKit } from "@/hooks/useLiveKit";
 import { LIVEKIT_URL } from "@/apis/constants/endpoints";
 import { groupApi } from "@/apis/domains/group/api";
-
-type PomodoroConfig = {
-  studyMinutes: number;
-  breakMinutes: number;
-  repeat: number;
-  enabled: boolean;
-};
+import { usePomodoroStatus } from "@/hooks/usePomodoroStatus";
+import { useStartPomodoro } from "@/hooks/useStartPomodoro";
+import { usePausePomodoro } from "@/hooks/usePausePomodoro";
+import { useResumePomodoro } from "@/hooks/useResumePomodoro";
+import { useStopPomodoro } from "@/hooks/useStopPomodoro";
 
 const isLiveKitReactionMessage = (
   value: unknown,
@@ -68,6 +66,18 @@ const RoomPage = () => {
     queryFn: () => groupApi.getGroupMembers(groupCode!),
     enabled: !!groupCode,
   });
+  const { data: pomodoroStatus } = usePomodoroStatus({
+    groupCode,
+    enabled: !!groupCode,
+  });
+  const { mutate: startPomodoro, isPending: isStartingPomodoro } =
+    useStartPomodoro(groupCode);
+  const { mutate: pausePomodoro, isPending: isPausingPomodoro } =
+    usePausePomodoro(groupCode);
+  const { mutate: resumePomodoro, isPending: isResumingPomodoro } =
+    useResumePomodoro(groupCode);
+  const { mutate: stopPomodoro, isPending: isStoppingPomodoro } =
+    useStopPomodoro(groupCode);
   const [token, setToken] = useState<string | null>(null); //livekit 토큰
   const [, setLivekitTestStatus] = useState(""); //테스트 상태메세지
   const [receivedReactions, setReceivedReactions] = useState<ReactionItem[]>([]);
@@ -180,27 +190,41 @@ const RoomPage = () => {
   ];
 
   const [todoOpen, setTodoOpen] = useState(false);
-  const [pomodoroConfig, setPomodoroConfig] = useState<PomodoroConfig>({
-    studyMinutes: 45,
-    breakMinutes: 15,
-    repeat: 1,
-    enabled: false,
-  });
 
-  const handlePomodoroFinish = () => {
-    setPomodoroConfig((prev) => ({
-      ...prev,
-      enabled: false,
-    }));
-  };
+  const DEFAULT_FOCUS_MINUTES = 45;
+  const DEFAULT_BREAK_MINUTES = 15;
+  const DEFAULT_TOTAL_ROUNDS = 1;
+
+  const isPomodoroRunning =
+    pomodoroStatus?.status === "RUNNING" ||
+    pomodoroStatus?.status === "BREAK" ||
+    pomodoroStatus?.status === "PAUSED";
 
   const pomodoroNode = (
     <Pomodoro
-      studyMinutes={pomodoroConfig.studyMinutes}
-      breakMinutes={pomodoroConfig.breakMinutes}
-      repeat={pomodoroConfig.repeat}
-      autoStart={pomodoroConfig.enabled}
-      onFinish={handlePomodoroFinish}
+      studyMinutes={
+        isPomodoroRunning
+          ? (pomodoroStatus?.focusMinutes ?? DEFAULT_FOCUS_MINUTES)
+          : DEFAULT_FOCUS_MINUTES
+      }
+      breakMinutes={
+        isPomodoroRunning
+          ? (pomodoroStatus?.breakMinutes ?? DEFAULT_BREAK_MINUTES)
+          : DEFAULT_BREAK_MINUTES
+      }
+      repeat={
+        isPomodoroRunning
+          ? (pomodoroStatus?.totalRounds ?? DEFAULT_TOTAL_ROUNDS)
+          : DEFAULT_TOTAL_ROUNDS
+      }
+      autoStart={isPomodoroRunning && pomodoroStatus?.status !== "PAUSED"}
+      serverNow={isPomodoroRunning ? pomodoroStatus?.serverNow : undefined}
+      phase={isPomodoroRunning ? pomodoroStatus?.phase : undefined}
+      focusEndsAt={isPomodoroRunning ? pomodoroStatus?.focusEndsAt : undefined}
+      breakEndsAt={isPomodoroRunning ? pomodoroStatus?.breakEndsAt : undefined}
+      currentRound={
+        isPomodoroRunning ? (pomodoroStatus?.currentRound ?? 1) : 1
+      }
     />
   );
 
@@ -239,8 +263,26 @@ const RoomPage = () => {
       <BottomBar
         reactions={reactions}
         onSendReaction={handleSendReaction}
-        onPomodoroStart={(config) => {
-          setPomodoroConfig(config);
+        pomodoroStatus={pomodoroStatus?.status}
+        isStartingPomodoro={isStartingPomodoro}
+        isPausingPomodoro={isPausingPomodoro}
+        isResumingPomodoro={isResumingPomodoro}
+        isStoppingPomodoro={isStoppingPomodoro}
+        onPomodoroStart={(body) => {
+          if (!groupCode) return;
+          startPomodoro(body);
+        }}
+        onPomodoroPause={() => {
+          if (!groupCode) return;
+          pausePomodoro();
+        }}
+        onPomodoroResume={() => {
+          if (!groupCode) return;
+          resumePomodoro();
+        }}
+        onPomodoroStop={() => {
+          if (!groupCode) return;
+          stopPomodoro();
         }}
         onToggleMic={toggleMicrophone}
         onToggleCam={toggleCamera}

@@ -7,29 +7,36 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { Play } from "lucide-react";
+import { Play, Pause, Square } from "lucide-react";
 import ToggleBtn from "@/components/ToggleBtn";
+import {
+  clampFocusMinutes,
+  clampTotalRounds,
+  type PomodoroStatus,
+  type StartPomodoroRequest,
+} from "@/apis/domains/pomodoro/type";
 
 type PomodoroModalProps = {
   open: boolean;
   onClose?: () => void;
-  onStart?: (config: {
-    studyMinutes: number;
-    breakMinutes: number;
-    repeat: number;
-    enabled: boolean;
-  }) => void;
+  onStart?: (body: StartPomodoroRequest) => void;
+  onPause?: () => void;
+  onResume?: () => void;
+  onStop?: () => void;
+  status?: PomodoroStatus;
+  isStarting?: boolean;
+  isPausing?: boolean;
+  isResuming?: boolean;
+  isStopping?: boolean;
   initialStudyMinutes?: number;
   initialRepeat?: number;
 };
 
 const ONE_HOUR_MINUTES = 60;
 
-const clampStudyMinutes = (value: number) => {
+const clampDialFocusMinutes = (value: number) => {
   const rounded = Math.round(value / 5) * 5;
-  if (rounded < 5) return 5;
-  if (rounded > 55) return 55;
-  return rounded;
+  return clampFocusMinutes(rounded);
 };
 
 function PomodoroPreview({
@@ -69,7 +76,7 @@ function PomodoroPreview({
     const degreeFromXAxis = (Math.atan2(dy, dx) * 180) / Math.PI;
     const normalized = (degreeFromXAxis + 450) % 360; // rotate start to top
     const minutes = (normalized / 360) * ONE_HOUR_MINUTES;
-    return clampStudyMinutes(minutes);
+    return clampDialFocusMinutes(minutes);
   }, []);
 
   const handlePointerMove = useCallback(
@@ -164,26 +171,48 @@ export default function PomodoroModal({
   open,
   onClose,
   onStart,
+  onPause,
+  onResume,
+  onStop,
+  status,
+  isStarting = false,
+  isPausing = false,
+  isResuming = false,
+  isStopping = false,
   initialStudyMinutes = 45,
   initialRepeat = 1,
 }: PomodoroModalProps) {
   if (!open) return null;
 
+  const canPause = status === "RUNNING";
+  const canResume = status === "PAUSED";
+  const canStop = status === "RUNNING" || status === "PAUSED";
+
   const [studyMinutes, setStudyMinutes] = useState(
-    clampStudyMinutes(initialStudyMinutes)
+    clampDialFocusMinutes(initialStudyMinutes),
   );
-  const [repeat, setRepeat] = useState(initialRepeat);
+  const [repeat, setRepeat] = useState(clampTotalRounds(initialRepeat));
   const [enabled, setEnabled] = useState(true);
 
   const breakMinutes = ONE_HOUR_MINUTES - studyMinutes;
 
   const handleChangeRepeat = (delta: number) => {
-    setRepeat((prev) => {
-      const next = prev + delta;
-      if (next < 1) return 1;
-      if (next > 12) return 12;
-      return next;
-    });
+    setRepeat((prev) => clampTotalRounds(prev + delta));
+  };
+
+  const handlePause = () => {
+    if (!canPause) return;
+    onPause?.();
+  };
+
+  const handleResume = () => {
+    if (!canResume) return;
+    onResume?.();
+  };
+
+  const handleStop = () => {
+    if (!canStop) return;
+    onStop?.();
   };
 
   const handleStart = () => {
@@ -192,10 +221,8 @@ export default function PomodoroModal({
       return;
     }
     onStart?.({
-      studyMinutes,
-      breakMinutes,
-      repeat,
-      enabled,
+      focusMinutes: clampFocusMinutes(studyMinutes),
+      totalRounds: clampTotalRounds(repeat),
     });
     onClose?.();
   };
@@ -263,11 +290,39 @@ export default function PomodoroModal({
             </div>
           </div>
         </div>
-        <div className="flex justify-center mt-2">
+        <div className="grid grid-cols-2 gap-3 mt-2">
+          <button
+            type="button"
+            onClick={handlePause}
+            disabled={!canPause || isPausing}
+            className="flex items-center justify-center gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Pause size={14} fill="currentColor" />
+            <span>일시정지</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleResume}
+            disabled={!canResume || isResuming}
+            className="flex items-center justify-center gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Play size={14} fill="currentColor" stroke="none" />
+            <span>재개</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleStop}
+            disabled={!canStop || isStopping}
+            className="flex items-center justify-center gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Square size={14} fill="currentColor" />
+            <span>정지</span>
+          </button>
           <button
             type="button"
             onClick={handleStart}
-            className="flex items-center justify-center w-1/3 max-w-[160px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80"
+            disabled={isStarting}
+            className="flex items-center justify-center gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Play size={14} fill="currentColor" stroke="none" />
             <span>시작하기</span>

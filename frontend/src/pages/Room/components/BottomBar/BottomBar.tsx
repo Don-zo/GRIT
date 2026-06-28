@@ -4,18 +4,23 @@ import { Mic, MicOff, Video, VideoOff, Smile, X } from "lucide-react";
 import type { Reaction } from "@/apis/domains/livekit/type";
 import EmojiModal from "./EmojiModal";
 import PomodoroModal from "./PomodoroModal";
-
-type PomodoroConfig = {
-  studyMinutes: number;
-  breakMinutes: number;
-  repeat: number;
-  enabled: boolean;
-};
+import type {
+  PomodoroStatus,
+  StartPomodoroRequest,
+} from "@/apis/domains/pomodoro/type";
 
 type BottomBarProps = {
   reactions?: Reaction[];
   onSendReaction?: (reaction: Reaction) => void;
-  onPomodoroStart?: (config: PomodoroConfig) => void;
+  onPomodoroStart?: (body: StartPomodoroRequest) => void;
+  onPomodoroPause?: () => void;
+  onPomodoroResume?: () => void;
+  onPomodoroStop?: () => void;
+  pomodoroStatus?: PomodoroStatus;
+  isStartingPomodoro?: boolean;
+  isPausingPomodoro?: boolean;
+  isResumingPomodoro?: boolean;
+  isStoppingPomodoro?: boolean;
   onToggleMic?: () => void;
   onToggleCam?: () => void;
   onLeaveRoom?: () => void;
@@ -25,6 +30,14 @@ export default function BottomBar({
   reactions = [],
   onSendReaction,
   onPomodoroStart,
+  onPomodoroPause,
+  onPomodoroResume,
+  onPomodoroStop,
+  pomodoroStatus,
+  isStartingPomodoro = false,
+  isPausingPomodoro = false,
+  isResumingPomodoro = false,
+  isStoppingPomodoro = false,
   onToggleMic,
   onToggleCam,
   onLeaveRoom,
@@ -129,8 +142,22 @@ export default function BottomBar({
         <PomodoroModal
           open={pomodoroOpen}
           onClose={() => setPomodoroOpen(false)}
-          onStart={(config) => {
-            onPomodoroStart?.(config);
+          status={pomodoroStatus}
+          isStarting={isStartingPomodoro}
+          isPausing={isPausingPomodoro}
+          isResuming={isResumingPomodoro}
+          isStopping={isStoppingPomodoro}
+          onPause={() => {
+            onPomodoroPause?.();
+          }}
+          onResume={() => {
+            onPomodoroResume?.();
+          }}
+          onStop={() => {
+            onPomodoroStop?.();
+          }}
+          onStart={(body) => {
+            onPomodoroStart?.(body);
             setPomodoroOpen(false);
           }}
         />
