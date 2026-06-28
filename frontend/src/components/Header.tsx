@@ -31,12 +31,14 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
     return () => el.removeEventListener("wheel", blockWheel);
   }, []);
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading } = useQuery({
     queryKey: QUERY_KEYS.member.me,
     queryFn: userApi.get,
     enabled: Boolean(accessToken),
   });
-  const currentUser = accessToken ? user : undefined;
+  const currentUser = accessToken
+    ? user || (isLoading ? { nickname: "로딩 중...", email: "" } : undefined)
+    : undefined;
 
   useEffect(() => {
     if (alwaysVisible) return;
