@@ -21,9 +21,11 @@ type PomodoroModalProps = {
   onClose?: () => void;
   onStart?: (body: StartPomodoroRequest) => void;
   onPause?: () => void;
+  onResume?: () => void;
   status?: PomodoroStatus;
   isStarting?: boolean;
   isPausing?: boolean;
+  isResuming?: boolean;
   initialStudyMinutes?: number;
   initialRepeat?: number;
 };
@@ -168,15 +170,18 @@ export default function PomodoroModal({
   onClose,
   onStart,
   onPause,
+  onResume,
   status,
   isStarting = false,
   isPausing = false,
+  isResuming = false,
   initialStudyMinutes = 45,
   initialRepeat = 1,
 }: PomodoroModalProps) {
   if (!open) return null;
 
   const canPause = status === "RUNNING";
+  const canResume = status === "PAUSED";
 
   const [studyMinutes, setStudyMinutes] = useState(
     clampDialFocusMinutes(initialStudyMinutes),
@@ -193,6 +198,11 @@ export default function PomodoroModal({
   const handlePause = () => {
     if (!canPause) return;
     onPause?.();
+  };
+
+  const handleResume = () => {
+    if (!canResume) return;
+    onResume?.();
   };
 
   const handleStart = () => {
@@ -275,16 +285,25 @@ export default function PomodoroModal({
             type="button"
             onClick={handlePause}
             disabled={!canPause || isPausing}
-            className="flex items-center justify-center w-1/3 max-w-[160px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center w-1/3 max-w-[120px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Pause size={14} fill="currentColor" />
             <span>일시정지</span>
           </button>
           <button
             type="button"
+            onClick={handleResume}
+            disabled={!canResume || isResuming}
+            className="flex items-center justify-center w-1/3 max-w-[120px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Play size={14} fill="currentColor" stroke="none" />
+            <span>재개</span>
+          </button>
+          <button
+            type="button"
             onClick={handleStart}
             disabled={isStarting}
-            className="flex items-center justify-center w-1/3 max-w-[160px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center w-1/3 max-w-[120px] gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Play size={14} fill="currentColor" stroke="none" />
             <span>시작하기</span>

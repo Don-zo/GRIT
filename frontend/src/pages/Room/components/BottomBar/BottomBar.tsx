@@ -14,9 +14,11 @@ type BottomBarProps = {
   onSendReaction?: (reaction: Reaction) => void;
   onPomodoroStart?: (body: StartPomodoroRequest) => void;
   onPomodoroPause?: () => void;
+  onPomodoroResume?: () => void;
   pomodoroStatus?: PomodoroStatus;
   isStartingPomodoro?: boolean;
   isPausingPomodoro?: boolean;
+  isResumingPomodoro?: boolean;
   onToggleMic?: () => void;
   onToggleCam?: () => void;
   onLeaveRoom?: () => void;
@@ -27,9 +29,11 @@ export default function BottomBar({
   onSendReaction,
   onPomodoroStart,
   onPomodoroPause,
+  onPomodoroResume,
   pomodoroStatus,
   isStartingPomodoro = false,
   isPausingPomodoro = false,
+  isResumingPomodoro = false,
   onToggleMic,
   onToggleCam,
   onLeaveRoom,
@@ -137,8 +141,12 @@ export default function BottomBar({
           status={pomodoroStatus}
           isStarting={isStartingPomodoro}
           isPausing={isPausingPomodoro}
+          isResuming={isResumingPomodoro}
           onPause={() => {
             onPomodoroPause?.();
+          }}
+          onResume={() => {
+            onPomodoroResume?.();
           }}
           onStart={(body) => {
             onPomodoroStart?.(body);

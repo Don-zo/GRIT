@@ -30,4 +30,11 @@ export const pomodoroApi = {
     );
     return response.data;
   },
+
+  resume: async (groupCode: string): Promise<PomodoroStatusResponse> => {
+    const response = await apiClient.post<PomodoroStatusResponse>(
+      ENDPOINTS.POMODORO.RESUME(groupCode),
+    );
+    return response.data;
+  },
 } as const;
