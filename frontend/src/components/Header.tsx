@@ -6,6 +6,7 @@ import { PATHS } from "@/routes/path";
 import { logout, signout } from "@/apis/domains/auth/api";
 import { userApi } from "@/apis/domains/user/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
+import { getAccessToken } from "@/utils/tokenStorage";
 
 type HeaderProps = {
   variant: "light" | "dark";
@@ -17,6 +18,7 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(alwaysVisible);
   const [isDropDownOpen, SetIsDropDownOpen] = useState(false);
   const navigate = useNavigate();
+  const accessToken = getAccessToken();
 
   useEffect(() => {
     const el = headerRef.current;
@@ -32,7 +34,9 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
   const { data: user } = useQuery({
     queryKey: QUERY_KEYS.member.me,
     queryFn: userApi.get,
+    enabled: Boolean(accessToken),
   });
+  const currentUser = accessToken ? user : undefined;
 
   useEffect(() => {
     if (alwaysVisible) return;
@@ -108,10 +112,10 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
         </h1>
 
         <div className="flex gap-3 items-center">
-          {user ? (
+          {currentUser ? (
             <>
               <span className={`text-sm ${currentStyle.userInfo}`}>
-                {user.nickname || user.email} 님
+                {currentUser.nickname || currentUser.email} 님
               </span>
               <div className="relative">
                 <button
