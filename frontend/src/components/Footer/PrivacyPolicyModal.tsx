@@ -15,15 +15,12 @@ export default function PrivacyPolicyModal({
       <Modal.Content className="w-[640px]">
         <Modal.CloseButton />
         <Modal.Header className="flex flex-col items-center text-center">
-          <Modal.Title size="sm" />
-          <p className="mt-2 text-sm font-medium text-[#D6FDE5]">
-            개인정보 처리방침
-          </p>
+          <Modal.Title size="sm">개인정보 처리방침</Modal.Title>
         </Modal.Header>
 
-        <Modal.Body className="max-h-[min(70vh,640px)] overflow-y-auto px-6 pb-8 text-bodySm text-[#D6FDE5]/85">
+        <Modal.Body className="max-h-[min(70vh,640px)] overflow-y-auto px-6 pb-8 text-bodySm text-green-light/85">
           <p className="leading-relaxed">
-            <strong className="text-[#D6FDE5]">GRIT</strong>
+            <strong className="text-green-light">GRIT</strong>
             (
             <a
               href="https://grit-sigma.vercel.app/"
@@ -45,12 +42,12 @@ export default function PrivacyPolicyModal({
             개인정보 처리방침을 수립·공개합니다.
           </p>
 
-          <p className="mt-4 text-[#D6FDE5]/60">
+          <p className="mt-4 text-green-light/60">
             시행일: 2026-06-28 | 버전: 1.0
           </p>
 
           <section className="mt-6">
-            <h2 className="text-bodyMd font-semibold text-[#D6FDE5]">
+            <h2 className="text-bodyMd font-semibold text-green-light">
               1. 개인정보의 처리 목적
             </h2>
             <p className="mt-2 leading-relaxed">
@@ -69,21 +66,21 @@ export default function PrivacyPolicyModal({
           </section>
 
           <section className="mt-6">
-            <h2 className="text-bodyMd font-semibold text-[#D6FDE5]">
+            <h2 className="text-bodyMd font-semibold text-green-light">
               2. 수집하는 개인정보 항목
             </h2>
             <p className="mt-2 leading-relaxed">
-              <strong className="text-[#D6FDE5]">필수 항목:</strong> 이메일
+              <strong className="text-green-light">필수 항목:</strong> 이메일
               주소
             </p>
             <p className="mt-2 leading-relaxed">
-              <strong className="text-[#D6FDE5]">자동 수집 항목:</strong> IP
+              <strong className="text-green-light">자동 수집 항목:</strong> IP
               주소, 쿠키, 서비스 이용기록, 기기정보
             </p>
           </section>
 
           <section className="mt-6">
-            <h2 className="text-bodyMd font-semibold text-[#D6FDE5]">
+            <h2 className="text-bodyMd font-semibold text-green-light">
               수집 방법
             </h2>
             <p className="mt-2 leading-relaxed">
@@ -92,11 +89,11 @@ export default function PrivacyPolicyModal({
           </section>
 
           <section className="mt-6">
-            <h2 className="text-bodyMd font-semibold text-[#D6FDE5]">
+            <h2 className="text-bodyMd font-semibold text-green-light">
               개인정보의 안전성 확보조치
             </h2>
             <p className="mt-2 leading-relaxed">
-              <strong className="text-[#D6FDE5]">기술적 조치:</strong>
+              <strong className="text-green-light">기술적 조치:</strong>
             </p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>개인정보 암호화</li>
@@ -104,18 +101,18 @@ export default function PrivacyPolicyModal({
           </section>
 
           <section className="mt-6">
-            <h2 className="text-bodyMd font-semibold text-[#D6FDE5]">
+            <h2 className="text-bodyMd font-semibold text-green-light">
               쿠키 및 행태정보 수집
             </h2>
-            <p className="mt-2 leading-relaxed font-medium text-[#D6FDE5]">
+            <p className="mt-2 leading-relaxed font-medium text-green-light">
               쿠키 사용
             </p>
             <p className="mt-2 leading-relaxed">
-              <strong className="text-[#D6FDE5]">사용 목적:</strong> 로그인
+              <strong className="text-green-light">사용 목적:</strong> 로그인
               세션 유지
             </p>
             <p className="mt-2 leading-relaxed">
-              <strong className="text-[#D6FDE5]">거부 방법:</strong>
+              <strong className="text-green-light">거부 방법:</strong>
             </p>
             <ul className="mt-2 list-disc space-y-2 pl-5">
               <li>
@@ -133,24 +130,24 @@ export default function PrivacyPolicyModal({
           </section>
 
           <section className="mt-6">
-            <h2 className="text-bodyMd font-semibold text-[#D6FDE5]">
+            <h2 className="text-bodyMd font-semibold text-green-light">
               정보주체의 권리·의무 및 행사방법
             </h2>
             <p className="mt-2 leading-relaxed">
-              <strong className="text-[#D6FDE5]">권리 행사 방법:</strong>{" "}
+              <strong className="text-green-light">권리 행사 방법:</strong>{" "}
               website
             </p>
           </section>
 
           <section className="mt-6">
-            <h2 className="text-bodyMd font-semibold text-[#D6FDE5]">
+            <h2 className="text-bodyMd font-semibold text-green-light">
               개인정보 처리방침의 변경
             </h2>
             <p className="mt-2 leading-relaxed">
               이 개인정보 처리방침은 2026-06-28부터 적용됩니다.
             </p>
             <p className="mt-2 leading-relaxed">
-              <strong className="text-[#D6FDE5]">변경 고지 방법:</strong>{" "}
+              <strong className="text-green-light">변경 고지 방법:</strong>{" "}
               홈페이지 공지사항 게시
             </p>
           </section>

@@ -33,7 +33,7 @@ const HomePage = () => {
               />
             </div>
           </aside>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
             <div className="mx-auto w-full max-w-[1180px] px-16 pb-16">
               <div className="mt-18 flex flex-col-reverse lg:flex-row items-center justify-center gap-8">
                 <Achievement />
@@ -46,7 +46,9 @@ const HomePage = () => {
                 <GroupSection />
               </div>
             </div>
-            <Footer variant="dark" />
+            <div className="mt-auto">
+              <Footer variant="dark" />
+            </div>
           </div>
         </div>
         <FriendManageModal
