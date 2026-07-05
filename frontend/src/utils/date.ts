@@ -18,7 +18,6 @@ export type DDayDisplayParts = {
   days: string;
 };
 
-/** TopBar 등 D-23 / D+123 / D-? 분리 표시용 */
 export function getDDayDisplayParts(
   iso: string | null | undefined,
 ): DDayDisplayParts {
@@ -26,4 +25,10 @@ export function getDDayDisplayParts(
   if (daysLeft === null) return { sign: "-", days: "?" };
   if (daysLeft >= 0) return { sign: "-", days: String(daysLeft) };
   return { sign: "+", days: String(Math.abs(daysLeft)) };
+}
+
+export function formatDDayLabel(iso: string | null | undefined): string {
+  const { sign, days } = getDDayDisplayParts(iso);
+  if (days === "?") return "D-?";
+  return `D${sign}${days}`;
 }

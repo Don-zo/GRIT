@@ -1,11 +1,9 @@
 import CustomBtn from "@/pages/Room/components/CustomBtn";
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Play, ListChecks, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PATHS } from "@/routes/path";
-import { userApi } from "@/apis/domains/user/api";
-import { QUERY_KEYS } from "@/apis/constants/queryKeys";
+import { useMember } from "@/hooks/useMember";
 import { getDDayDisplayParts } from "@/utils/date";
 import { formatStudyGoalAsClock } from "@/utils/studyGoalTime";
 
@@ -22,10 +20,7 @@ type TopBarProps = {
 };
 
 export default function TopBar({ isTodoOpen = false, onToggleTodo }: TopBarProps) {
-  const { data: member } = useQuery({
-    queryKey: QUERY_KEYS.member.me,
-    queryFn: userApi.get,
-  });
+  const { data: member } = useMember();
 
   const { sign: dDaySign, days: dDayDays } = getDDayDisplayParts(member?.dDayDate);
   const totalTime = formatStudyGoalAsClock(member?.weeklyStudyTimeGoal);

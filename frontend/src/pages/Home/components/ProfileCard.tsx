@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Settings, MessageCircle } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import SettingsModal from "@/pages/Home/components/Modals/ProfileSettingsModal";
-import { userApi } from "@/apis/domains/user/api";
-import { QUERY_KEYS } from "@/apis/constants/queryKeys";
-import { formatDisplayDate, getDaysUntilDDay } from "@/utils/date";
+import { useMember } from "@/hooks/useMember";
+import { formatDisplayDate, formatDDayLabel } from "@/utils/date";
 import { formatStudyGoalDisplay } from "@/utils/studyGoalTime";
 
 interface ProfileCardProps {
@@ -25,10 +23,7 @@ const ProfileCard = ({
     isLoading,
     isError,
     refetch,
-  } = useQuery({
-    queryKey: QUERY_KEYS.member.me,
-    queryFn: userApi.get,
-  });
+  } = useMember();
 
   useEffect(() => {
     if (initialSettingsOpen && oauthFirstTimeUser) {
@@ -37,7 +32,7 @@ const ProfileCard = ({
     }
   }, [initialSettingsOpen, oauthFirstTimeUser]);
 
-  const daysLeft = member ? getDaysUntilDDay(member.dDayDate) : null;
+  const dDayLabel = formatDDayLabel(member?.dDayDate);
   const targetDateLabel = member ? formatDisplayDate(member.dDayDate) : "—";
   const examName = member?.dDayTitle?.trim() || "미설정";
   const displayName = member?.nickname?.trim() || member?.email || "—";
@@ -103,13 +98,7 @@ const ProfileCard = ({
             <span className="font-medium">{targetDateLabel}</span>
             <span className="font-normal">까지</span>
           </div>
-          <span className="text-white text-h1 font-bold">
-            {daysLeft === null
-              ? "D-?"
-              : daysLeft >= 0
-                ? `D-${daysLeft}`
-                : `D+${Math.abs(daysLeft)}`}
-          </span>
+          <span className="text-white text-h1 font-bold">{dDayLabel}</span>
           <span className="text-white text-bodySm">{examName}</span>
         </div>
       </div>
