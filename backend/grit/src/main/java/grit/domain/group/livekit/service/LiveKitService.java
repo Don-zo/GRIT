@@ -25,6 +25,7 @@ import livekit.LivekitModels.DataPacket.Kind;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import retrofit2.Response;
 import tools.jackson.databind.ObjectMapper;
 
 @Service
@@ -116,7 +117,13 @@ public class LiveKitService {
             String json = objectMapper.writeValueAsString(payload);
             byte[] payloadBytes = json.getBytes(StandardCharsets.UTF_8);
             observation.highCardinalityKeyValue("livekit.payload.bytes", String.valueOf(payloadBytes.length));
-            client.sendData(roomName, payloadBytes, kind).execute();
+            Response<Void> response = client.sendData(roomName, payloadBytes, kind).execute();
+            if (!response.isSuccessful()) {
+                throw new RuntimeException("LiveKit send data failed. status="
+                        + response.code()
+                        + ", message="
+                        + response.message());
+            }
         } catch (Exception e) {
             observation.error(e);
             throw new RuntimeException("Failed to send data to LiveKit", e);
