@@ -1,3 +1,5 @@
+import type { PomodoroStatusResponse } from "@/apis/domains/pomodoro/type";
+
 export interface TokenResponse {
   token: string;
 }
@@ -7,7 +9,6 @@ export interface Reaction {
   emoji: string;
 }
 
-/** POST body: 필드명 emoji, 값은 ReactionEmoji enum 문자열 (예: THUMBS_UP) */
 export interface SendReactionRequest {
   emoji: string;
 }
@@ -16,4 +17,10 @@ export interface LiveKitReactionMessage {
   emoji: string;
   emojiChar: string;
   senderNickname: string;
+}
+
+export interface LiveKitPomodoroSyncMessage {
+  type: "pomodoro.sync";
+  senderNickname: string;
+  timer: PomodoroStatusResponse;
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATHS } from "@/routes/path";
 import BottomBar from "@/pages/Room/components/BottomBar/BottomBar";
@@ -15,6 +15,10 @@ import {
   sendReaction,
 } from "@/apis/domains/livekit/api";
 import type { Reaction, LiveKitReactionMessage } from "@/apis/domains/livekit/type";
+import {
+  isLiveKitPomodoroSyncMessage,
+  toPomodoroStatusResponse,
+} from "@/apis/domains/livekit/pomodoroSync";
 import ReactionFloater from "@/pages/Room/components/ReactionFloater";
 import type { ReactionItem } from "@/pages/Room/components/ReactionFloater";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
@@ -84,6 +88,7 @@ const getParticipantMatchKeys = (value: unknown): string[] => {
 const RoomPage = () => {
   const navigate = useNavigate();
   const { groupCode } = useParams();
+  const queryClient = useQueryClient();
 
   const { data: reactions = [] } = useQuery({
     queryKey: QUERY_KEYS.livekit.reactions(groupCode ?? ""),
@@ -139,27 +144,40 @@ const RoomPage = () => {
     };
   }, []);
 
-  const handleDataReceived = useCallback((payload: Uint8Array) => {
-    try {
-      const text = new TextDecoder().decode(payload);
-      const data = JSON.parse(text);
-      if (!isLiveKitReactionMessage(data)) return;
+  const handleDataReceived = useCallback(
+    (payload: Uint8Array) => {
+      try {
+        const text = new TextDecoder().decode(payload);
+        const data = JSON.parse(text);
 
-      const id = Date.now() + Math.random();
-      const left = 10 + Math.random() * 70; // 10% ~ 80% 사이 랜덤 X
-      setReceivedReactions((prev) => [...prev, { ...data, id, left }]);
+        if (isLiveKitPomodoroSyncMessage(data)) {
+          if (!groupCode) return;
+          queryClient.setQueryData(
+            QUERY_KEYS.pomodoro.status(groupCode),
+            toPomodoroStatusResponse(data.timer),
+          );
+          return;
+        }
 
-      const timeoutId = window.setTimeout(() => {
-        setReceivedReactions((prev) => prev.filter((r) => r.id !== id));
-        reactionTimeoutsRef.current = reactionTimeoutsRef.current.filter(
-          (savedId) => savedId !== timeoutId,
-        );
-      }, 3000);
-      reactionTimeoutsRef.current.push(timeoutId);
-    } catch {
-      // 파싱 불가한 메시지는 무시
-    }
-  }, []);
+        if (!isLiveKitReactionMessage(data)) return;
+
+        const id = Date.now() + Math.random();
+        const left = 10 + Math.random() * 70; // 10% ~ 80% 사이 랜덤 X
+        setReceivedReactions((prev) => [...prev, { ...data, id, left }]);
+
+        const timeoutId = window.setTimeout(() => {
+          setReceivedReactions((prev) => prev.filter((r) => r.id !== id));
+          reactionTimeoutsRef.current = reactionTimeoutsRef.current.filter(
+            (savedId) => savedId !== timeoutId,
+          );
+        }, 3000);
+        reactionTimeoutsRef.current.push(timeoutId);
+      } catch {
+        // 파싱 불가한 메시지는 무시
+      }
+    },
+    [groupCode, queryClient],
+  );
 
   //token && serverUrl 있을 때만 연결
   const {
