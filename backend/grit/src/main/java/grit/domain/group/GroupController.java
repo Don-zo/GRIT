@@ -110,7 +110,8 @@ public class GroupController {
                 .map(member -> new GroupMemberResponseDto(
                         member.getId(),
                         member.getNickname(),
-                        member.getId().equals(memberPrincipal.id())
+                        member.getId().equals(memberPrincipal.id()),
+                        s3Service.resolveUrl(S3Directory.PROFILE_IMAGES, member.getImageName())
                 ))
                 .toList();
         return ResponseEntity.ok(response);
