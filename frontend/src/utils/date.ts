@@ -12,3 +12,18 @@ export function getDaysUntilDDay(iso: string | null): number | null {
   if (!target.isValid()) return null;
   return target.diff(dayjs().startOf("day"), "day");
 }
+
+export type DDayDisplayParts = {
+  sign: "-" | "+";
+  days: string;
+};
+
+/** TopBar 등 D-23 / D+123 / D-? 분리 표시용 */
+export function getDDayDisplayParts(
+  iso: string | null | undefined,
+): DDayDisplayParts {
+  const daysLeft = getDaysUntilDDay(iso ?? null);
+  if (daysLeft === null) return { sign: "-", days: "?" };
+  if (daysLeft >= 0) return { sign: "-", days: String(daysLeft) };
+  return { sign: "+", days: String(Math.abs(daysLeft)) };
+}
