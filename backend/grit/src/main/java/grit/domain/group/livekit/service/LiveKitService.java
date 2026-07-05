@@ -13,7 +13,10 @@ import io.livekit.server.CanSubscribe;
 import io.livekit.server.RoomJoin;
 import io.livekit.server.RoomName;
 import io.livekit.server.RoomServiceClient;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import jakarta.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -40,6 +43,7 @@ public class LiveKitService {
     private final GroupService groupService;
     private final ObjectMapper objectMapper;
     private final Clock clock;
+    private final ObservationRegistry observationRegistry;
     private RoomServiceClient client;
 
     @PostConstruct
@@ -68,6 +72,7 @@ public class LiveKitService {
         Group group = groupService.findGroupByCode(groupCode);
         checkPermission(member, group);
         sendData(roomName(group.getCode()),
+                "reaction",
                 Map.of(
                         "type", "reaction",
                         "emoji", emoji.name(),
@@ -91,6 +96,7 @@ public class LiveKitService {
         timer.put("totalRounds", pomodoro.getTotalRounds());
 
         sendData(roomName(group.getCode()),
+                "pomodoro.sync",
                 Map.of(
                         "type", "pomodoro.sync",
                         "timer", timer,
@@ -98,12 +104,24 @@ public class LiveKitService {
                 ), Kind.RELIABLE);
     }
 
-    private void sendData(String roomName, Object payload, Kind kind) {
-        try {
+    private void sendData(String roomName, String messageType, Object payload, Kind kind) {
+        Observation observation = Observation.createNotStarted("livekit.send_data", observationRegistry)
+                .contextualName("LiveKit send data")
+                .lowCardinalityKeyValue("livekit.message_type", messageType)
+                .lowCardinalityKeyValue("livekit.kind", kind.name())
+                .highCardinalityKeyValue("livekit.room", roomName)
+                .start();
+
+        try (Observation.Scope ignored = observation.openScope()) {
             String json = objectMapper.writeValueAsString(payload);
-            client.sendData(roomName, json.getBytes(), kind).execute();
+            byte[] payloadBytes = json.getBytes(StandardCharsets.UTF_8);
+            observation.highCardinalityKeyValue("livekit.payload.bytes", String.valueOf(payloadBytes.length));
+            client.sendData(roomName, payloadBytes, kind).execute();
         } catch (Exception e) {
+            observation.error(e);
             throw new RuntimeException("Failed to send data to LiveKit", e);
+        } finally {
+            observation.stop();
         }
     }
 
