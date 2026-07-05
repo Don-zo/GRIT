@@ -7,6 +7,7 @@ import Achievement from "@/pages/Home/components/AchievementCard";
 import ProfileCard from "@/pages/Home/components/ProfileCard";
 import LeftSidebar from "@/pages/Home/components/LeftSidebar";
 import FriendManageModal from "@/pages/Home/components/Modals/FriendManageModal";
+import Footer from "@/components/Footer/Footer";
 
 type HomeLocationState = {
   openProfileSetupModal: boolean;
@@ -22,17 +23,17 @@ const HomePage = () => {
 
   return (
     <SmallViewportNotice>
-      <div className="flex flex-col pt-[65px] w-full h-auto bg-gray-darkest">
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-gray-darkest pt-[65px]">
         <Header variant="dark" alwaysVisible />
-        <div className="flex h-screen overflow-hidden overscroll-contain">
+        <div className="flex min-h-0 flex-1 overflow-hidden">
           <aside className="w-17 shrink-0 bg-[#2E323A] py-5">
-            <div className="overflow-y-auto h-full">
+            <div className="h-full overflow-y-auto">
               <LeftSidebar
                 onOpenFriendManage={() => setIsFriendManageOpen(true)}
               />
             </div>
           </aside>
-          <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <div className="mx-auto w-full max-w-[1180px] px-16 pb-16">
               <div className="mt-18 flex flex-col-reverse lg:flex-row items-center justify-center gap-8">
                 <Achievement />
@@ -45,12 +46,13 @@ const HomePage = () => {
                 <GroupSection />
               </div>
             </div>
+            <Footer variant="dark" />
           </div>
-          <FriendManageModal
-            open={isFriendManageOpen}
-            onClose={() => setIsFriendManageOpen(false)}
-          />
         </div>
+        <FriendManageModal
+          open={isFriendManageOpen}
+          onClose={() => setIsFriendManageOpen(false)}
+        />
       </div>
     </SmallViewportNotice>
   );
