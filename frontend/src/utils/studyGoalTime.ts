@@ -9,7 +9,9 @@ export function normalizeStudyGoalMinutes(minutes: number): number {
   return Math.min(55, Math.max(0, Math.round(minutes / 5) * 5));
 }
 
-export function parseStudyGoal(value: string | null | undefined): StudyGoalParts {
+export function parseStudyGoal(
+  value: string | null | undefined,
+): StudyGoalParts {
   const trimmed = value?.trim() ?? "";
   if (!trimmed) return { hours: 0, minutes: 0 };
 
@@ -67,7 +69,16 @@ export function serializeStudyGoal(
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-export function formatStudyGoalDisplay(value: string | null | undefined): string {
+export function formatStudyGoalDisplay(
+  value: string | null | undefined,
+): string {
   const { hours, minutes } = parseStudyGoal(value);
   return formatStudyGoal(hours, minutes) || value?.trim() || "미설정";
+}
+
+export function formatStudyGoalAsClock(
+  value: string | null | undefined,
+): string {
+  const { hours, minutes } = parseStudyGoal(value);
+  return `${hours}:${String(minutes).padStart(2, "0")}:00`;
 }

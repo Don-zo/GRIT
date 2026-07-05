@@ -7,7 +7,7 @@ import {
 } from "@/pages/Room/utils/participantUtils";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { groupApi } from "@/apis/domains/group/api";
-import { userApi } from "@/apis/domains/user/api";
+import { useMember } from "@/hooks/useMember";
 import type { ParticipantData } from "@/types/livekit";
 
 export function useRoomParticipants(
@@ -20,10 +20,7 @@ export function useRoomParticipants(
     enabled: !!groupCode,
   });
 
-  const { data: currentMember } = useQuery({
-    queryKey: QUERY_KEYS.member.me,
-    queryFn: userApi.get,
-  });
+  const { data: currentMember } = useMember();
 
   const groupMemberByKey = useMemo(() => {
     const map = new Map<string, (typeof groupMembers)[number]>();

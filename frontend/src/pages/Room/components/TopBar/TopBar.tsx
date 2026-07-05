@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import { Play, ListChecks, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PATHS } from "@/routes/path";
+import { useMember } from "@/hooks/useMember";
+import { getDDayDisplayParts } from "@/utils/date";
+import { formatStudyGoalAsClock } from "@/utils/studyGoalTime";
 
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
@@ -17,23 +20,23 @@ type TopBarProps = {
 };
 
 export default function TopBar({ isTodoOpen = false, onToggleTodo }: TopBarProps) {
-  const [dDay] = useState(23);
+  const { data: member } = useMember();
+
+  const { sign: dDaySign, days: dDayDays } = getDDayDisplayParts(member?.dDayDate);
+  const totalTime = formatStudyGoalAsClock(member?.weeklyStudyTimeGoal);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setElapsedSeconds(prev => prev + 1);
+      setElapsedSeconds((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const totalTime = "4:00:00";
-
   return (
     <div className="flex items-center justify-between w-full h-20 gap-4 px-6">
-
       <div className="flex items-center h-full gap-5">
         <Link
           to={PATHS.HOME}
@@ -45,14 +48,16 @@ export default function TopBar({ isTodoOpen = false, onToggleTodo }: TopBarProps
 
         <div className="flex flex-col justify-center h-full leading-5.5 relative bottom-[2px] text-white">
           <div className="flex gap-1 ml-0.5 text-bodyMd items-center">
-            <div>D -</div>
-            <div className="text-[#4CAF50]">{dDay}</div>
+            <div>D {dDaySign}</div>
+            <div className="text-[#4CAF50]">{dDayDays}</div>
           </div>
 
           <div className="flex items-center gap-1.5">
             <Play size={15} className="relative top-[2px]" />
             <div className="flex items-baseline gap-1 leading-none relative top-[1px]">
-              <div className="ml-1 font-semibold text-h3">{formatTime(elapsedSeconds)}</div>
+              <div className="ml-1 font-semibold text-h3">
+                {formatTime(elapsedSeconds)}
+              </div>
               <div className="text-bodyMd">/ {totalTime}</div>
             </div>
           </div>

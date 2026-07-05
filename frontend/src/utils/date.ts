@@ -12,3 +12,23 @@ export function getDaysUntilDDay(iso: string | null): number | null {
   if (!target.isValid()) return null;
   return target.diff(dayjs().startOf("day"), "day");
 }
+
+export type DDayDisplayParts = {
+  sign: "-" | "+";
+  days: string;
+};
+
+export function getDDayDisplayParts(
+  iso: string | null | undefined,
+): DDayDisplayParts {
+  const daysLeft = getDaysUntilDDay(iso ?? null);
+  if (daysLeft === null) return { sign: "-", days: "?" };
+  if (daysLeft >= 0) return { sign: "-", days: String(daysLeft) };
+  return { sign: "+", days: String(Math.abs(daysLeft)) };
+}
+
+export function formatDDayLabel(iso: string | null | undefined): string {
+  const { sign, days } = getDDayDisplayParts(iso);
+  if (days === "?") return "D-?";
+  return `D${sign}${days}`;
+}
