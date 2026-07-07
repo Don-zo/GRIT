@@ -907,6 +907,8 @@
         };
         let pomodoroPhaseRefreshInFlight = false;
         let pomodoroTicker = null;
+        let studyTimeAutoPauseFocusEndsAt = null;
+        let studyTimeAutoPauseInFlight = false;
         let studyTimeState = {
             weekStartDate: null,
             currentWeekStudyTimeSeconds: 0,
@@ -1208,6 +1210,7 @@
             progressEl.style.setProperty('--pomodoro-progress', getPomodoroProgressPercent(viewState));
             progressEl.classList.toggle('break', viewState.phase === 'BREAK');
             progressEl.classList.toggle('paused', status === 'PAUSED');
+            pauseStudyTimeWhenPomodoroFocusEnds(viewState);
             if (viewState.shouldRefresh) {
                 refreshPomodoroAtPhaseEnd();
             }
@@ -1341,6 +1344,29 @@
             const seconds = remainingSeconds % 60;
 
             return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function pauseStudyTimeWhenPomodoroFocusEnds(viewState) {
+            if (!room || viewState.status !== 'RUNNING' || viewState.phase !== 'BREAK') {
+                return;
+            }
+
+            const focusEndsAt = pomodoroState.focusEndsAt;
+            if (!focusEndsAt || studyTimeAutoPauseFocusEndsAt === focusEndsAt || studyTimeAutoPauseInFlight) {
+                return;
+            }
+
+            studyTimeAutoPauseInFlight = true;
+            requestStudyTime('/pause')
+                .then(() => {
+                    studyTimeAutoPauseFocusEndsAt = focusEndsAt;
+                })
+                .catch((err) => {
+                    console.error('집중 종료 공부 시간 중단 오류:', err);
+                })
+                .finally(() => {
+                    studyTimeAutoPauseInFlight = false;
+                });
         }
 
         function getPomodoroNow() {
