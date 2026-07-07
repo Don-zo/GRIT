@@ -909,7 +909,8 @@
         let pomodoroTicker = null;
         let studyTimeState = {
             weekStartDate: null,
-            accumulatedSeconds: 0,
+            currentWeekStudyTimeSeconds: 0,
+            weeklyStudyTimeGoal: null,
             running: false,
             serverNow: null,
             serverSyncedAt: null,
@@ -1055,10 +1056,12 @@
         function applyStudyTimeState(data) {
             if (!data) return;
 
+            const currentWeekStudyTimeSeconds = data.currentWeekStudyTimeSeconds ?? data.accumulatedSeconds;
             studyTimeState = {
                 ...studyTimeState,
                 ...data,
-                serverSyncedAt: data.serverNow ? Date.now() : studyTimeState.serverSyncedAt,
+                currentWeekStudyTimeSeconds: currentWeekStudyTimeSeconds ?? studyTimeState.currentWeekStudyTimeSeconds,
+                serverSyncedAt: currentWeekStudyTimeSeconds !== undefined ? Date.now() : studyTimeState.serverSyncedAt,
             };
             renderStudyTime();
         }
@@ -1070,7 +1073,7 @@
             const pauseBtn = document.getElementById('study-time-pause-btn');
 
             valueEl.textContent = formatStudyDuration(getStudyTimeSeconds());
-            metaEl.textContent = `이번 주 · ${studyTimeState.running ? '누적 중' : '일시정지'}`;
+            metaEl.textContent = `목표 ${formatStudyGoal(studyTimeState.weeklyStudyTimeGoal)} · ${studyTimeState.running ? '누적 중' : '일시정지'}`;
 
             resumeBtn.disabled = !room || studyTimeState.running;
             pauseBtn.disabled = !room || !studyTimeState.running;
@@ -1085,7 +1088,7 @@
         }
 
         function getStudyTimeSeconds() {
-            const baseSeconds = Number(studyTimeState.accumulatedSeconds || 0);
+            const baseSeconds = Number(studyTimeState.currentWeekStudyTimeSeconds || 0);
             if (!studyTimeState.running || !studyTimeState.serverSyncedAt) {
                 return baseSeconds;
             }
@@ -1100,12 +1103,24 @@
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
 
+        function formatStudyGoal(value) {
+            if (!value) return '--:--';
+            return String(value).slice(0, 5);
+        }
+
         async function fetchStudyTime() {
             try {
-                const res = await apiFetch('/api/study-time/me/weekly');
-                if (!res.ok) return;
+                const [summaryRes, weeklyRes] = await Promise.all([
+                    apiFetch('/api/members/me/study-time'),
+                    apiFetch('/api/study-time/me/weekly'),
+                ]);
 
-                applyStudyTimeState(await res.json());
+                if (weeklyRes.ok) {
+                    applyStudyTimeState(await weeklyRes.json());
+                }
+                if (summaryRes.ok) {
+                    applyStudyTimeState(await summaryRes.json());
+                }
             } catch (err) {
                 console.error('공부 시간 조회 오류:', err);
             }
