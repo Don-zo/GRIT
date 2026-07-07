@@ -8,13 +8,15 @@ import grit.domain.group.livekit.service.LiveKitService;
 import grit.domain.member.entity.Member;
 import grit.global.exception.AccessDeniedException;
 import grit.global.exception.EntityNotFoundException;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import java.time.Clock;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class PomodoroService {
     private final PomodoroRepository pomodoroRepository;
     private final LiveKitService liveKitService;
     private final Clock clock;
+    private final ObservationRegistry observationRegistry;
 
     @Transactional(readOnly = true)
     public Pomodoro findCurrent(Member member, String groupCode) {
@@ -48,7 +51,7 @@ public class PomodoroService {
         pomodoro.start(Instant.now(clock), focusMinutes, totalRounds);
 
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
-        sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
+        sendPomodoroSyncAfterCommit("start", member, group, savedPomodoro);
 
         return savedPomodoro;
     }
@@ -61,7 +64,7 @@ public class PomodoroService {
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.pause(Instant.now(clock));
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
-        sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
+        sendPomodoroSyncAfterCommit("pause", member, group, savedPomodoro);
 
         return savedPomodoro;
     }
@@ -74,7 +77,7 @@ public class PomodoroService {
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.resume(Instant.now(clock));
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
-        sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
+        sendPomodoroSyncAfterCommit("resume", member, group, savedPomodoro);
 
         return savedPomodoro;
     }
@@ -87,7 +90,7 @@ public class PomodoroService {
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.stop();
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
-        sendPomodoroSyncAfterCommit(member, group, savedPomodoro);
+        sendPomodoroSyncAfterCommit("stop", member, group, savedPomodoro);
 
         return savedPomodoro;
     }
@@ -97,16 +100,45 @@ public class PomodoroService {
                 .orElseThrow(() -> new EntityNotFoundException("진행 중인 뽀모도로가 없습니다."));
     }
 
-    private void sendPomodoroSyncAfterCommit(Member member, Group group, Pomodoro pomodoro) {
+    private void sendPomodoroSyncAfterCommit(String operation, Member member, Group group, Pomodoro pomodoro) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             liveKitService.sendPomodoroSync(member, group, pomodoro);
             return;
         }
 
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            private Observation commitObservation;
+            private Observation.Scope commitScope;
+
+            @Override
+            public void beforeCompletion() {
+                commitObservation = Observation.createNotStarted("pomodoro.tx.commit", observationRegistry)
+                        .contextualName("Pomodoro transaction commit")
+                        .lowCardinalityKeyValue("pomodoro.operation", operation)
+                        .start();
+                commitScope = commitObservation.openScope();
+            }
+
             @Override
             public void afterCommit() {
+                stopCommitObservation();
                 liveKitService.sendPomodoroSync(member, group, pomodoro);
+            }
+
+            @Override
+            public void afterCompletion(int status) {
+                stopCommitObservation();
+            }
+
+            private void stopCommitObservation() {
+                if (commitObservation != null) {
+                    if (commitScope != null) {
+                        commitScope.close();
+                    }
+                    commitObservation.stop();
+                    commitScope = null;
+                    commitObservation = null;
+                }
             }
         });
     }
