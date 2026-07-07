@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import livekit.LivekitModels.DataPacket.Kind;
 import lombok.RequiredArgsConstructor;
+import okhttp3.ResponseBody;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import retrofit2.Response;
@@ -57,7 +58,7 @@ public class LiveKitService {
         checkPermission(member, group);
 
         AccessToken token = new AccessToken(apiKey, apiSecret);
-        token.setIdentity(member.getNickname());
+        token.setIdentity(memberIdentity(member));
         token.setName(member.getNickname());
         token.addGrants(
                 new RoomJoin(true),
@@ -119,10 +120,12 @@ public class LiveKitService {
             observation.highCardinalityKeyValue("livekit.payload.bytes", String.valueOf(payloadBytes.length));
             Response<Void> response = client.sendData(roomName, payloadBytes, kind).execute();
             if (!response.isSuccessful()) {
-                throw new RuntimeException("LiveKit send data failed. status="
-                        + response.code()
-                        + ", message="
-                        + response.message());
+                try (ResponseBody errorBody = response.errorBody()) {
+                    throw new RuntimeException("LiveKit send data failed. status="
+                            + response.code()
+                            + ", message="
+                            + response.message());
+                }
             }
         } catch (Exception e) {
             observation.error(e);
@@ -140,6 +143,10 @@ public class LiveKitService {
 
     private String roomName(String groupCode) {
         return "group:" + groupCode;
+    }
+
+    private String memberIdentity(Member member) {
+        return "member:" + member.getId();
     }
 
 }

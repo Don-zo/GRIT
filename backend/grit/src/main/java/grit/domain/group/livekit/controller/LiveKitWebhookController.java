@@ -2,6 +2,7 @@ package grit.domain.group.livekit.controller;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import grit.domain.group.livekit.service.LiveKitRoomStatusService;
+import grit.domain.studytime.service.StudyTimeLiveKitWebhookService;
 import io.livekit.server.WebhookReceiver;
 import jakarta.annotation.PostConstruct;
 import livekit.LivekitWebhook.WebhookEvent;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LiveKitWebhookController {
 
     private final LiveKitRoomStatusService liveKitRoomStatusService;
+    private final StudyTimeLiveKitWebhookService studyTimeLiveKitWebhookService;
 
     @Value("${livekit.api.key}")
     private String apiKey;
@@ -49,6 +51,7 @@ public class LiveKitWebhookController {
         }
 
         liveKitRoomStatusService.applyWebhookEvent(event);
+        studyTimeLiveKitWebhookService.applyWebhookEvent(event);
         return ResponseEntity.noContent().build();
     }
 

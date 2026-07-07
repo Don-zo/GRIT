@@ -6,12 +6,14 @@ import grit.domain.group.livekit.pomodoro.entity.Pomodoro;
 import grit.domain.group.livekit.pomodoro.repository.PomodoroRepository;
 import grit.domain.group.livekit.service.LiveKitService;
 import grit.domain.member.entity.Member;
+import grit.domain.studytime.service.StudyTimeService;
 import grit.global.exception.AccessDeniedException;
 import grit.global.exception.EntityNotFoundException;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,7 @@ public class PomodoroService {
     private final GroupService groupService;
     private final PomodoroRepository pomodoroRepository;
     private final LiveKitService liveKitService;
+    private final StudyTimeService studyTimeService;
     private final Clock clock;
     private final ObservationRegistry observationRegistry;
 
@@ -51,6 +54,7 @@ public class PomodoroService {
         pomodoro.start(Instant.now(clock), focusMinutes, totalRounds);
 
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
+        studyTimeService.applyPomodoroToActiveRoomMembers(group, savedPomodoro, List.of(member));
         sendPomodoroSyncAfterCommit("start", member, group, savedPomodoro);
 
         return savedPomodoro;
@@ -64,6 +68,7 @@ public class PomodoroService {
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.pause(Instant.now(clock));
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
+        studyTimeService.applyPomodoroToActiveRoomMembers(group, savedPomodoro, List.of(member));
         sendPomodoroSyncAfterCommit("pause", member, group, savedPomodoro);
 
         return savedPomodoro;
@@ -77,6 +82,7 @@ public class PomodoroService {
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.resume(Instant.now(clock));
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
+        studyTimeService.applyPomodoroToActiveRoomMembers(group, savedPomodoro, List.of(member));
         sendPomodoroSyncAfterCommit("resume", member, group, savedPomodoro);
 
         return savedPomodoro;
@@ -90,6 +96,7 @@ public class PomodoroService {
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.stop();
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
+        studyTimeService.applyPomodoroToActiveRoomMembers(group, savedPomodoro, List.of(member));
         sendPomodoroSyncAfterCommit("stop", member, group, savedPomodoro);
 
         return savedPomodoro;
