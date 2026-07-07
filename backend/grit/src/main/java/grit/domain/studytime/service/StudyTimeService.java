@@ -8,6 +8,7 @@ import grit.domain.group.livekit.pomodoro.entity.PomodoroStatus;
 import grit.domain.group.livekit.pomodoro.repository.PomodoroRepository;
 import grit.domain.group.livekit.service.LiveKitRoomStatusService;
 import grit.domain.member.entity.Member;
+import grit.domain.member.dto.MemberStudyTimeResponseDto;
 import grit.domain.member.repository.MemberRepository;
 import grit.domain.studytime.dto.WeeklyStudyTimeResponseDto;
 import grit.domain.studytime.entity.StudyTimerState;
@@ -76,6 +77,15 @@ public class StudyTimeService {
                 now,
                 lastStartedAt,
                 activeGroupId
+        );
+    }
+
+    @Transactional
+    public MemberStudyTimeResponseDto getMemberStudyTime(Member member) {
+        WeeklyStudyTimeResponseDto weekly = getWeekly(member);
+        return new MemberStudyTimeResponseDto(
+                member.getWeeklyStudyTimeGoal(),
+                weekly.accumulatedSeconds()
         );
     }
 

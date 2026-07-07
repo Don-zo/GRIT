@@ -12,6 +12,7 @@ import grit.domain.group.livekit.pomodoro.repository.PomodoroRepository;
 import grit.domain.group.livekit.service.LiveKitRoomStatusService;
 import grit.domain.member.constant.Role;
 import grit.domain.member.constant.SocialProvider;
+import grit.domain.member.dto.MemberStudyTimeResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.repository.MemberRepository;
 import grit.domain.studytime.entity.StudyTimerState;
@@ -21,6 +22,7 @@ import grit.domain.studytime.repository.WeeklyStudyTimeRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -80,6 +82,7 @@ class StudyTimeServiceTest {
                 .providerId("google-1")
                 .nickname("member")
                 .role(Role.USER)
+                .weeklyStudyTimeGoal(LocalTime.of(12, 30))
                 .build();
         group = Group.builder()
                 .id(10L)
@@ -176,6 +179,18 @@ class StudyTimeServiceTest {
 
         assertThat(studyTimeService.getWeekly(member).accumulatedSeconds()).isEqualTo(45 * 60);
         assertThat(states.get(member.getId()).isRunning()).isFalse();
+    }
+
+    @Test
+    void getMemberStudyTimeReturnsGoalAndCurrentWeekAccumulatedSeconds() {
+        studyTimeService.manualResume(member, group.getCode());
+        clock.setInstant(Instant.parse("2026-07-06T00:30:00Z"));
+        studyTimeService.manualPause(member, group.getCode());
+
+        MemberStudyTimeResponseDto response = studyTimeService.getMemberStudyTime(member);
+
+        assertThat(response.weeklyStudyTimeGoal()).isEqualTo(LocalTime.of(12, 30));
+        assertThat(response.currentWeekStudyTimeSeconds()).isEqualTo(30 * 60);
     }
 
     private Pomodoro runningPomodoro(Long id, Instant startedAt) {
