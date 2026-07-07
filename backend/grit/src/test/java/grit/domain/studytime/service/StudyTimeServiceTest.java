@@ -2,6 +2,7 @@ package grit.domain.studytime.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import grit.domain.group.GroupService;
@@ -90,7 +91,7 @@ class StudyTimeServiceTest {
                 .name("group")
                 .build();
 
-        when(groupService.findGroupByCode(group.getCode())).thenReturn(group);
+        lenient().when(groupService.findGroupByCode(group.getCode())).thenReturn(group);
         when(groupService.isMemberInGroup(member, group)).thenReturn(true);
         when(studyTimerStateRepository.findByMemberForUpdate(member))
                 .thenAnswer(invocation -> Optional.ofNullable(states.get(member.getId())));
@@ -102,9 +103,9 @@ class StudyTimeServiceTest {
                 });
         when(weeklyStudyTimeRepository.findByMemberAndWeekStartDate(any(Member.class), any(LocalDate.class)))
                 .thenAnswer(invocation -> Optional.ofNullable(weeklyTimes.get(invocation.getArgument(1))));
-        when(weeklyStudyTimeRepository.findByMemberAndWeekStartDateForUpdate(any(Member.class), any(LocalDate.class)))
+        lenient().when(weeklyStudyTimeRepository.findByMemberAndWeekStartDateForUpdate(any(Member.class), any(LocalDate.class)))
                 .thenAnswer(invocation -> Optional.ofNullable(weeklyTimes.get(invocation.getArgument(1))));
-        when(weeklyStudyTimeRepository.save(any(WeeklyStudyTime.class)))
+        lenient().when(weeklyStudyTimeRepository.save(any(WeeklyStudyTime.class)))
                 .thenAnswer(invocation -> {
                     WeeklyStudyTime weeklyStudyTime = invocation.getArgument(0);
                     weeklyTimes.put(weeklyStudyTime.getWeekStartDate(), weeklyStudyTime);
@@ -174,11 +175,18 @@ class StudyTimeServiceTest {
         Pomodoro pomodoro = runningPomodoro(12L, Instant.parse("2026-07-06T00:00:00Z"));
         when(pomodoroRepository.findByGroup(group)).thenReturn(Optional.of(pomodoro));
 
-        studyTimeService.manualResume(member, group.getCode());
+        studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T00:00:00Z"));
         clock.setInstant(Instant.parse("2026-07-06T00:50:00Z"));
 
         assertThat(studyTimeService.getWeekly(member).accumulatedSeconds()).isEqualTo(45 * 60);
         assertThat(states.get(member.getId()).isRunning()).isFalse();
+    }
+
+    @Test
+    void manualResumeKeepsRunningAfterWeeklyLookup() {
+        studyTimeService.manualResume(member, group.getCode());
+
+        assertThat(studyTimeService.getWeekly(member).running()).isTrue();
     }
 
     @Test

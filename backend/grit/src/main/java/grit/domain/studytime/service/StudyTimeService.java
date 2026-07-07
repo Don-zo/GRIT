@@ -12,6 +12,7 @@ import grit.domain.member.dto.MemberStudyTimeResponseDto;
 import grit.domain.member.repository.MemberRepository;
 import grit.domain.studytime.dto.WeeklyStudyTimeResponseDto;
 import grit.domain.studytime.entity.StudyTimerState;
+import grit.domain.studytime.entity.StudyTimerStartSource;
 import grit.domain.studytime.entity.WeeklyStudyTime;
 import grit.domain.studytime.repository.StudyTimerStateRepository;
 import grit.domain.studytime.repository.WeeklyStudyTimeRepository;
@@ -96,7 +97,7 @@ public class StudyTimeService {
 
         StudyTimerState state = findOrCreateStateForUpdate(member);
         state.clearManualPaused();
-        startOrResume(state, group, Instant.now(clock));
+        startOrResume(state, group, Instant.now(clock), StudyTimerStartSource.MANUAL);
 
         return getWeekly(member);
     }
@@ -145,7 +146,7 @@ public class StudyTimeService {
                 return;
             }
 
-            startOrResume(state, group, now);
+            startOrResume(state, group, now, StudyTimerStartSource.AUTO);
             return;
         }
 
@@ -171,7 +172,7 @@ public class StudyTimeService {
     }
 
     private void reconcileWithCurrentPomodoro(StudyTimerState state, Instant now) {
-        if (state == null || !state.isRunning() || state.getActiveGroup() == null) {
+        if (state == null || !state.isRunning() || !state.isAutoStarted() || state.getActiveGroup() == null) {
             return;
         }
 
@@ -232,7 +233,7 @@ public class StudyTimeService {
         }
     }
 
-    private void startOrResume(StudyTimerState state, Group group, Instant now) {
+    private void startOrResume(StudyTimerState state, Group group, Instant now, StudyTimerStartSource startSource) {
         if (state.isRunningIn(group)) {
             return;
         }
@@ -241,7 +242,7 @@ public class StudyTimeService {
             pause(state, now);
         }
 
-        state.start(group, now);
+        state.start(group, now, startSource);
     }
 
     private void pauseIfRunningInGroup(StudyTimerState state, Group group, Instant now) {
