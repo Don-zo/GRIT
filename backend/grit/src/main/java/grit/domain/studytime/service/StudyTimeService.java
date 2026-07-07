@@ -12,7 +12,6 @@ import grit.domain.member.dto.MemberStudyTimeResponseDto;
 import grit.domain.member.repository.MemberRepository;
 import grit.domain.studytime.dto.WeeklyStudyTimeResponseDto;
 import grit.domain.studytime.entity.StudyTimerState;
-import grit.domain.studytime.entity.StudyTimerStartSource;
 import grit.domain.studytime.entity.WeeklyStudyTime;
 import grit.domain.studytime.repository.StudyTimerStateRepository;
 import grit.domain.studytime.repository.WeeklyStudyTimeRepository;
@@ -52,7 +51,6 @@ public class StudyTimeService {
     public WeeklyStudyTimeResponseDto getWeekly(Member member) {
         Instant now = Instant.now(clock);
         StudyTimerState state = studyTimerStateRepository.findByMemberForUpdate(member).orElse(null);
-        reconcileWithCurrentPomodoro(state, now);
 
         LocalDate weekStartDate = getWeekStartDate(now);
         long accumulatedSeconds = weeklyStudyTimeRepository
@@ -97,7 +95,7 @@ public class StudyTimeService {
 
         StudyTimerState state = findOrCreateStateForUpdate(member);
         state.clearManualPaused();
-        startOrResume(state, group, Instant.now(clock), StudyTimerStartSource.MANUAL);
+        startOrResume(state, group, Instant.now(clock));
 
         return getWeekly(member);
     }
@@ -146,11 +144,11 @@ public class StudyTimeService {
                 return;
             }
 
-            startOrResume(state, group, now, StudyTimerStartSource.AUTO);
+            startOrResume(state, group, now);
             return;
         }
 
-        pauseIfRunningInGroup(state, group, now);
+        pauseIfRunningInGroup(state, group, getAutoPauseInstant(pomodoro, now));
     }
 
     @Transactional
@@ -169,34 +167,6 @@ public class StudyTimeService {
     private StudyTimerState findOrCreateStateForUpdate(Member member) {
         return studyTimerStateRepository.findByMemberForUpdate(member)
                 .orElseGet(() -> studyTimerStateRepository.save(StudyTimerState.create(member)));
-    }
-
-    private void reconcileWithCurrentPomodoro(StudyTimerState state, Instant now) {
-        if (state == null || !state.isRunning() || !state.isAutoStarted() || state.getActiveGroup() == null) {
-            return;
-        }
-
-        pomodoroRepository.findByGroup(state.getActiveGroup())
-                .flatMap(pomodoro -> getAutoPauseInstant(pomodoro, now))
-                .ifPresent(pauseAt -> pause(state, pauseAt));
-    }
-
-    private Optional<Instant> getAutoPauseInstant(Pomodoro pomodoro, Instant now) {
-        PomodoroStatus status = pomodoro.getCurrentStatus(now);
-        PomodoroPhase phase = pomodoro.getCurrentPhase(now);
-        if (status == PomodoroStatus.RUNNING && phase == PomodoroPhase.FOCUS) {
-            return Optional.empty();
-        }
-
-        if (status == PomodoroStatus.BREAK) {
-            return Optional.ofNullable(pomodoro.getFocusEndsAt(now)).or(() -> Optional.of(now));
-        }
-
-        if (status == PomodoroStatus.PAUSED) {
-            return Optional.ofNullable(pomodoro.getPausedAt()).or(() -> Optional.of(now));
-        }
-
-        return Optional.of(now);
     }
 
     private List<Member> findActiveRoomMembers(Group group, Collection<Member> additionalMembers) {
@@ -221,6 +191,19 @@ public class StudyTimeService {
                 .toList();
     }
 
+    private Instant getAutoPauseInstant(Pomodoro pomodoro, Instant now) {
+        PomodoroStatus status = pomodoro.getCurrentStatus(now);
+        if (status == PomodoroStatus.BREAK) {
+            return Optional.ofNullable(pomodoro.getFocusEndsAt(now)).orElse(now);
+        }
+
+        if (status == PomodoroStatus.PAUSED) {
+            return Optional.ofNullable(pomodoro.getPausedAt()).orElse(now);
+        }
+
+        return now;
+    }
+
     private Optional<Long> parseMemberId(String identity) {
         if (identity == null || !identity.startsWith("member:")) {
             return Optional.empty();
@@ -233,7 +216,7 @@ public class StudyTimeService {
         }
     }
 
-    private void startOrResume(StudyTimerState state, Group group, Instant now, StudyTimerStartSource startSource) {
+    private void startOrResume(StudyTimerState state, Group group, Instant now) {
         if (state.isRunningIn(group)) {
             return;
         }
@@ -242,7 +225,7 @@ public class StudyTimeService {
             pause(state, now);
         }
 
-        state.start(group, now, startSource);
+        state.start(group, now);
     }
 
     private void pauseIfRunningInGroup(StudyTimerState state, Group group, Instant now) {

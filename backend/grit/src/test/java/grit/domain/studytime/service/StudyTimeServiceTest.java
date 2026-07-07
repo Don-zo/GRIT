@@ -171,12 +171,11 @@ class StudyTimeServiceTest {
     }
 
     @Test
-    void getWeeklyReconcilesRunningTimerWhenPomodoroAlreadyEnteredBreak() {
+    void pomodoroAutoStatePausesRunningTimerWhenEnteredBreak() {
         Pomodoro pomodoro = runningPomodoro(12L, Instant.parse("2026-07-06T00:00:00Z"));
-        when(pomodoroRepository.findByGroup(group)).thenReturn(Optional.of(pomodoro));
 
         studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T00:00:00Z"));
-        clock.setInstant(Instant.parse("2026-07-06T00:50:00Z"));
+        studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T00:50:00Z"));
 
         assertThat(studyTimeService.getWeekly(member).accumulatedSeconds()).isEqualTo(45 * 60);
         assertThat(states.get(member.getId()).isRunning()).isFalse();

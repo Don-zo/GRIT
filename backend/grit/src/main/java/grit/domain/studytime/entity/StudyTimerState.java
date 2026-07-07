@@ -5,8 +5,6 @@ import grit.domain.member.entity.Member;
 import grit.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,10 +49,6 @@ public class StudyTimerState extends BaseEntity {
     @JoinColumn(name = "active_group_id")
     private Group activeGroup;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private StudyTimerStartSource startSource;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manual_paused_group_id")
     private Group manualPausedGroup;
@@ -68,7 +62,7 @@ public class StudyTimerState extends BaseEntity {
                 .build();
     }
 
-    public void start(Group group, Instant startedAt, StudyTimerStartSource startSource) {
+    public void start(Group group, Instant startedAt) {
         if (running) {
             return;
         }
@@ -76,7 +70,6 @@ public class StudyTimerState extends BaseEntity {
         this.running = true;
         this.lastStartedAt = startedAt;
         this.activeGroup = group;
-        this.startSource = startSource;
     }
 
     public Instant pause() {
@@ -88,7 +81,6 @@ public class StudyTimerState extends BaseEntity {
         this.running = false;
         this.lastStartedAt = null;
         this.activeGroup = null;
-        this.startSource = null;
         return startedAt;
     }
 
@@ -105,10 +97,6 @@ public class StudyTimerState extends BaseEntity {
                 && manualPausedGroup.getId().equals(group.getId())
                 && manualPausedPomodoroPhaseKey != null
                 && manualPausedPomodoroPhaseKey.equals(phaseKey);
-    }
-
-    public boolean isAutoStarted() {
-        return startSource == null || startSource == StudyTimerStartSource.AUTO;
     }
 
     public void markManualPaused(Group group, String phaseKey) {
