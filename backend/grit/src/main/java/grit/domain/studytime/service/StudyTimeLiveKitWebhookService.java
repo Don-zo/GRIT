@@ -47,7 +47,7 @@ public class StudyTimeLiveKitWebhookService {
         switch (event.getEvent()) {
             case EVENT_PARTICIPANT_JOINED -> applyParticipantJoined(event, group);
             case EVENT_PARTICIPANT_LEFT -> applyParticipantLeft(event, group);
-            case EVENT_ROOM_FINISHED -> studyTimeService.pauseRunningMembersInGroup(group, Instant.now(clock));
+            case EVENT_ROOM_FINISHED -> applyRoomFinished(group);
             default -> {
             }
         }
@@ -59,8 +59,21 @@ public class StudyTimeLiveKitWebhookService {
     }
 
     private void applyParticipantLeft(WebhookEvent event, Group group) {
-        findEventMember(event).ifPresent(member ->
-                studyTimeService.pauseForRoomLeave(member, group, Instant.now(clock)));
+        findEventMember(event).ifPresent(member -> {
+            Instant now = Instant.now(clock);
+            pomodoroRepository.findByGroup(group)
+                    .ifPresent(pomodoro -> studyTimeService.applyPomodoroAutoState(member, group, pomodoro, now));
+            studyTimeService.pauseForRoomLeave(member, group, now);
+        });
+    }
+
+    private void applyRoomFinished(Group group) {
+        Instant now = Instant.now(clock);
+        pomodoroRepository.findByGroup(group)
+                .ifPresentOrElse(
+                        pomodoro -> studyTimeService.pauseRunningMembersInGroup(group, pomodoro, now),
+                        () -> studyTimeService.pauseRunningMembersInGroup(group, now)
+                );
     }
 
     private java.util.Optional<Member> findEventMember(WebhookEvent event) {

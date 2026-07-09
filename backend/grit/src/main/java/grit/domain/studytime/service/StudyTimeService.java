@@ -40,6 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class StudyTimeService {
 
+    private static final long POMODORO_ROUND_SECONDS = 60 * 60L;
+
     private final StudyTimerStateRepository studyTimerStateRepository;
     private final WeeklyStudyTimeRepository weeklyStudyTimeRepository;
     private final PomodoroRepository pomodoroRepository;
@@ -148,7 +150,7 @@ public class StudyTimeService {
                         if (phaseKey != null && !state.hasManualPauseFor(group, phaseKey)) {
                             state.clearManualPaused();
                         }
-                        pauseIfRunningInGroup(state, group, getAutoPauseInstant(pomodoro, now));
+                        pauseIfRunningInGroup(state, group, getAutoPauseInstant(pomodoro, now, state));
                     });
             return;
         }
@@ -177,6 +179,12 @@ public class StudyTimeService {
     public void pauseRunningMembersInGroup(Group group, Instant now) {
         studyTimerStateRepository.findRunningByActiveGroupForUpdate(group)
                 .forEach(state -> pause(state, now));
+    }
+
+    @Transactional
+    public void pauseRunningMembersInGroup(Group group, Pomodoro pomodoro, Instant now) {
+        studyTimerStateRepository.findRunningByActiveGroupForUpdate(group)
+                .forEach(state -> pause(state, getAutoPauseInstant(pomodoro, now, state)));
     }
 
     private StudyTimerState findOrCreateStateForUpdate(Member member) {
@@ -213,17 +221,44 @@ public class StudyTimeService {
                 .toList();
     }
 
-    private Instant getAutoPauseInstant(Pomodoro pomodoro, Instant now) {
+    private Instant getAutoPauseInstant(Pomodoro pomodoro, Instant now, StudyTimerState state) {
         PomodoroStatus status = pomodoro.getCurrentStatus(now);
+        Instant lastStartedAt = state.getLastStartedAt();
+
         if (status == PomodoroStatus.BREAK) {
-            return Optional.ofNullable(pomodoro.getFocusEndsAt(now)).orElse(now);
+            return Optional.ofNullable(pomodoro.getFocusEndsAt(now))
+                    .filter(focusEndsAt -> lastStartedAt != null && lastStartedAt.isBefore(focusEndsAt))
+                    .orElse(now);
         }
 
         if (status == PomodoroStatus.PAUSED) {
-            return Optional.ofNullable(pomodoro.getPausedAt()).orElse(now);
+            return Optional.ofNullable(pomodoro.getPausedAt())
+                    .filter(pausedAt -> lastStartedAt == null || pausedAt.isAfter(lastStartedAt))
+                    .orElse(now);
+        }
+
+        if (status == PomodoroStatus.FINISHED) {
+            return getFirstFocusEndAfter(pomodoro, lastStartedAt, now).orElse(now);
         }
 
         return now;
+    }
+
+    private Optional<Instant> getFirstFocusEndAfter(Pomodoro pomodoro, Instant lastStartedAt, Instant now) {
+        if (lastStartedAt == null || pomodoro.getStartedAt() == null) {
+            return Optional.empty();
+        }
+
+        Instant firstFocusEndsAt = Optional.ofNullable(pomodoro.getAnchorFocusEndsAt())
+                .orElseGet(() -> pomodoro.getStartedAt().plusSeconds(pomodoro.getFocusMinutes() * 60L));
+        for (int round = 0; round < pomodoro.getTotalRounds(); round++) {
+            Instant focusEndsAt = firstFocusEndsAt.plusSeconds(round * POMODORO_ROUND_SECONDS);
+            if (focusEndsAt.isAfter(lastStartedAt) && !focusEndsAt.isAfter(now)) {
+                return Optional.of(focusEndsAt);
+            }
+        }
+
+        return Optional.empty();
     }
 
     private Optional<Long> parseMemberId(String identity) {

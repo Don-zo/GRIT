@@ -143,6 +143,19 @@ class PomodoroServiceStudyTimeTest {
         assertThat(studyTimeService.getWeekly(member).accumulatedSeconds()).isEqualTo(45 * 60);
     }
 
+    @Test
+    void stopAfterFinishedCountsOnlyUntilFirstFocusEnd() {
+        clock.setInstant(Instant.parse("2026-07-06T02:10:00Z"));
+        Pomodoro pomodoro = runningPomodoro(12L, Instant.parse("2026-07-06T00:00:00Z"));
+        when(pomodoroRepository.findByGroup(group)).thenReturn(Optional.of(pomodoro));
+        when(pomodoroRepository.save(any(Pomodoro.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T00:00:00Z"));
+
+        pomodoroService.stop(member, group.getCode());
+
+        assertThat(studyTimeService.getWeekly(member).accumulatedSeconds()).isEqualTo(45 * 60);
+    }
+
     private Pomodoro runningPomodoro(Long id, Instant startedAt) {
         return Pomodoro.builder()
                 .id(id)
@@ -158,9 +171,13 @@ class PomodoroServiceStudyTimeTest {
 
     private static final class MutableClock extends Clock {
 
-        private final Instant instant;
+        private Instant instant;
 
         private MutableClock(Instant instant) {
+            this.instant = instant;
+        }
+
+        private void setInstant(Instant instant) {
             this.instant = instant;
         }
 
