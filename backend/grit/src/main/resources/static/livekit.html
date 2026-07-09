@@ -1347,12 +1347,17 @@
         }
 
         function pauseStudyTimeWhenPomodoroFocusEnds(viewState) {
-            if (!room || viewState.status !== 'RUNNING' || viewState.phase !== 'BREAK') {
+            if (!room || viewState.status !== 'RUNNING') {
                 return;
             }
 
             const focusEndsAt = pomodoroState.focusEndsAt;
             if (!focusEndsAt || studyTimeAutoPauseFocusEndsAt === focusEndsAt || studyTimeAutoPauseInFlight) {
+                return;
+            }
+
+            const focusEndsAtTime = parsePomodoroTime(focusEndsAt);
+            if (focusEndsAtTime === null || getPomodoroNow() < focusEndsAtTime) {
                 return;
             }
 
