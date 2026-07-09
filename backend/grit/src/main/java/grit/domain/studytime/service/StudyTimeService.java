@@ -17,6 +17,7 @@ import grit.domain.studytime.repository.StudyTimerStateRepository;
 import grit.domain.studytime.repository.WeeklyStudyTimeRepository;
 import grit.global.config.TimeConfig;
 import grit.global.exception.AccessDeniedException;
+import grit.global.exception.EntityNotFoundException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -50,7 +51,7 @@ public class StudyTimeService {
     @Transactional
     public WeeklyStudyTimeResponseDto getWeekly(Member member) {
         Instant now = Instant.now(clock);
-        StudyTimerState state = studyTimerStateRepository.findByMemberForUpdate(member).orElse(null);
+        StudyTimerState state = studyTimerStateRepository.findByMember(member).orElse(null);
 
         LocalDate weekStartDate = getWeekStartDate(now);
         long accumulatedSeconds = weeklyStudyTimeRepository
@@ -106,12 +107,19 @@ public class StudyTimeService {
         checkPermission(member, group);
 
         Instant now = Instant.now(clock);
-        StudyTimerState state = findOrCreateStateForUpdate(member);
+        Optional<String> manualPausePhaseKey = pomodoroRepository.findByGroup(group)
+                .flatMap(pomodoro -> getAutoResumePhaseKey(pomodoro, now));
+
+        StudyTimerState state = manualPausePhaseKey
+                .map(phaseKey -> findOrCreateStateForUpdate(member))
+                .orElseGet(() -> studyTimerStateRepository.findByMemberForUpdate(member).orElse(null));
+        if (state == null) {
+            return getWeekly(member);
+        }
+
         pause(state, now);
 
-        pomodoroRepository.findByGroup(group)
-                .flatMap(pomodoro -> getAutoResumePhaseKey(pomodoro, now))
-                .ifPresentOrElse(
+        manualPausePhaseKey.ifPresentOrElse(
                         phaseKey -> state.markManualPaused(group, phaseKey),
                         state::clearManualPaused
                 );
@@ -130,25 +138,32 @@ public class StudyTimeService {
     public void applyPomodoroAutoState(Member member, Group group, Pomodoro pomodoro, Instant now) {
         checkPermission(member, group);
 
-        StudyTimerState state = findOrCreateStateForUpdate(member);
         PomodoroStatus currentStatus = pomodoro.getCurrentStatus(now);
         PomodoroPhase currentPhase = pomodoro.getCurrentPhase(now);
         String phaseKey = getPhaseKey(pomodoro, now).orElse(null);
+
+        if (currentStatus != PomodoroStatus.RUNNING || currentPhase != PomodoroPhase.FOCUS) {
+            studyTimerStateRepository.findByMemberForUpdate(member)
+                    .ifPresent(state -> {
+                        if (phaseKey != null && !state.hasManualPauseFor(group, phaseKey)) {
+                            state.clearManualPaused();
+                        }
+                        pauseIfRunningInGroup(state, group, getAutoPauseInstant(pomodoro, now));
+                    });
+            return;
+        }
+
+        StudyTimerState state = findOrCreateStateForUpdate(member);
 
         if (phaseKey != null && !state.hasManualPauseFor(group, phaseKey)) {
             state.clearManualPaused();
         }
 
-        if (currentStatus == PomodoroStatus.RUNNING && currentPhase == PomodoroPhase.FOCUS) {
-            if (phaseKey != null && state.hasManualPauseFor(group, phaseKey)) {
-                return;
-            }
-
-            startOrResume(state, group, now);
+        if (phaseKey != null && state.hasManualPauseFor(group, phaseKey)) {
             return;
         }
 
-        pauseIfRunningInGroup(state, group, getAutoPauseInstant(pomodoro, now));
+        startOrResume(state, group, now);
     }
 
     @Transactional
@@ -165,8 +180,15 @@ public class StudyTimeService {
     }
 
     private StudyTimerState findOrCreateStateForUpdate(Member member) {
-        return studyTimerStateRepository.findByMemberForUpdate(member)
-                .orElseGet(() -> studyTimerStateRepository.save(StudyTimerState.create(member)));
+        Optional<StudyTimerState> existingState = studyTimerStateRepository.findByMemberForUpdate(member);
+        if (existingState.isPresent()) {
+            return existingState.get();
+        }
+
+        Member lockedMember = memberRepository.findLockedById(member.getId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원입니다."));
+        return studyTimerStateRepository.findByMemberForUpdate(lockedMember)
+                .orElseGet(() -> studyTimerStateRepository.save(StudyTimerState.create(lockedMember)));
     }
 
     private List<Member> findActiveRoomMembers(Group group, Collection<Member> additionalMembers) {

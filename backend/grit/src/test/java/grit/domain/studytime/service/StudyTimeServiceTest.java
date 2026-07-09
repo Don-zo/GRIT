@@ -93,15 +93,18 @@ class StudyTimeServiceTest {
 
         lenient().when(groupService.findGroupByCode(group.getCode())).thenReturn(group);
         when(groupService.isMemberInGroup(member, group)).thenReturn(true);
-        when(studyTimerStateRepository.findByMemberForUpdate(member))
+        lenient().when(studyTimerStateRepository.findByMember(member))
                 .thenAnswer(invocation -> Optional.ofNullable(states.get(member.getId())));
-        when(studyTimerStateRepository.save(any(StudyTimerState.class)))
+        lenient().when(studyTimerStateRepository.findByMemberForUpdate(member))
+                .thenAnswer(invocation -> Optional.ofNullable(states.get(member.getId())));
+        lenient().when(memberRepository.findLockedById(member.getId())).thenReturn(Optional.of(member));
+        lenient().when(studyTimerStateRepository.save(any(StudyTimerState.class)))
                 .thenAnswer(invocation -> {
                     StudyTimerState state = invocation.getArgument(0);
                     states.put(state.getMember().getId(), state);
                     return state;
                 });
-        when(weeklyStudyTimeRepository.findByMemberAndWeekStartDate(any(Member.class), any(LocalDate.class)))
+        lenient().when(weeklyStudyTimeRepository.findByMemberAndWeekStartDate(any(Member.class), any(LocalDate.class)))
                 .thenAnswer(invocation -> Optional.ofNullable(weeklyTimes.get(invocation.getArgument(1))));
         lenient().when(weeklyStudyTimeRepository.findByMemberAndWeekStartDateForUpdate(any(Member.class), any(LocalDate.class)))
                 .thenAnswer(invocation -> Optional.ofNullable(weeklyTimes.get(invocation.getArgument(1))));
@@ -179,6 +182,24 @@ class StudyTimeServiceTest {
 
         assertThat(studyTimeService.getWeekly(member).accumulatedSeconds()).isEqualTo(45 * 60);
         assertThat(states.get(member.getId()).isRunning()).isFalse();
+    }
+
+    @Test
+    void pauseOnlyAutoStateDoesNotCreateIdleTimerState() {
+        Pomodoro pomodoro = runningPomodoro(12L, Instant.parse("2026-07-06T00:00:00Z"));
+
+        studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T00:50:00Z"));
+
+        assertThat(states).doesNotContainKey(member.getId());
+    }
+
+    @Test
+    void manualPauseWithoutRunningFocusDoesNotCreateIdleTimerState() {
+        when(pomodoroRepository.findByGroup(group)).thenReturn(Optional.empty());
+
+        studyTimeService.manualPause(member, group.getCode());
+
+        assertThat(states).doesNotContainKey(member.getId());
     }
 
     @Test

@@ -44,14 +44,16 @@ public class PomodoroService {
         Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
+        Instant now = Instant.now(clock);
         Pomodoro pomodoro = pomodoroRepository.findByGroup(group).orElse(null);
+        applyStudyTimeBeforePomodoroChange(group, pomodoro, member, now);
         if (pomodoro == null) {
             pomodoro = Pomodoro.builder()
                     .group(group)
                     .build();
         }
 
-        pomodoro.start(Instant.now(clock), focusMinutes, totalRounds);
+        pomodoro.start(now, focusMinutes, totalRounds);
 
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         studyTimeService.applyPomodoroToActiveRoomMembers(group, savedPomodoro, List.of(member));
@@ -65,8 +67,10 @@ public class PomodoroService {
         Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
+        Instant now = Instant.now(clock);
         Pomodoro pomodoro = findByGroup(group);
-        pomodoro.pause(Instant.now(clock));
+        applyStudyTimeBeforePomodoroChange(group, pomodoro, member, now);
+        pomodoro.pause(now);
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         studyTimeService.applyPomodoroToActiveRoomMembers(group, savedPomodoro, List.of(member));
         sendPomodoroSyncAfterCommit("pause", member, group, savedPomodoro);
@@ -79,8 +83,10 @@ public class PomodoroService {
         Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
+        Instant now = Instant.now(clock);
         Pomodoro pomodoro = findByGroup(group);
-        pomodoro.resume(Instant.now(clock));
+        applyStudyTimeBeforePomodoroChange(group, pomodoro, member, now);
+        pomodoro.resume(now);
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         studyTimeService.applyPomodoroToActiveRoomMembers(group, savedPomodoro, List.of(member));
         sendPomodoroSyncAfterCommit("resume", member, group, savedPomodoro);
@@ -93,13 +99,21 @@ public class PomodoroService {
         Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
+        Instant now = Instant.now(clock);
         Pomodoro pomodoro = findByGroup(group);
+        applyStudyTimeBeforePomodoroChange(group, pomodoro, member, now);
         pomodoro.stop();
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         studyTimeService.applyPomodoroToActiveRoomMembers(group, savedPomodoro, List.of(member));
         sendPomodoroSyncAfterCommit("stop", member, group, savedPomodoro);
 
         return savedPomodoro;
+    }
+
+    private void applyStudyTimeBeforePomodoroChange(Group group, Pomodoro pomodoro, Member member, Instant now) {
+        if (pomodoro != null) {
+            studyTimeService.applyPomodoroToActiveRoomMembers(group, pomodoro, List.of(member));
+        }
     }
 
     private Pomodoro findByGroup(Group group) {
