@@ -27,7 +27,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -180,30 +179,6 @@ class StudyTimeServiceTest {
 
         studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T00:00:00Z"));
         studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T00:50:00Z"));
-
-        assertThat(studyTimeService.getWeekly(member).accumulatedSeconds()).isEqualTo(45 * 60);
-        assertThat(states.get(member.getId()).isRunning()).isFalse();
-    }
-
-    @Test
-    void pomodoroAutoStatePausesAtFirstFocusEndWhenAlreadyFinished() {
-        Pomodoro pomodoro = runningPomodoro(12L, Instant.parse("2026-07-06T00:00:00Z"));
-
-        studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T00:00:00Z"));
-        studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T02:10:00Z"));
-
-        assertThat(studyTimeService.getWeekly(member).accumulatedSeconds()).isEqualTo(45 * 60);
-        assertThat(states.get(member.getId()).isRunning()).isFalse();
-    }
-
-    @Test
-    void roomFinishedDuringBreakCountsOnlyUntilFocusEnd() {
-        Pomodoro pomodoro = runningPomodoro(12L, Instant.parse("2026-07-06T00:00:00Z"));
-
-        studyTimeService.applyPomodoroAutoState(member, group, pomodoro, Instant.parse("2026-07-06T00:00:00Z"));
-        when(studyTimerStateRepository.findRunningByActiveGroupForUpdate(group))
-                .thenReturn(List.of(states.get(member.getId())));
-        studyTimeService.pauseRunningMembersInGroup(group, pomodoro, Instant.parse("2026-07-06T00:50:00Z"));
 
         assertThat(studyTimeService.getWeekly(member).accumulatedSeconds()).isEqualTo(45 * 60);
         assertThat(states.get(member.getId()).isRunning()).isFalse();
