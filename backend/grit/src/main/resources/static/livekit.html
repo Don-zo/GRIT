@@ -909,15 +909,17 @@
         let pomodoroTicker = null;
         let studyTimeAutoPauseFocusEndsAt = null;
         let studyTimeAutoPauseInFlight = false;
+        let studyTimeAutoResumeFocusEndsAt = null;
+        let studyTimeAutoResumeInFlight = false;
+        let studyTimePreviousPomodoroPhase = null;
         let studyTimeState = {
             weekStartDate: null,
             currentWeekStudyTimeSeconds: 0,
-            weeklyStudyTimeGoal: null,
+            weeklyStudyTimeGoalSeconds: null,
             running: false,
             serverNow: null,
             serverSyncedAt: null,
             lastStartedAt: null,
-            activeGroupId: null,
         };
         let studyTimeTicker = null;
 
@@ -1038,7 +1040,9 @@
 
                 if (data.type === 'pomodoro.sync') {
                     applyPomodoroState(data.timer);
-                    fetchStudyTime();
+                    if (!room || data.senderNickname !== room.localParticipant.name) {
+                        syncStudyTimeForPomodoroEvent(data.timer);
+                    }
                 }
             } catch (err) {
                 console.error('LiveKit 데이터 수신 파싱 오류:', err);
@@ -1058,12 +1062,12 @@
         function applyStudyTimeState(data) {
             if (!data) return;
 
-            const currentWeekStudyTimeSeconds = data.currentWeekStudyTimeSeconds ?? data.accumulatedSeconds;
             studyTimeState = {
                 ...studyTimeState,
                 ...data,
-                currentWeekStudyTimeSeconds: currentWeekStudyTimeSeconds ?? studyTimeState.currentWeekStudyTimeSeconds,
-                serverSyncedAt: currentWeekStudyTimeSeconds !== undefined ? Date.now() : studyTimeState.serverSyncedAt,
+                serverSyncedAt: data.currentWeekStudyTimeSeconds !== undefined
+                    ? Date.now()
+                    : studyTimeState.serverSyncedAt,
             };
             renderStudyTime();
         }
@@ -1075,7 +1079,7 @@
             const pauseBtn = document.getElementById('study-time-pause-btn');
 
             valueEl.textContent = formatStudyDuration(getStudyTimeSeconds());
-            metaEl.textContent = `목표 ${formatStudyGoal(studyTimeState.weeklyStudyTimeGoal)} · ${studyTimeState.running ? '누적 중' : '일시정지'}`;
+            metaEl.textContent = `목표 ${formatStudyGoal(studyTimeState.weeklyStudyTimeGoalSeconds)} · ${studyTimeState.running ? '누적 중' : '일시정지'}`;
 
             resumeBtn.disabled = !room || studyTimeState.running;
             pauseBtn.disabled = !room || !studyTimeState.running;
@@ -1106,23 +1110,20 @@
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
-        function formatStudyGoal(value) {
-            if (!value) return '--:--';
-            return String(value).slice(0, 5);
+        function formatStudyGoal(totalSeconds) {
+            if (totalSeconds === null || totalSeconds === undefined) return '--:--';
+
+            const safeSeconds = Math.max(0, Number(totalSeconds));
+            const hours = Math.floor(safeSeconds / 3600);
+            const minutes = Math.floor((safeSeconds % 3600) / 60);
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
 
         async function fetchStudyTime() {
             try {
-                const [summaryRes, weeklyRes] = await Promise.all([
-                    apiFetch('/api/members/me/study-time'),
-                    apiFetch('/api/study-time/me/weekly'),
-                ]);
-
-                if (weeklyRes.ok) {
-                    applyStudyTimeState(await weeklyRes.json());
-                }
-                if (summaryRes.ok) {
-                    applyStudyTimeState(await summaryRes.json());
+                const res = await apiFetch('/api/members/me/study-time');
+                if (res.ok) {
+                    applyStudyTimeState(await res.json());
                 }
             } catch (err) {
                 console.error('공부 시간 조회 오류:', err);
@@ -1144,6 +1145,7 @@
 
             try {
                 await requestStudyTime('/pause');
+                studyTimeAutoResumeFocusEndsAt = pomodoroState.focusEndsAt;
             } catch (err) {
                 toast.error(err.message);
             }
@@ -1152,7 +1154,7 @@
         async function requestStudyTime(path) {
             setStudyTimeControlsDisabled(true);
             try {
-                const res = await apiFetch(`/api/group/${encodeURIComponent(groupCode)}/study-time${path}`, {
+                const res = await apiFetch(`/api/members/me/study-time${path}`, {
                     method: 'POST',
                 });
                 if (!res.ok) {
@@ -1211,6 +1213,7 @@
             progressEl.classList.toggle('break', viewState.phase === 'BREAK');
             progressEl.classList.toggle('paused', status === 'PAUSED');
             pauseStudyTimeWhenPomodoroFocusEnds(viewState);
+            resumeStudyTimeWhenPomodoroFocusStarts(viewState);
             if (viewState.shouldRefresh) {
                 refreshPomodoroAtPhaseEnd();
             }
@@ -1351,6 +1354,10 @@
                 return;
             }
 
+            if (viewState.breakMinutes === 0 && viewState.currentRound < viewState.totalRounds) {
+                return;
+            }
+
             const focusEndsAt = pomodoroState.focusEndsAt;
             if (!focusEndsAt || studyTimeAutoPauseFocusEndsAt === focusEndsAt || studyTimeAutoPauseInFlight) {
                 return;
@@ -1372,6 +1379,55 @@
                 .finally(() => {
                     studyTimeAutoPauseInFlight = false;
                 });
+        }
+
+        function resumeStudyTimeWhenPomodoroFocusStarts(viewState) {
+            const previousPhase = studyTimePreviousPomodoroPhase;
+            studyTimePreviousPomodoroPhase = viewState.phase;
+
+            if (previousPhase === 'BREAK' && viewState.phase === 'FOCUS' && studyTimeAutoPauseInFlight) {
+                studyTimePreviousPomodoroPhase = previousPhase;
+                return;
+            }
+
+            if (!room
+                || previousPhase !== 'BREAK'
+                || viewState.status !== 'RUNNING'
+                || viewState.phase !== 'FOCUS'
+                || studyTimeState.running) {
+                return;
+            }
+
+            const focusEndsAt = pomodoroState.focusEndsAt;
+            if (!focusEndsAt
+                || studyTimeAutoResumeFocusEndsAt === focusEndsAt
+                || studyTimeAutoResumeInFlight
+                || studyTimeAutoPauseInFlight) {
+                return;
+            }
+
+            studyTimeAutoResumeInFlight = true;
+            requestStudyTime('/resume')
+                .then(() => {
+                    studyTimeAutoResumeFocusEndsAt = focusEndsAt;
+                })
+                .catch((err) => {
+                    console.error('집중 시작 공부 시간 재개 오류:', err);
+                })
+                .finally(() => {
+                    studyTimeAutoResumeInFlight = false;
+                });
+        }
+
+        function syncStudyTimeForPomodoroEvent(timer) {
+            if (!timer || !timer.status) return;
+
+            const path = timer.status === 'RUNNING' && timer.phase === 'FOCUS'
+                ? '/resume'
+                : '/pause';
+            requestStudyTime(path).catch((err) => {
+                console.error('뽀모도로 이벤트 공부 시간 반영 오류:', err);
+            });
         }
 
         function getPomodoroNow() {
@@ -1482,7 +1538,7 @@
 
                 const data = await res.json();
                 applyPomodoroState(data);
-                fetchStudyTime();
+                syncStudyTimeForPomodoroEvent(data);
             } finally {
                 setPomodoroControlsDisabled(false);
                 renderPomodoro();
