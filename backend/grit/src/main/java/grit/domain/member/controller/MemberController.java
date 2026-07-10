@@ -5,13 +5,13 @@ import grit.domain.member.dto.MemberNickNameAvailabilityResponseDto;
 import grit.domain.member.dto.MemberProfileImageUploadUrlResponseDto;
 import grit.domain.member.dto.MemberProfileInitializeRequestDto;
 import grit.domain.member.dto.MemberProfileUpdateRequestDto;
+import grit.domain.member.dto.MemberResponseDto;
 import grit.domain.member.dto.MemberStudyTimeResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
 import grit.domain.studytime.service.StudyTimeService;
 import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
-import grit.domain.member.dto.MemberResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -51,7 +51,23 @@ public class MemberController {
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
 
         Member member = getAuthenticatedMember(memberPrincipal);
-        return ResponseEntity.ok(studyTimeService.getMemberStudyTime(member));
+        return ResponseEntity.ok(studyTimeService.getStudyTime(member));
+    }
+
+    @PostMapping("/me/study-time/resume")
+    public ResponseEntity<MemberStudyTimeResponseDto> resumeStudyTime(
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
+
+        Member member = getAuthenticatedMember(memberPrincipal);
+        return ResponseEntity.ok(studyTimeService.resume(member));
+    }
+
+    @PostMapping("/me/study-time/pause")
+    public ResponseEntity<MemberStudyTimeResponseDto> pauseStudyTime(
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
+
+        Member member = getAuthenticatedMember(memberPrincipal);
+        return ResponseEntity.ok(studyTimeService.pause(member));
     }
 
     @Operation(summary = "프로필 수정", description = "사용자의 프로필 전체를 수정합니다. nickname은 필수이며, introduction/imageName/dDayDate/dDayTitle/weeklyStudyTimeGoal은 null로 전달하면 삭제됩니다.")

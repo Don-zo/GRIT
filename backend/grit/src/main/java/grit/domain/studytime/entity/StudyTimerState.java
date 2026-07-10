@@ -1,6 +1,5 @@
 package grit.domain.studytime.entity;
 
-import grit.domain.group.entity.Group;
 import grit.domain.member.entity.Member;
 import grit.global.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -10,7 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -45,31 +43,19 @@ public class StudyTimerState extends BaseEntity {
 
     private Instant lastStartedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "active_group_id")
-    private Group activeGroup;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manual_paused_group_id")
-    private Group manualPausedGroup;
-
-    @Column(length = 80)
-    private String manualPausedPomodoroPhaseKey;
-
     public static StudyTimerState create(Member member) {
         return StudyTimerState.builder()
                 .member(member)
                 .build();
     }
 
-    public void start(Group group, Instant startedAt) {
+    public void start(Instant startedAt) {
         if (running) {
             return;
         }
 
         this.running = true;
         this.lastStartedAt = startedAt;
-        this.activeGroup = group;
     }
 
     public Instant pause() {
@@ -80,32 +66,6 @@ public class StudyTimerState extends BaseEntity {
         Instant startedAt = this.lastStartedAt;
         this.running = false;
         this.lastStartedAt = null;
-        this.activeGroup = null;
         return startedAt;
-    }
-
-    public boolean isRunningIn(Group group) {
-        return running
-                && activeGroup != null
-                && activeGroup.getId() != null
-                && activeGroup.getId().equals(group.getId());
-    }
-
-    public boolean hasManualPauseFor(Group group, String phaseKey) {
-        return manualPausedGroup != null
-                && manualPausedGroup.getId() != null
-                && manualPausedGroup.getId().equals(group.getId())
-                && manualPausedPomodoroPhaseKey != null
-                && manualPausedPomodoroPhaseKey.equals(phaseKey);
-    }
-
-    public void markManualPaused(Group group, String phaseKey) {
-        this.manualPausedGroup = group;
-        this.manualPausedPomodoroPhaseKey = phaseKey;
-    }
-
-    public void clearManualPaused() {
-        this.manualPausedGroup = null;
-        this.manualPausedPomodoroPhaseKey = null;
     }
 }

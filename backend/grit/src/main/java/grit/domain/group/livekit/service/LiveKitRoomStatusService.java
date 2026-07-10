@@ -3,11 +3,9 @@ package grit.domain.group.livekit.service;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import livekit.LivekitWebhook.WebhookEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
@@ -86,15 +84,6 @@ public class LiveKitRoomStatusService {
         }
 
         return participantCounts;
-    }
-
-    public Set<String> getParticipantIdentities(String groupCode) {
-        try {
-            Set<String> identities = redisTemplate.opsForSet().members(participantsKey(roomName(groupCode)));
-            return identities == null ? Set.of() : identities;
-        } catch (DataAccessException ignored) {
-            return Collections.emptySet();
-        }
     }
 
     private void addParticipant(String roomName, WebhookEvent event) {

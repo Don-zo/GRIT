@@ -1,11 +1,14 @@
 package grit.domain.member.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import java.time.LocalTime;
+import java.time.Instant;
+import java.time.LocalDate;
 
 public record MemberStudyTimeResponseDto(
-        @JsonFormat(pattern = "HH:mm")
-        LocalTime weeklyStudyTimeGoal,
-        long currentWeekStudyTimeSeconds
+        LocalDate weekStartDate,
+        Long weeklyStudyTimeGoalSeconds,
+        long currentWeekStudyTimeSeconds,
+        boolean running,
+        Instant serverNow,
+        Instant lastStartedAt
 ) {
 }
