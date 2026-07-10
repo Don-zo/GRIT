@@ -58,7 +58,7 @@ public class LiveKitService {
         checkPermission(member, group);
 
         AccessToken token = new AccessToken(apiKey, apiSecret);
-        token.setIdentity(memberIdentity(member));
+        token.setIdentity(member.getNickname());
         token.setName(member.getNickname());
         token.addGrants(
                 new RoomJoin(true),
@@ -143,10 +143,6 @@ public class LiveKitService {
 
     private String roomName(String groupCode) {
         return "group:" + groupCode;
-    }
-
-    private String memberIdentity(Member member) {
-        return "member:" + member.getId();
     }
 
 }

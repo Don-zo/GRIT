@@ -37,19 +37,11 @@ public class StudyTimeLiveKitWebhookService {
             return Optional.empty();
         }
 
-        return parseMemberId(event.getParticipant().getIdentity())
-                .flatMap(memberRepository::findById);
-    }
-
-    private Optional<Long> parseMemberId(String identity) {
-        if (identity == null || !identity.startsWith("member:")) {
+        String identity = event.getParticipant().getIdentity();
+        if (identity == null || identity.isBlank()) {
             return Optional.empty();
         }
 
-        try {
-            return Optional.of(Long.parseLong(identity.substring("member:".length())));
-        } catch (NumberFormatException e) {
-            return Optional.empty();
-        }
+        return memberRepository.findByNickname(identity);
     }
 }
