@@ -282,7 +282,7 @@ public class StudyTimeService {
 
             if (seconds > 0) {
                 WeeklyStudyTime weeklyStudyTime = weeklyStudyTimeRepository
-                        .findByMemberAndWeekStartDateForUpdate(member, weekStartDate)
+                        .findByMemberAndWeekStartDate(member, weekStartDate)
                         .orElseGet(() -> weeklyStudyTimeRepository.save(WeeklyStudyTime.create(member, weekStartDate)));
                 weeklyStudyTime.addSeconds(seconds);
             }

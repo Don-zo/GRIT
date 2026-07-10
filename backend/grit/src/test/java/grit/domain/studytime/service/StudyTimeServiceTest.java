@@ -106,8 +106,6 @@ class StudyTimeServiceTest {
                 });
         lenient().when(weeklyStudyTimeRepository.findByMemberAndWeekStartDate(any(Member.class), any(LocalDate.class)))
                 .thenAnswer(invocation -> Optional.ofNullable(weeklyTimes.get(invocation.getArgument(1))));
-        lenient().when(weeklyStudyTimeRepository.findByMemberAndWeekStartDateForUpdate(any(Member.class), any(LocalDate.class)))
-                .thenAnswer(invocation -> Optional.ofNullable(weeklyTimes.get(invocation.getArgument(1))));
         lenient().when(weeklyStudyTimeRepository.save(any(WeeklyStudyTime.class)))
                 .thenAnswer(invocation -> {
                     WeeklyStudyTime weeklyStudyTime = invocation.getArgument(0);
