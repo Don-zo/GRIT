@@ -23,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import livekit.LivekitModels.DataPacket.Kind;
 import lombok.RequiredArgsConstructor;
-import okhttp3.ResponseBody;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import retrofit2.Response;
@@ -120,12 +119,10 @@ public class LiveKitService {
             observation.highCardinalityKeyValue("livekit.payload.bytes", String.valueOf(payloadBytes.length));
             Response<Void> response = client.sendData(roomName, payloadBytes, kind).execute();
             if (!response.isSuccessful()) {
-                try (ResponseBody errorBody = response.errorBody()) {
-                    throw new RuntimeException("LiveKit send data failed. status="
-                            + response.code()
-                            + ", message="
-                            + response.message());
-                }
+                throw new RuntimeException("LiveKit send data failed. status="
+                        + response.code()
+                        + ", message="
+                        + response.message());
             }
         } catch (Exception e) {
             observation.error(e);

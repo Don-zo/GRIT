@@ -41,7 +41,6 @@ public class PomodoroService {
         Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
-        Instant now = Instant.now(clock);
         Pomodoro pomodoro = pomodoroRepository.findByGroup(group).orElse(null);
         if (pomodoro == null) {
             pomodoro = Pomodoro.builder()
@@ -49,7 +48,7 @@ public class PomodoroService {
                     .build();
         }
 
-        pomodoro.start(now, focusMinutes, totalRounds);
+        pomodoro.start(Instant.now(clock), focusMinutes, totalRounds);
 
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         sendPomodoroSyncAfterCommit("start", member, group, savedPomodoro);
@@ -62,9 +61,8 @@ public class PomodoroService {
         Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
-        Instant now = Instant.now(clock);
         Pomodoro pomodoro = findByGroup(group);
-        pomodoro.pause(now);
+        pomodoro.pause(Instant.now(clock));
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         sendPomodoroSyncAfterCommit("pause", member, group, savedPomodoro);
 
@@ -76,9 +74,8 @@ public class PomodoroService {
         Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
-        Instant now = Instant.now(clock);
         Pomodoro pomodoro = findByGroup(group);
-        pomodoro.resume(now);
+        pomodoro.resume(Instant.now(clock));
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
         sendPomodoroSyncAfterCommit("resume", member, group, savedPomodoro);
 
@@ -90,7 +87,6 @@ public class PomodoroService {
         Group group = groupService.findGroupByCodeForUpdate(groupCode);
         checkPermission(member, group);
 
-        Instant now = Instant.now(clock);
         Pomodoro pomodoro = findByGroup(group);
         pomodoro.stop();
         Pomodoro savedPomodoro = pomodoroRepository.save(pomodoro);
