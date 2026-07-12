@@ -36,5 +36,5 @@ export function getStudyTimeProgressPercent(
   goalSeconds: number | null | undefined,
 ): number {
   if (goalSeconds == null || goalSeconds <= 0) return 0;
-  return Math.min(100, (currentSeconds / goalSeconds) * 100);
+  return Math.max(0, Math.min(100, (currentSeconds / goalSeconds) * 100));
 }

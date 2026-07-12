@@ -19,7 +19,7 @@ function buildOptimisticRunning(
 ): MemberStudyTimeResponse {
   const nowIso = new Date().toISOString();
   return {
-    weekStartDate: prev?.weekStartDate ?? "",
+    weekStartDate: prev?.weekStartDate ?? nowIso.slice(0, 10),
     weeklyStudyTimeGoalSeconds: prev?.weeklyStudyTimeGoalSeconds ?? null,
     currentWeekStudyTimeSeconds: displayedSeconds,
     running: true,
@@ -34,7 +34,7 @@ function buildOptimisticPaused(
 ): MemberStudyTimeResponse {
   const nowIso = new Date().toISOString();
   return {
-    weekStartDate: prev?.weekStartDate ?? "",
+    weekStartDate: prev?.weekStartDate ?? nowIso.slice(0, 10),
     weeklyStudyTimeGoalSeconds: prev?.weeklyStudyTimeGoalSeconds ?? null,
     currentWeekStudyTimeSeconds: displayedSeconds,
     running: false,
@@ -176,11 +176,12 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
 
   const setDesiredRunning = useCallback(
     (running: boolean) => {
-      desiredRunningRef.current = running;
-
       const current = queryClient.getQueryData<MemberStudyTimeResponse>(
         QUERY_KEYS.studyTime.me,
       );
+      if (current?.running === running) return;
+
+      desiredRunningRef.current = running;
       applyOptimistic(
         running
           ? buildOptimisticRunning(current, displayedSecondsRef.current)
@@ -209,17 +210,15 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
 
   useEffect(() => {
     const reconcile = () => {
+      // studyTime·pomodoro 둘 다 준비된 뒤에만 동기화 (새로고침/재입장 포함)
+      if (!studyTime || !pomodoroStatus) return;
+
       const phase = getPomodoroStudyPhase(
         pomodoroStatus,
         Date.now(),
         pomodoroFetchedAtRef.current,
       );
       const prevPhase = prevPomodoroPhaseRef.current;
-
-      if (prevPhase === null) {
-        prevPomodoroPhaseRef.current = phase;
-        return;
-      }
 
       if (prevPhase === phase) return;
       prevPomodoroPhaseRef.current = phase;
@@ -234,7 +233,7 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
     reconcile();
     const interval = window.setInterval(reconcile, 250);
     return () => window.clearInterval(interval);
-  }, [pomodoroStatus, syncPause, syncResume]);
+  }, [pomodoroStatus, syncPause, syncResume, studyTime]);
 
   return {
     studyTime,

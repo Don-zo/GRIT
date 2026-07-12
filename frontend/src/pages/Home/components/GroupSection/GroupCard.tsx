@@ -26,6 +26,7 @@ export default function GroupCard({
     void queryClient.prefetchQuery({
       queryKey: QUERY_KEYS.studyTime.me,
       queryFn: studyTimeApi.get,
+      staleTime: 5000,
     });
     navigate(`/room/${groupCode}`);
   };
@@ -34,6 +35,7 @@ export default function GroupCard({
     void queryClient.prefetchQuery({
       queryKey: QUERY_KEYS.studyTime.me,
       queryFn: studyTimeApi.get,
+      staleTime: 5000,
     });
   };
 
