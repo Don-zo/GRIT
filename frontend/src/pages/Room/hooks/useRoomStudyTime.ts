@@ -61,24 +61,14 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
   const inflightRef = useRef(false);
   const fetchedAtRef = useRef<number | undefined>(undefined);
   const displayedSecondsRef = useRef(0);
-  const pomodoroFetchedAtRef = useRef<number>(Date.now());
   const prevPomodoroPhaseRef = useRef<PomodoroStudyPhase | null>(null);
+  const didInitialSyncRef = useRef(false);
 
   useEffect(() => {
     if (dataUpdatedAt) {
       fetchedAtRef.current = dataUpdatedAt;
     }
   }, [dataUpdatedAt]);
-
-  useEffect(() => {
-    pomodoroFetchedAtRef.current = Date.now();
-  }, [
-    pomodoroStatus?.status,
-    pomodoroStatus?.phase,
-    pomodoroStatus?.serverNow,
-    pomodoroStatus?.focusEndsAt,
-    pomodoroStatus?.breakEndsAt,
-  ]);
 
   const [displayedSeconds, setDisplayedSeconds] = useState(0);
 
@@ -209,31 +199,32 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
   }, [queryClient, setDesiredRunning]);
 
   useEffect(() => {
-    const reconcile = () => {
-      // studyTime·pomodoro 둘 다 준비된 뒤에만 동기화 (새로고침/재입장 포함)
-      if (!studyTime || !pomodoroStatus) return;
+    if (!studyTime || !pomodoroStatus) return;
 
-      const phase = getPomodoroStudyPhase(
-        pomodoroStatus,
-        Date.now(),
-        pomodoroFetchedAtRef.current,
-      );
-      const prevPhase = prevPomodoroPhaseRef.current;
+    const phase = getPomodoroStudyPhase(pomodoroStatus);
+    const prevPhase = prevPomodoroPhaseRef.current;
 
-      if (prevPhase === phase) return;
+    // 최초 로드(새로고침/재입장): 현재 국면에 한 번 맞춤
+    if (!didInitialSyncRef.current) {
+      didInitialSyncRef.current = true;
       prevPomodoroPhaseRef.current = phase;
-
       if (shouldStudyTimerRunForPhase(phase)) {
         syncResume();
       } else {
         syncPause();
       }
-    };
+      return;
+    }
 
-    reconcile();
-    const interval = window.setInterval(reconcile, 250);
-    return () => window.clearInterval(interval);
-  }, [pomodoroStatus, syncPause, syncResume, studyTime]);
+    if (prevPhase === phase) return;
+    prevPomodoroPhaseRef.current = phase;
+
+    if (shouldStudyTimerRunForPhase(phase)) {
+      syncResume();
+    } else {
+      syncPause();
+    }
+  }, [pomodoroStatus, studyTime, syncPause, syncResume]);
 
   return {
     studyTime,

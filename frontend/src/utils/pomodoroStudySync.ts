@@ -2,52 +2,21 @@ import type { PomodoroStatusResponse } from "@/apis/domains/pomodoro/type";
 
 export type PomodoroStudyPhase = "focus" | "break" | "paused" | "idle";
 
-function getAlignedServerNowMs(
-  serverNow: string,
-  clientNowMs: number,
-  fetchedAtMs?: number,
-): number {
-  const serverNowMs = Date.parse(serverNow);
-  if (Number.isNaN(serverNowMs)) return clientNowMs;
-  const anchorMs = fetchedAtMs ?? clientNowMs;
-  return serverNowMs + Math.max(0, clientNowMs - anchorMs);
-}
-
 /**
- * 뽀모도로 상태 + endsAt 시각으로 공부 타이머가 따라야 할 국면을 계산한다.
- * LiveKit phase 갱신이 늦어도 focusEndsAt/breakEndsAt 기준으로 전환을 감지한다.
+ * 벽시계/endsAt 예측은 뽀모도로 UI(setInterval 카운트다운)보다
+ * 먼저 멈추는 원인이 되므로, 서버가 내려준 status/phase만 신뢰한다.
  */
 export function getPomodoroStudyPhase(
   pomodoro: PomodoroStatusResponse | undefined,
-  clientNowMs: number = Date.now(),
-  fetchedAtMs?: number,
 ): PomodoroStudyPhase {
   if (!pomodoro) return "idle";
 
-  const { status, phase, focusEndsAt, breakEndsAt, serverNow } = pomodoro;
+  const { status, phase } = pomodoro;
 
   if (status === "IDLE" || status === "FINISHED") return "idle";
   if (status === "PAUSED") return "paused";
-
-  const nowMs = getAlignedServerNowMs(serverNow, clientNowMs, fetchedAtMs);
-  const focusEndMs = focusEndsAt ? Date.parse(focusEndsAt) : Number.NaN;
-  const breakEndMs = breakEndsAt ? Date.parse(breakEndsAt) : Number.NaN;
-
-  const focusEnded = !Number.isNaN(focusEndMs) && nowMs >= focusEndMs;
-  const breakEnded = !Number.isNaN(breakEndMs) && nowMs >= breakEndMs;
-
-  if (status === "BREAK" || phase === "BREAK") {
-    if (breakEnded) return "focus";
-    return "break";
-  }
-
-  if (status === "RUNNING") {
-    if (focusEnded) {
-      if (!Number.isNaN(breakEndMs)) {
-        return breakEnded ? "focus" : "break";
-      }
-      return "break";
-    }
+  if (status === "BREAK" || phase === "BREAK") return "break";
+  if (status === "RUNNING" && (phase === "FOCUS" || phase == null)) {
     return "focus";
   }
 
