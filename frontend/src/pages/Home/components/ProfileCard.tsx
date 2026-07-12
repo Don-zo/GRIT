@@ -3,8 +3,13 @@ import { Settings, MessageCircle } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import SettingsModal from "@/pages/Home/components/Modals/ProfileSettingsModal";
 import { useMember } from "@/hooks/useMember";
+import { useStudyTime } from "@/hooks/useStudyTime";
 import { formatDisplayDate, formatDDayLabel } from "@/utils/date";
 import { formatStudyGoalDisplay } from "@/utils/studyGoalTime";
+import {
+  getDisplayedStudySeconds,
+  getStudyTimeProgressPercent,
+} from "@/utils/studyTime";
 
 interface ProfileCardProps {
   initialSettingsOpen: boolean;
@@ -24,6 +29,7 @@ const ProfileCard = ({
     isError,
     refetch,
   } = useMember();
+  const { data: studyTime } = useStudyTime();
 
   useEffect(() => {
     if (initialSettingsOpen && oauthFirstTimeUser) {
@@ -38,6 +44,10 @@ const ProfileCard = ({
   const displayName = member?.nickname?.trim() || member?.email || "—";
   const motivation = member?.introduction?.trim() || "소개를 입력해주세요";
   const goalTimeLabel = formatStudyGoalDisplay(member?.weeklyStudyTimeGoal);
+  const studyProgressPercent = getStudyTimeProgressPercent(
+    getDisplayedStudySeconds(studyTime),
+    studyTime?.weeklyStudyTimeGoalSeconds,
+  );
 
   return (
     <div className="w-full lg:w-1/2 h-64 bg-green-dark rounded-2xl p-6">
@@ -113,8 +123,7 @@ const ProfileCard = ({
         <div className="w-full h-4 bg-gray-dark rounded-full overflow-hidden">
           <div
             className="h-full bg-green-normal rounded-full transition-all duration-300"
-            style={{ width: "0%" }}
-            title="실시간 공부 시간 연동 전"
+            style={{ width: `${studyProgressPercent}%` }}
           />
         </div>
       </div>

@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
 import LiveBadge from "./LiveBadge";
 import GroupCodeBadge from "./GroupCodeBadge";
 import GroupSettingsModal from "@/pages/Home/components/Modals/GroupSettingsModal";
 import type { Group } from "@/apis/domains/group/type";
+import { studyTimeApi } from "@/apis/domains/studyTime/api";
+import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 type GroupCardProps = Group;
 
@@ -17,14 +20,30 @@ export default function GroupCard({
   liveParticipantCount,
 }: GroupCardProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const handleGoToRoom = () => {
+    void queryClient.prefetchQuery({
+      queryKey: QUERY_KEYS.studyTime.me,
+      queryFn: studyTimeApi.get,
+      staleTime: 5000,
+    });
     navigate(`/room/${groupCode}`);
+  };
+
+  const prefetchStudyTime = () => {
+    void queryClient.prefetchQuery({
+      queryKey: QUERY_KEYS.studyTime.me,
+      queryFn: studyTimeApi.get,
+      staleTime: 5000,
+    });
   };
 
   return (
     <div
       onClick={handleGoToRoom}
+      onMouseEnter={prefetchStudyTime}
+      onFocus={prefetchStudyTime}
       className="w-full h-fit bg-gray-dark rounded-2xl shadow-xl/20"
     >
       <div className="group/card flex flex-col overflow-hidden relative aspect-square rounded-2xl w-full bg-gray-semidark">

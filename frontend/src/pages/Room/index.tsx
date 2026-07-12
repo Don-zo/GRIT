@@ -16,7 +16,7 @@ const RoomPage = () => {
   const { groupCode } = useParams();
   const [todoOpen, setTodoOpen] = useState(false);
 
-  const { pomodoro, reactions, handleDataReceived } =
+  const { pomodoro, reactions, studyTime, handleDataReceived } =
     useRoomLiveKitData(groupCode);
 
   const {
@@ -39,6 +39,13 @@ const RoomPage = () => {
       <TopBar
         isTodoOpen={todoOpen}
         onToggleTodo={() => setTodoOpen((prev) => !prev)}
+        displayedStudySeconds={studyTime.displayedSeconds}
+        isStudyTimerRunning={studyTime.isRunning}
+        isStudyTimerPending={studyTime.isTogglePending}
+        onToggleStudyTimer={studyTime.handleToggle}
+        weeklyStudyTimeGoalSeconds={
+          studyTime.studyTime?.weeklyStudyTimeGoalSeconds
+        }
       />
 
       <div className="flex flex-1 overflow-hidden">
