@@ -202,6 +202,45 @@
             border-color: rgba(239, 68, 68, 0.25);
         }
 
+        .study-time-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        .study-time-display {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 102px;
+        }
+
+        .study-time-value {
+            font-size: 16px;
+            line-height: 1;
+            font-weight: 800;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .study-time-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .study-time-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .status-dot {
             width: 8px;
             height: 8px;
@@ -678,11 +717,18 @@
                 width: 100%;
                 justify-content: space-between;
             }
+
+            .study-time-panel {
+                order: 4;
+                width: 100%;
+                justify-content: space-between;
+            }
         }
 
         @media (max-width: 620px) {
             .pomodoro-panel,
-            .pomodoro-form {
+            .pomodoro-form,
+            .study-time-panel {
                 align-items: stretch;
                 flex-direction: column;
             }
@@ -692,11 +738,13 @@
             }
 
             .pomodoro-form,
-            .pomodoro-actions {
+            .pomodoro-actions,
+            .study-time-actions {
                 width: 100%;
             }
 
-            .pomodoro-actions button {
+            .pomodoro-actions button,
+            .study-time-actions button {
                 flex: 1;
             }
         }
@@ -757,6 +805,18 @@
                     <button class="pomodoro-btn danger" id="pomodoro-stop-btn" type="button"
                         onclick="stopPomodoro()">정지</button>
                 </div>
+            </div>
+        </div>
+        <div class="study-time-panel" id="study-time-panel">
+            <div class="study-time-display">
+                <div class="study-time-value" id="study-time-value">--:--:--</div>
+                <div class="study-time-meta" id="study-time-meta">이번 주 · 대기</div>
+            </div>
+            <div class="study-time-actions">
+                <button class="pomodoro-btn primary" id="study-time-resume-btn" type="button"
+                    onclick="resumeStudyTime()">재개</button>
+                <button class="pomodoro-btn" id="study-time-pause-btn" type="button"
+                    onclick="pauseStudyTime()">일시정지</button>
             </div>
         </div>
         <div class="status-bar">
@@ -847,6 +907,21 @@
         };
         let pomodoroPhaseRefreshInFlight = false;
         let pomodoroTicker = null;
+        let studyTimeAutoPauseFocusEndsAt = null;
+        let studyTimeAutoPauseInFlight = false;
+        let studyTimeAutoResumeFocusEndsAt = null;
+        let studyTimeAutoResumeInFlight = false;
+        let studyTimePreviousPomodoroPhase = null;
+        let studyTimeState = {
+            weekStartDate: null,
+            currentWeekStudyTimeSeconds: 0,
+            weeklyStudyTimeGoalSeconds: null,
+            running: false,
+            serverNow: null,
+            serverSyncedAt: null,
+            lastStartedAt: null,
+        };
+        let studyTimeTicker = null;
 
         const urlParams = new URLSearchParams(window.location.search);
         const groupCode = urlParams.get('groupCode');
@@ -889,6 +964,8 @@
             await fetchSupportedReactions();
             buildReactionPicker();
             renderPomodoro();
+            renderStudyTime();
+            await fetchStudyTime();
         }
 
         // ────────────────────────────────────────
@@ -963,6 +1040,9 @@
 
                 if (data.type === 'pomodoro.sync') {
                     applyPomodoroState(data.timer);
+                    if (!room || data.senderNickname !== room.localParticipant.name) {
+                        syncStudyTimeForPomodoroEvent(data.timer);
+                    }
                 }
             } catch (err) {
                 console.error('LiveKit 데이터 수신 파싱 오류:', err);
@@ -974,6 +1054,124 @@
             if (!data.emojiChar || !sender) return;
 
             showReactionOnTile(sender, data.emojiChar);
+        }
+
+        // ────────────────────────────────────────
+        // 공부 시간 테스트 UI
+        // ────────────────────────────────────────
+        function applyStudyTimeState(data) {
+            if (!data) return;
+
+            studyTimeState = {
+                ...studyTimeState,
+                ...data,
+                serverSyncedAt: data.currentWeekStudyTimeSeconds !== undefined
+                    ? Date.now()
+                    : studyTimeState.serverSyncedAt,
+            };
+            renderStudyTime();
+        }
+
+        function renderStudyTime() {
+            const valueEl = document.getElementById('study-time-value');
+            const metaEl = document.getElementById('study-time-meta');
+            const resumeBtn = document.getElementById('study-time-resume-btn');
+            const pauseBtn = document.getElementById('study-time-pause-btn');
+
+            valueEl.textContent = formatStudyDuration(getStudyTimeSeconds());
+            metaEl.textContent = `목표 ${formatStudyGoal(studyTimeState.weeklyStudyTimeGoalSeconds)} · ${studyTimeState.running ? '누적 중' : '일시정지'}`;
+
+            resumeBtn.disabled = !room || studyTimeState.running;
+            pauseBtn.disabled = !room || !studyTimeState.running;
+
+            if (studyTimeState.running && !studyTimeTicker) {
+                studyTimeTicker = setInterval(renderStudyTime, 1000);
+            }
+            if (!studyTimeState.running && studyTimeTicker) {
+                clearInterval(studyTimeTicker);
+                studyTimeTicker = null;
+            }
+        }
+
+        function getStudyTimeSeconds() {
+            const baseSeconds = Number(studyTimeState.currentWeekStudyTimeSeconds || 0);
+            if (!studyTimeState.running || !studyTimeState.serverSyncedAt) {
+                return baseSeconds;
+            }
+
+            return baseSeconds + Math.max(0, Math.floor((Date.now() - studyTimeState.serverSyncedAt) / 1000));
+        }
+
+        function formatStudyDuration(totalSeconds) {
+            const safeSeconds = Math.max(0, Number(totalSeconds || 0));
+            const hours = Math.floor(safeSeconds / 3600);
+            const minutes = Math.floor((safeSeconds % 3600) / 60);
+            const seconds = Math.floor(safeSeconds % 60);
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function formatStudyGoal(totalSeconds) {
+            if (totalSeconds === null || totalSeconds === undefined) return '--:--';
+
+            const safeSeconds = Math.max(0, Number(totalSeconds));
+            const hours = Math.floor(safeSeconds / 3600);
+            const minutes = Math.floor((safeSeconds % 3600) / 60);
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        async function fetchStudyTime() {
+            try {
+                const res = await apiFetch('/api/members/me/study-time');
+                if (res.ok) {
+                    applyStudyTimeState(await res.json());
+                }
+            } catch (err) {
+                console.error('공부 시간 조회 오류:', err);
+            }
+        }
+
+        async function resumeStudyTime() {
+            if (!room) return;
+
+            try {
+                await requestStudyTime('/resume');
+            } catch (err) {
+                toast.error(err.message);
+            }
+        }
+
+        async function pauseStudyTime() {
+            if (!room) return;
+
+            try {
+                await requestStudyTime('/pause');
+                studyTimeAutoResumeFocusEndsAt = pomodoroState.focusEndsAt;
+            } catch (err) {
+                toast.error(err.message);
+            }
+        }
+
+        async function requestStudyTime(path) {
+            setStudyTimeControlsDisabled(true);
+            try {
+                const res = await apiFetch(`/api/members/me/study-time${path}`, {
+                    method: 'POST',
+                });
+                if (!res.ok) {
+                    const error = await readErrorMessage(res);
+                    throw new Error(error || '공부 시간 요청에 실패했습니다.');
+                }
+
+                applyStudyTimeState(await res.json());
+            } finally {
+                setStudyTimeControlsDisabled(false);
+                renderStudyTime();
+            }
+        }
+
+        function setStudyTimeControlsDisabled(disabled) {
+            document.getElementById('study-time-resume-btn').disabled = disabled;
+            document.getElementById('study-time-pause-btn').disabled = disabled;
         }
 
         // ────────────────────────────────────────
@@ -1014,6 +1212,8 @@
             progressEl.style.setProperty('--pomodoro-progress', getPomodoroProgressPercent(viewState));
             progressEl.classList.toggle('break', viewState.phase === 'BREAK');
             progressEl.classList.toggle('paused', status === 'PAUSED');
+            pauseStudyTimeWhenPomodoroFocusEnds(viewState);
+            resumeStudyTimeWhenPomodoroFocusStarts(viewState);
             if (viewState.shouldRefresh) {
                 refreshPomodoroAtPhaseEnd();
             }
@@ -1149,6 +1349,87 @@
             return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
+        function pauseStudyTimeWhenPomodoroFocusEnds(viewState) {
+            if (!room || viewState.status !== 'RUNNING') {
+                return;
+            }
+
+            if (viewState.breakMinutes === 0 && viewState.currentRound < viewState.totalRounds) {
+                return;
+            }
+
+            const focusEndsAt = pomodoroState.focusEndsAt;
+            if (!focusEndsAt || studyTimeAutoPauseFocusEndsAt === focusEndsAt || studyTimeAutoPauseInFlight) {
+                return;
+            }
+
+            const focusEndsAtTime = parsePomodoroTime(focusEndsAt);
+            if (focusEndsAtTime === null || getPomodoroNow() < focusEndsAtTime) {
+                return;
+            }
+
+            studyTimeAutoPauseInFlight = true;
+            requestStudyTime('/pause')
+                .then(() => {
+                    studyTimeAutoPauseFocusEndsAt = focusEndsAt;
+                })
+                .catch((err) => {
+                    console.error('집중 종료 공부 시간 중단 오류:', err);
+                })
+                .finally(() => {
+                    studyTimeAutoPauseInFlight = false;
+                });
+        }
+
+        function resumeStudyTimeWhenPomodoroFocusStarts(viewState) {
+            const previousPhase = studyTimePreviousPomodoroPhase;
+            studyTimePreviousPomodoroPhase = viewState.phase;
+
+            if (previousPhase === 'BREAK' && viewState.phase === 'FOCUS' && studyTimeAutoPauseInFlight) {
+                studyTimePreviousPomodoroPhase = previousPhase;
+                return;
+            }
+
+            if (!room
+                || previousPhase !== 'BREAK'
+                || viewState.status !== 'RUNNING'
+                || viewState.phase !== 'FOCUS'
+                || studyTimeState.running) {
+                return;
+            }
+
+            const focusEndsAt = pomodoroState.focusEndsAt;
+            if (!focusEndsAt
+                || studyTimeAutoResumeFocusEndsAt === focusEndsAt
+                || studyTimeAutoResumeInFlight
+                || studyTimeAutoPauseInFlight) {
+                return;
+            }
+
+            studyTimeAutoResumeInFlight = true;
+            requestStudyTime('/resume')
+                .then(() => {
+                    studyTimeAutoResumeFocusEndsAt = focusEndsAt;
+                })
+                .catch((err) => {
+                    console.error('집중 시작 공부 시간 재개 오류:', err);
+                })
+                .finally(() => {
+                    studyTimeAutoResumeInFlight = false;
+                });
+        }
+
+        function syncStudyTimeForPomodoroEvent(timer) {
+            if (!timer || !timer.status) return;
+
+            const path = timer.status === 'RUNNING' && timer.phase === 'FOCUS'
+                ? '/resume'
+                : '/pause';
+            requestStudyTime(path).catch((err) => {
+                console.error('뽀모도로 이벤트 공부 시간 반영 오류:', err);
+            });
+        }
+
         function getPomodoroNow() {
             if (!pomodoroState.serverNow || !pomodoroState.serverSyncedAt) {
                 return Date.now();
@@ -1257,6 +1538,7 @@
 
                 const data = await res.json();
                 applyPomodoroState(data);
+                syncStudyTimeForPomodoroEvent(data);
             } finally {
                 setPomodoroControlsDisabled(false);
                 renderPomodoro();
@@ -1396,6 +1678,7 @@
                     room = null;
                     clearVideoGrid();
                     renderPomodoro();
+                    fetchStudyTime();
                 })
                 .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
                     if (track.kind === 'video' || track.kind === 'audio') {
@@ -1422,7 +1705,9 @@
 
             await room.connect(WS_URL, token);
             await fetchPomodoroState();
+            await fetchStudyTime();
             renderPomodoro();
+            renderStudyTime();
         }
 
         // ────────────────────────────────────────
