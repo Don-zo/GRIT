@@ -31,7 +31,7 @@ function writeKeepRunningIntent(keepRunning: boolean) {
       sessionStorage.removeItem(STUDY_TIMER_KEEP_RUNNING_KEY);
     }
   } catch {
-    // sessionStorage 불가 환경은 무시
+    // ignore
   }
 }
 
@@ -65,6 +65,10 @@ function buildOptimisticPaused(
   };
 }
 
+function isPomodoroBlockingPhase(phase: PomodoroStudyPhase): boolean {
+  return phase === "break" || phase === "paused";
+}
+
 type UseRoomStudyTimeOptions = {
   pomodoroStatus: PomodoroStatusResponse | undefined;
 };
@@ -84,7 +88,10 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
   const fetchedAtRef = useRef<number | undefined>(undefined);
   const displayedSecondsRef = useRef(0);
   const prevPomodoroPhaseRef = useRef<PomodoroStudyPhase | null>(null);
-  const didInitialSyncRef = useRef(false);
+  const didBindPomodoroPhaseRef = useRef(false);
+  const pomodoroStatusRef = useRef(pomodoroStatus);
+
+  pomodoroStatusRef.current = pomodoroStatus;
 
   useEffect(() => {
     if (dataUpdatedAt) {
@@ -221,25 +228,50 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
     setDesiredRunning(!current?.running);
   }, [queryClient, setDesiredRunning]);
 
-  useEffect(() => {
-    // studyTime + pomodoro 모두 준비된 뒤 한 번만 처리
-    if (!studyTime || !pomodoroStatus || didInitialSyncRef.current) return;
-    didInitialSyncRef.current = true;
+  /** 재생 의도인데 서버/캐시가 멈춤이면 다시 재생 (탭 복귀·refetch 대응) */
+  const restoreKeepRunningIfNeeded = useCallback(() => {
+    if (!readKeepRunningIntent()) return;
 
-    const phase = getPomodoroStudyPhase(pomodoroStatus);
-    prevPomodoroPhaseRef.current = phase;
+    const phase = pomodoroStatusRef.current
+      ? getPomodoroStudyPhase(pomodoroStatusRef.current)
+      : "idle";
+    if (isPomodoroBlockingPhase(phase)) return;
+
+    const current = queryClient.getQueryData<MemberStudyTimeResponse>(
+      QUERY_KEYS.studyTime.me,
+    );
+    if (!current || current.running) return;
+
+    syncResume();
+  }, [queryClient, syncResume]);
+
+  useEffect(() => {
+    if (!studyTime) return;
 
     if (studyTime.running) {
       writeKeepRunningIntent(true);
       return;
     }
 
-    // 수동으로 끈 상태는 유지. 재생 중이었는데 방 이탈 등으로 멈춘 경우만 복구.
-    if (!readKeepRunningIntent()) return;
-    if (phase === "break" || phase === "paused") return;
+    restoreKeepRunningIfNeeded();
+  }, [studyTime, restoreKeepRunningIfNeeded]);
 
-    syncResume();
-  }, [pomodoroStatus, studyTime, syncResume]);
+  useEffect(() => {
+    const handleVisible = () => {
+      if (document.visibilityState !== "visible") return;
+
+      // 탭 복귀 시 최신 서버 상태 확인 + 재생 의도 복구
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.studyTime.me });
+      restoreKeepRunningIfNeeded();
+    };
+
+    document.addEventListener("visibilitychange", handleVisible);
+    window.addEventListener("focus", handleVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisible);
+      window.removeEventListener("focus", handleVisible);
+    };
+  }, [queryClient, restoreKeepRunningIfNeeded]);
 
   useEffect(() => {
     if (!pomodoroStatus) return;
@@ -247,10 +279,13 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
     const phase = getPomodoroStudyPhase(pomodoroStatus);
     const prevPhase = prevPomodoroPhaseRef.current;
 
-    // 초기 phase 기록은 위 effect에서 수행
-    if (prevPhase === null) return;
-    if (prevPhase === phase) return;
+    if (!didBindPomodoroPhaseRef.current) {
+      didBindPomodoroPhaseRef.current = true;
+      prevPomodoroPhaseRef.current = phase;
+      return;
+    }
 
+    if (prevPhase === null || prevPhase === phase) return;
     prevPomodoroPhaseRef.current = phase;
 
     if (shouldStudyTimerRunForPhase(phase)) {
@@ -258,6 +293,7 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
       return;
     }
 
+    // break / paused / idle(정지) 전환만 타이머 pause
     syncPause();
   }, [pomodoroStatus, syncPause, syncResume]);
 
