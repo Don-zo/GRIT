@@ -13,6 +13,28 @@ import {
 } from "@/utils/pomodoroStudySync";
 import { getDisplayedStudySeconds } from "@/utils/studyTime";
 
+const STUDY_TIMER_KEEP_RUNNING_KEY = "grit:studyTimerKeepRunning";
+
+function readKeepRunningIntent(): boolean {
+  try {
+    return sessionStorage.getItem(STUDY_TIMER_KEEP_RUNNING_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeKeepRunningIntent(keepRunning: boolean) {
+  try {
+    if (keepRunning) {
+      sessionStorage.setItem(STUDY_TIMER_KEEP_RUNNING_KEY, "1");
+    } else {
+      sessionStorage.removeItem(STUDY_TIMER_KEEP_RUNNING_KEY);
+    }
+  } catch {
+    // sessionStorage 불가 환경은 무시
+  }
+}
+
 function buildOptimisticRunning(
   prev: MemberStudyTimeResponse | undefined,
   displayedSeconds: number,
@@ -171,6 +193,7 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
       );
       if (current?.running === running) return;
 
+      writeKeepRunningIntent(running);
       desiredRunningRef.current = running;
       applyOptimistic(
         running
@@ -199,32 +222,44 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
   }, [queryClient, setDesiredRunning]);
 
   useEffect(() => {
-    if (!studyTime || !pomodoroStatus) return;
+    // studyTime + pomodoro 모두 준비된 뒤 한 번만 처리
+    if (!studyTime || !pomodoroStatus || didInitialSyncRef.current) return;
+    didInitialSyncRef.current = true;
+
+    const phase = getPomodoroStudyPhase(pomodoroStatus);
+    prevPomodoroPhaseRef.current = phase;
+
+    if (studyTime.running) {
+      writeKeepRunningIntent(true);
+      return;
+    }
+
+    // 수동으로 끈 상태는 유지. 재생 중이었는데 방 이탈 등으로 멈춘 경우만 복구.
+    if (!readKeepRunningIntent()) return;
+    if (phase === "break" || phase === "paused") return;
+
+    syncResume();
+  }, [pomodoroStatus, studyTime, syncResume]);
+
+  useEffect(() => {
+    if (!pomodoroStatus) return;
 
     const phase = getPomodoroStudyPhase(pomodoroStatus);
     const prevPhase = prevPomodoroPhaseRef.current;
 
-    // 최초 로드(새로고침/재입장): 현재 국면에 한 번 맞춤
-    if (!didInitialSyncRef.current) {
-      didInitialSyncRef.current = true;
-      prevPomodoroPhaseRef.current = phase;
-      if (shouldStudyTimerRunForPhase(phase)) {
-        syncResume();
-      } else {
-        syncPause();
-      }
-      return;
-    }
-
+    // 초기 phase 기록은 위 effect에서 수행
+    if (prevPhase === null) return;
     if (prevPhase === phase) return;
+
     prevPomodoroPhaseRef.current = phase;
 
     if (shouldStudyTimerRunForPhase(phase)) {
       syncResume();
-    } else {
-      syncPause();
+      return;
     }
-  }, [pomodoroStatus, studyTime, syncPause, syncResume]);
+
+    syncPause();
+  }, [pomodoroStatus, syncPause, syncResume]);
 
   return {
     studyTime,
