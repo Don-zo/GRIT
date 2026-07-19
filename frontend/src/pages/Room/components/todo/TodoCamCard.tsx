@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ToggleBtn from "@/components/ToggleBtn";
-import { BookCheck, CalendarClock } from "lucide-react";
+import { BookCheck, CalendarClock, Pencil } from "lucide-react";
 import TodoList from "./TodoList";
 import { groupApi } from "@/apis/domains/group/api";
 import type {
@@ -18,6 +18,7 @@ import {
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { todoApi } from "@/apis/domains/todo/api";
 import { useToastContext } from "@/contexts/ToastContext";
+import { PATHS } from "@/routes/path";
 
 type TodoCamCardProps = {
   variant?: "default" | "panel";
@@ -166,7 +167,7 @@ export default function TodoCamCard({
                   ${idx !== 0 ? "ml-[-8px]" : ""}
                   ${
                     isActive
-                      ? "bg-gray-light text-green-dark font-semibold"
+                      ? "bg-[#2E3039] text-[#EEEEEE] font-semibold"
                       : "bg-green-dark text-white font-light shadow-[0_-2px_6px_rgba(0,0,0,0.25)]"
                   }
                 `}
@@ -179,14 +180,29 @@ export default function TodoCamCard({
 
         <div
           className="
-            bg-gray-light w-96 round-except-tl
+            bg-[#2E3039] w-96 round-except-tl
             shadow-[0_4px_14px_rgba(0,0,0,0.15)]
             h-[600px]
             p-4
             flex flex-col
           "
         >
-          <div className="flex justify-end mb-3 select-none">
+          <div className="flex items-center justify-end gap-2 mb-3 select-none">
+            <button
+              type="button"
+              onClick={() =>
+                window.open(PATHS.TODO, "_blank", "noopener,noreferrer")
+              }
+              className="
+                inline-flex items-center gap-1 h-7 px-2.5 rounded-full
+                bg-green-semidark text-caption font-extralight text-white
+                transition-opacity hover:opacity-90
+              "
+              aria-label="투두 수정"
+            >
+              <Pencil size={12} absoluteStrokeWidth />
+              수정
+            </button>
             <ToggleBtn
               checked={isDayView}
               onChange={setIsDayView}
