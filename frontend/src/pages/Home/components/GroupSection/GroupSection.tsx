@@ -46,6 +46,9 @@ export default function GroupSection() {
   });
 
   const totalPages = Math.max(1, Math.ceil(groups.length / GROUPS_PER_PAGE));
+  if (page > totalPages) {
+    setPage(totalPages);
+  }
   const currentPage = Math.min(page, totalPages);
   const pagedGroups = groups.slice(
     (currentPage - 1) * GROUPS_PER_PAGE,
