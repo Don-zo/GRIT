@@ -912,6 +912,7 @@
         let studyTimeAutoResumeFocusEndsAt = null;
         let studyTimeAutoResumeInFlight = false;
         let studyTimePreviousPomodoroPhase = null;
+        let studyTimeRoomLeavePauseInFlight = false;
         let studyTimeState = {
             weekStartDate: null,
             currentWeekStudyTimeSeconds: 0,
@@ -1678,7 +1679,7 @@
                     room = null;
                     clearVideoGrid();
                     renderPomodoro();
-                    fetchStudyTime();
+                    pauseStudyTimeForRoomLeave();
                 })
                 .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
                     if (track.kind === 'video' || track.kind === 'audio') {
@@ -1818,8 +1819,24 @@
         }
 
         async function leaveRoom() {
-            if (room) await room.disconnect();
+            if (room) {
+                await pauseStudyTimeForRoomLeave();
+                await room.disconnect();
+            }
             window.location.href = '/groups.html';
+        }
+
+        async function pauseStudyTimeForRoomLeave() {
+            if (!studyTimeState.running || studyTimeRoomLeavePauseInFlight) return;
+
+            studyTimeRoomLeavePauseInFlight = true;
+            try {
+                await requestStudyTime('/pause');
+            } catch (err) {
+                console.error('방 퇴장 공부 시간 중단 오류:', err);
+            } finally {
+                studyTimeRoomLeavePauseInFlight = false;
+            }
         }
 
         // ────────────────────────────────────────
@@ -1843,7 +1860,18 @@
         }
 
         window.addEventListener('beforeunload', () => {
-            if (room) room.disconnect();
+            if (!room) return;
+
+            if (studyTimeState.running && !studyTimeRoomLeavePauseInFlight) {
+                studyTimeRoomLeavePauseInFlight = true;
+                apiFetch('/api/members/me/study-time/pause', {
+                    method: 'POST',
+                    keepalive: true,
+                }).catch((err) => {
+                    console.error('페이지 종료 공부 시간 중단 오류:', err);
+                });
+            }
+            room.disconnect();
         });
 
         // 시작
