@@ -63,8 +63,8 @@ const Pomodoro: React.FC<PomodoroProps> = ({
 
   const serverRemainingMs = !isServerMode
     ? 0
-    : isPausedServer && pausedAt && phaseEndsAt
-      ? Math.max(0, Date.parse(phaseEndsAt) - Date.parse(pausedAt))
+    : isPausedServer && phaseEndsAt && serverNow
+      ? Math.max(0, Date.parse(phaseEndsAt) - Date.parse(serverNow))
       : phaseEndsAt
         ? Math.max(
             0,
