@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   isLiveKitPomodoroSyncMessage,
@@ -15,10 +15,11 @@ import { useStopPomodoro } from "@/hooks/useStopPomodoro";
 export function useRoomPomodoro(groupCode: string | undefined) {
   const queryClient = useQueryClient();
 
-  const { data: pomodoroStatus } = usePomodoroStatus({
-    groupCode,
-    enabled: !!groupCode,
-  });
+  const { data: pomodoroStatus, refetch: refetchPomodoroStatus } =
+    usePomodoroStatus({
+      groupCode,
+      enabled: !!groupCode,
+    });
 
   const { mutate: startPomodoro, isPending: isStartingPomodoro } =
     useStartPomodoro(groupCode);
@@ -28,6 +29,28 @@ export function useRoomPomodoro(groupCode: string | undefined) {
     useResumePomodoro(groupCode);
   const { mutate: stopPomodoro, isPending: isStoppingPomodoro } =
     useStopPomodoro(groupCode);
+
+  useEffect(() => {
+    if (!pomodoroStatus) return;
+
+    const { status, phase, serverNow, focusEndsAt, breakEndsAt } =
+      pomodoroStatus;
+
+    const isCounting = status === "RUNNING" || status === "BREAK";
+    if (!isCounting) return;
+
+    const endsAt = phase === "FOCUS" ? focusEndsAt : breakEndsAt;
+    if (!endsAt) return;
+
+    const remainingMs = Date.parse(endsAt) - Date.parse(serverNow);
+    const delayMs = Math.max(remainingMs, 0) + 1000;
+
+    const timer = setTimeout(() => {
+      refetchPomodoroStatus();
+    }, delayMs);
+
+    return () => clearTimeout(timer);
+  }, [pomodoroStatus, refetchPomodoroStatus]);
 
   const applyLiveKitSync = useCallback(
     (data: unknown): boolean => {

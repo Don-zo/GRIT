@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, MessageCircle } from "lucide-react";
+import { Settings, MessageCircle, UserRound, Target } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import SettingsModal from "@/pages/Home/components/Modals/ProfileSettingsModal";
 import { useMember } from "@/hooks/useMember";
@@ -23,12 +23,7 @@ const ProfileCard = ({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isInitialProfileSave, setIsInitialProfileSave] = useState(false);
 
-  const {
-    data: member,
-    isLoading,
-    isError,
-    refetch,
-  } = useMember();
+  const { data: member, isLoading, isError, refetch } = useMember();
   const { data: studyTime } = useStudyTime();
 
   useEffect(() => {
@@ -49,80 +44,90 @@ const ProfileCard = ({
     studyTime?.weeklyStudyTimeGoalSeconds,
   );
 
+  const openSettings = () => {
+    setIsInitialProfileSave(false);
+    setIsSettingsOpen(true);
+  };
+
   return (
-    <div className="w-full lg:w-1/2 h-64 bg-green-dark rounded-2xl p-6">
-      <div className="mb-4 flex justify-end">
+    <div className="flex h-64 w-full flex-col rounded-2xl bg-green-dark p-6 lg:w-1/2">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <UserRound className="h-5 w-5 text-green-normal" strokeWidth={2} />
+          <span className="text-bodyLg leading-bodyLg text-white">내 정보</span>
+        </div>
         <button
           type="button"
-          onClick={() => {
-            setIsInitialProfileSave(false);
-            setIsSettingsOpen(true);
-          }}
+          onClick={openSettings}
           disabled={isLoading}
           aria-label="설정"
-          className="disabled:opacity-50"
+          className="rounded-md p-1 text-white transition-colors hover:bg-green-darkest/40 disabled:opacity-50"
         >
-          <Settings
-            className="w-4 h-4 text-white cursor-pointer"
-            strokeWidth={2}
-          />
+          <Settings className="h-4 w-4 cursor-pointer" strokeWidth={2} />
         </button>
       </div>
 
       {isError && (
-        <p className="mb-4 text-sm text-red-300">
+        <p className="mb-3 text-sm text-red-300">
           프로필을 불러오지 못했습니다.{" "}
           <button
             type="button"
             onClick={() => refetch()}
-            className="underline cursor-pointer"
+            className="cursor-pointer underline"
           >
             다시 시도
           </button>
         </p>
       )}
 
-      <div className="mb-8 flex items-stretch justify-between">
-        <div className="flex items-start gap-3">
-          <Avatar size={72} src={member?.imageUrl} />
-          <div className="flex min-w-0 flex-col gap-2">
-            <div className="text-white flex flex-wrap items-center gap-1">
-              <span className="text-h4 font-bold">
+      <div className="mb-3 flex min-h-0 flex-1 gap-3">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <Avatar size={64} src={member?.imageUrl} />
+          <div className="flex min-w-0 flex-1 flex-col gap-2 pt-0.5">
+            <p className="break-keep text-white">
+              <span className="text-h4 font-bold leading-h4">
                 {isLoading ? "…" : displayName}
               </span>
-              <span className="text-bodyMd">님, 화이팅 ^^</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 text-green-light shrink-0" />
-              <span className="text-green-light text-caption line-clamp-2">
+              <span className="text-bodyMd leading-bodyMd"> 님, 화이팅 ^^</span>
+            </p>
+            <div className="flex items-start gap-2">
+              <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-light" />
+              <p className="line-clamp-2 break-keep text-caption leading-caption text-green-light">
                 {isLoading ? "불러오는 중…" : motivation}
-              </span>
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="mx-4 w-[1.5px] shrink-0 self-stretch bg-green-darkest" />
-
-        <div className="flex flex-col items-end text-right shrink-0">
-          <div className="flex items-center text-white text-bodySm gap-1">
-            <span className="font-medium">{targetDateLabel}</span>
-            <span className="font-normal">까지</span>
+        <div className="flex w-[150px] shrink-0 flex-col rounded-xl border border-green-semidark/35 bg-green-darkest/35 px-3 py-3">
+          <div className="flex items-center justify-end gap-1 text-green-light">
+            <Target className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+            <span className="text-caption leading-caption">D-day</span>
           </div>
-          <span className="text-white text-h1 font-bold">{dDayLabel}</span>
-          <span className="text-white text-bodySm">{examName}</span>
+          <p className="mt-3 break-keep text-right text-bodySm leading-bodySm text-white/90">
+            {targetDateLabel}까지
+          </p>
+          <p className="break-keep text-right text-h2 font-bold leading-h2 text-white">
+            {dDayLabel}
+          </p>
+          <p className="mt-1.5 line-clamp-2 break-keep text-right text-caption leading-caption text-green-light">
+            {examName}
+          </p>
         </div>
       </div>
 
       <div>
-        <div className="mb-4 flex items-center justify-between">
-          <span className="text-white text-bodyMd">이번 주 목표 공부시간</span>
-          <span className="text-white text-bodyMd">
-            {isLoading ? "…" : `${goalTimeLabel}`}
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <span className="shrink-0 text-bodyMd leading-bodyMd text-white">
+            이번 주 목표 공부시간
+          </span>
+          <span className="break-keep text-right text-bodyMd leading-bodyMd text-white">
+            {isLoading ? "…" : goalTimeLabel}
           </span>
         </div>
-        <div className="w-full h-4 bg-gray-dark rounded-full overflow-hidden">
+        <div className="h-4 w-full overflow-hidden rounded-full bg-gray-dark">
           <div
-            className="h-full bg-green-normal rounded-full transition-all duration-300"
+            className="h-full rounded-full bg-green-normal transition-all duration-300"
             style={{ width: `${studyProgressPercent}%` }}
           />
         </div>
