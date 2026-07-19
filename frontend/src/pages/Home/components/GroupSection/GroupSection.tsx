@@ -8,7 +8,7 @@ import CreateGroupModal from "@/pages/Home/components/Modals/CreateGroupModal";
 import JoinGroupModal from "@/pages/Home/components/Modals/JoinGroupModal";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
-const GROUPS_PER_PAGE = 12;
+const GROUPS_PER_PAGE = 8;
 
 function getPageItems(current: number, total: number): (number | "...")[] {
   if (total <= 7) {
