@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import type { PomodoroPhase } from "@/apis/domains/pomodoro/type";
+import React, { useEffect, useRef, useState } from "react";
+import type { PomodoroPhase, PomodoroStatus } from "@/apis/domains/pomodoro/type";
 
 type PomodoroProps = {
   studyMinutes: number;
@@ -13,21 +13,12 @@ type PomodoroProps = {
   className?: string;
   onFinish?: () => void;
   serverNow?: string;
+  status?: PomodoroStatus;
   phase?: PomodoroPhase;
   focusEndsAt?: string | null;
   breakEndsAt?: string | null;
+  pausedAt?: string | null;
   currentRound?: number;
-};
-
-const getRemainingSeconds = (
-  serverNow: string,
-  endsAt: string | null | undefined,
-) => {
-  if (!endsAt) return 0;
-  return Math.max(
-    0,
-    Math.floor((Date.parse(endsAt) - Date.parse(serverNow)) / 1000),
-  );
 };
 
 const Pomodoro: React.FC<PomodoroProps> = ({
@@ -40,9 +31,11 @@ const Pomodoro: React.FC<PomodoroProps> = ({
   className = "",
   onFinish,
   serverNow,
+  status,
   phase,
   focusEndsAt,
   breakEndsAt,
+  pausedAt,
   currentRound,
 }) => {
   const calculatedStrokeWidth = strokeWidth ?? size * 0.15;
@@ -55,11 +48,30 @@ const Pomodoro: React.FC<PomodoroProps> = ({
   const phaseEndsAt = phase === "FOCUS" ? focusEndsAt : breakEndsAt;
 
   const [secondsInCycle, setSecondsInCycle] = useState(0);
-  const [serverRemainingSeconds, setServerRemainingSeconds] = useState(() =>
-    isServerMode ? getRemainingSeconds(serverNow, phaseEndsAt) : 0,
-  );
+  const clockOffsetRef = useRef(0);
+  const prevServerNowRef = useRef<string | undefined>(undefined);
+  const [, forceTick] = useState(0);
   const [currentRepeat, setCurrentRepeat] = useState(currentRound ?? 1);
   const [running, setRunning] = useState(autoStart);
+
+  if (isServerMode && serverNow && serverNow !== prevServerNowRef.current) {
+    prevServerNowRef.current = serverNow;
+    clockOffsetRef.current = Date.parse(serverNow) - Date.now();
+  }
+
+  const isPausedServer = isServerMode && status === "PAUSED";
+
+  const serverRemainingMs = !isServerMode
+    ? 0
+    : isPausedServer && pausedAt && phaseEndsAt
+      ? Math.max(0, Date.parse(phaseEndsAt) - Date.parse(pausedAt))
+      : phaseEndsAt
+        ? Math.max(
+            0,
+            Date.parse(phaseEndsAt) - (Date.now() + clockOffsetRef.current),
+          )
+        : 0;
+  const serverRemainingSeconds = Math.floor(serverRemainingMs / 1000);
 
   const isStudy = isServerMode ? phase === "FOCUS" : secondsInCycle < studySeconds;
 
@@ -72,25 +84,21 @@ const Pomodoro: React.FC<PomodoroProps> = ({
   const remaining = isServerMode
     ? serverRemainingSeconds
     : Math.max(phaseTotal - phaseElapsed, 0);
+  const remainingExact = isServerMode
+    ? serverRemainingMs / 1000
+    : Math.max(phaseTotal - phaseElapsed, 0);
 
   const radius = (size - calculatedStrokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  const studyRatio =
-    cycleTotalSeconds > 0 ? studySeconds / cycleTotalSeconds : 0;
-  const breakRatio =
-    cycleTotalSeconds > 0 ? breakSeconds / cycleTotalSeconds : 0;
-
-  const redInnerProgress =
-    studySeconds > 0 ? Math.min(phaseElapsed, studySeconds) / studySeconds : 0;
-  const redVisibleLen = circumference * studyRatio * redInnerProgress;
-
-  const blueInnerProgress =
-    !isStudy && breakSeconds > 0 ? phaseElapsed / breakSeconds : 0;
-  const blueVisibleLen = circumference * breakRatio * blueInnerProgress;
-
-  const redAngle = -90;
-  const blueAngle = -90 + 360 * studyRatio;
+  const activePhaseSeconds = isStudy ? studySeconds : breakSeconds;
+  const remainingRatio =
+    activePhaseSeconds > 0
+      ? Math.min(Math.max(remainingExact / activePhaseSeconds, 0), 1)
+      : 0;
+  const progressVisibleLen = circumference * remainingRatio;
+  const progressColor = isStudy ? "#A43F3D" : "#555555";
+  const progressAngle = -90;
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -100,16 +108,10 @@ const Pomodoro: React.FC<PomodoroProps> = ({
 
   useEffect(() => {
     if (!isServerMode) return;
-    setServerRemainingSeconds(getRemainingSeconds(serverNow, phaseEndsAt));
     setCurrentRepeat(currentRound ?? 1);
     setRunning(autoStart);
-  }, [
-    autoStart,
-    currentRound,
-    isServerMode,
-    phaseEndsAt,
-    serverNow,
-  ]);
+    forceTick((t) => t + 1);
+  }, [autoStart, currentRound, isServerMode, phaseEndsAt, serverNow]);
 
   useEffect(() => {
     if (isServerMode || !running || cycleTotalSeconds <= 0) return;
@@ -140,11 +142,12 @@ const Pomodoro: React.FC<PomodoroProps> = ({
   useEffect(() => {
     if (!isServerMode || !running) return;
 
-    const timer = setInterval(() => {
-      setServerRemainingSeconds((prev) => Math.max(prev - 1, 0));
-    }, 1000);
+    let frameId = requestAnimationFrame(function tick() {
+      forceTick((t) => t + 1);
+      frameId = requestAnimationFrame(tick);
+    });
 
-    return () => clearInterval(timer);
+    return () => cancelAnimationFrame(frameId);
   }, [isServerMode, running]);
 
   useEffect(() => {
@@ -181,31 +184,17 @@ const Pomodoro: React.FC<PomodoroProps> = ({
             fill="none"
           />
 
-          {blueVisibleLen > 0 && (
+          {progressVisibleLen > 0 && (
             <circle
               cx={size / 2}
               cy={size / 2}
               r={radius}
-              stroke="#555555"
+              stroke={progressColor}
               strokeWidth={calculatedStrokeWidth}
               fill="none"
-              strokeLinecap="round"
-              strokeDasharray={`${blueVisibleLen} ${circumference}`}
-              transform={`rotate(${blueAngle} ${size / 2} ${size / 2})`}
-            />
-          )}
-
-          {redVisibleLen > 0 && (
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              stroke="#A43F3D"
-              strokeWidth={calculatedStrokeWidth}
-              fill="none"
-              strokeLinecap="round"
-              strokeDasharray={`${redVisibleLen} ${circumference}`}
-              transform={`rotate(${redAngle} ${size / 2} ${size / 2})`}
+              strokeLinecap="butt"
+              strokeDasharray={`${progressVisibleLen} ${circumference}`}
+              transform={`rotate(${progressAngle} ${size / 2} ${size / 2})`}
             />
           )}
         </svg>

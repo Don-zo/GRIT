@@ -33,10 +33,12 @@ export default function RoomPomodoro({ pomodoroStatus }: RoomPomodoroProps) {
           : DEFAULT_TOTAL_ROUNDS
       }
       autoStart={isRunning && pomodoroStatus?.status !== "PAUSED"}
+      status={isRunning ? pomodoroStatus?.status : undefined}
       serverNow={isRunning ? pomodoroStatus?.serverNow : undefined}
       phase={isRunning ? pomodoroStatus?.phase : undefined}
       focusEndsAt={isRunning ? pomodoroStatus?.focusEndsAt : undefined}
       breakEndsAt={isRunning ? pomodoroStatus?.breakEndsAt : undefined}
+      pausedAt={isRunning ? pomodoroStatus?.pausedAt : undefined}
       currentRound={isRunning ? (pomodoroStatus?.currentRound ?? 1) : 1}
     />
   );

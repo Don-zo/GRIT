@@ -184,9 +184,11 @@ export default function PomodoroModal({
 }: PomodoroModalProps) {
   if (!open) return null;
 
+  const isBreak = status === "BREAK";
   const canPause = status === "RUNNING";
   const canResume = status === "PAUSED";
-  const canStop = status === "RUNNING" || status === "PAUSED";
+  const canStop = status === "RUNNING" || status === "PAUSED" || isBreak;
+  const canStart = !isBreak;
 
   const [studyMinutes, setStudyMinutes] = useState(
     clampDialFocusMinutes(initialStudyMinutes),
@@ -216,6 +218,7 @@ export default function PomodoroModal({
   };
 
   const handleStart = () => {
+    if (!canStart) return;
     if (!enabled) {
       onClose?.();
       return;
@@ -321,7 +324,7 @@ export default function PomodoroModal({
           <button
             type="button"
             onClick={handleStart}
-            disabled={isStarting}
+            disabled={!canStart || isStarting}
             className="flex items-center justify-center gap-2 py-2 text-sm transition-colors bg-[#2C2C2C] rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Play size={14} fill="currentColor" stroke="none" />
