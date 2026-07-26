@@ -186,7 +186,7 @@ export default function PomodoroModal({
 
   const isBreak = status === "BREAK";
   const canPause = status === "RUNNING";
-  const canResume = status === "PAUSED";
+  const canResume = status === "PAUSED" && !isResuming;
   const canStop = status === "RUNNING" || status === "PAUSED" || isBreak;
   const canStart = !isBreak;
 

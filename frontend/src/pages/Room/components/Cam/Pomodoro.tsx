@@ -45,8 +45,6 @@ const Pomodoro: React.FC<PomodoroProps> = ({
   const totalRepeats = Math.max(repeat, 1);
   const isServerMode = serverNow != null;
 
-  const phaseEndsAt = phase === "FOCUS" ? focusEndsAt : breakEndsAt;
-
   const [secondsInCycle, setSecondsInCycle] = useState(0);
   const clockOffsetRef = useRef(0);
   const prevServerNowRef = useRef<string | undefined>(undefined);
@@ -61,6 +59,21 @@ const Pomodoro: React.FC<PomodoroProps> = ({
 
   const isPausedServer = isServerMode && status === "PAUSED";
 
+  const focusRemainingMs =
+    isServerMode && !isPausedServer && focusEndsAt
+      ? Date.parse(focusEndsAt) - (Date.now() + clockOffsetRef.current)
+      : null;
+
+  const effectivePhase =
+    phase === "FOCUS" &&
+    focusRemainingMs != null &&
+    focusRemainingMs <= 0 &&
+    breakEndsAt
+      ? "BREAK"
+      : phase;
+
+  const phaseEndsAt = effectivePhase === "FOCUS" ? focusEndsAt : breakEndsAt;
+
   const serverRemainingMs = !isServerMode
     ? 0
     : isPausedServer && phaseEndsAt && serverNow
@@ -71,9 +84,12 @@ const Pomodoro: React.FC<PomodoroProps> = ({
             Date.parse(phaseEndsAt) - (Date.now() + clockOffsetRef.current),
           )
         : 0;
-  const serverRemainingSeconds = Math.floor(serverRemainingMs / 1000);
+  const serverRemainingSeconds =
+    serverRemainingMs > 0 ? Math.ceil(serverRemainingMs / 1000) : 0;
 
-  const isStudy = isServerMode ? phase === "FOCUS" : secondsInCycle < studySeconds;
+  const isStudy = isServerMode
+    ? effectivePhase === "FOCUS"
+    : secondsInCycle < studySeconds;
 
   const phaseTotal = isStudy ? studySeconds : breakSeconds;
   const phaseElapsed = isServerMode
@@ -137,7 +153,14 @@ const Pomodoro: React.FC<PomodoroProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [running, cycleTotalSeconds, totalRepeats, currentRepeat, onFinish, isServerMode]);
+  }, [
+    running,
+    cycleTotalSeconds,
+    totalRepeats,
+    currentRepeat,
+    onFinish,
+    isServerMode,
+  ]);
 
   useEffect(() => {
     if (!isServerMode || !running) return;
