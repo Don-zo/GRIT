@@ -2,6 +2,7 @@ interface CustomCheckboxProps {
   checked: boolean;
   onChange: (v: boolean) => void;
   label?: string;
+  labelClassName?: string;
   ariaLabel?: string;
   size?: "md" | "sm";
 }
@@ -10,10 +11,10 @@ export default function CustomCheckbox({
   checked,
   onChange,
   label,
+  labelClassName = "text-gray-darkest",
   ariaLabel,
   size = "md",
 }: CustomCheckboxProps) {
-  const weight = checked ? 700 : 400;
   const isSm = size === "sm";
   const boxClass = isSm
     ? "h-4 w-4 rounded-full border-[0.5px] border-green-semidark bg-white"
@@ -53,16 +54,13 @@ export default function CustomCheckbox({
         </svg>
       </div>
 
-      {/* 라벨 */}
       {label && (
         <span
-          className="transition-all duration-200 ease-out text-bodyMd text-gray-darkest"
-          style={{
-            fontFamily:
-              '"Pretendard Variable", Pretendard, -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            fontVariationSettings: `"wght" ${weight}`,
-            fontWeight: weight,
-          }}
+          className={`
+            text-bodyMd transition-all duration-200 ease-out
+            ${labelClassName}
+            ${checked ? "opacity-40 line-through decoration-current" : "opacity-100"}
+          `}
         >
           {label}
         </span>

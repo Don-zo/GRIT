@@ -1,4 +1,5 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ModalOverlay } from "./ModalOverlay";
 import { ModalHeader } from "./ModalHeader";
 import { ModalBody } from "./ModalBody";
@@ -30,17 +31,31 @@ type ModalProps = {
 };
 
 function Modal({ isOpen, onClose, children }: ModalProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
-  return (
+
+  return createPortal(
     <ModalContext.Provider value={{ isOpen, onClose }}>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center"
+        className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center"
         role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
         onClick={(e) => e.stopPropagation()}
       >
         {children}
       </div>
-    </ModalContext.Provider>
+    </ModalContext.Provider>,
+    document.body
   );
 }
 

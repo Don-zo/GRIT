@@ -12,6 +12,9 @@ export const ENDPOINTS = {
     PROFILE: "/api/members/me/profile",
     NICKNAME_CHECK: "/api/members/nickname-availability",
     IMAGE_UPLOAD: `/api/members/me/profile-image/upload-url`,
+    STUDY_TIME: "/api/members/me/study-time",
+    STUDY_TIME_RESUME: "/api/members/me/study-time/resume",
+    STUDY_TIME_PAUSE: "/api/members/me/study-time/pause",
   },
   GROUP: {
     CREATE: "/api/groups",

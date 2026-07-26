@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { camTodoTheme } from "./camTodoTheme";
 
 interface CircularProgressProps {
   value: number;
@@ -59,22 +60,26 @@ export default function CircularProgress({
           background: `conic-gradient(
             from -360deg,
             #3E7358 0deg ${displayAngle}deg,
-            #C5C8C7 ${displayAngle}deg 360deg
+            ${camTodoTheme.progressTrack} ${displayAngle}deg 360deg
           )`,
+          mask: `radial-gradient(farthest-side, transparent calc(100% - ${thickness}px), #000 calc(100% - ${thickness}px + 0.5px))`,
+          WebkitMask: `radial-gradient(farthest-side, transparent calc(100% - ${thickness}px), #000 calc(100% - ${thickness}px + 0.5px))`,
         }}
       />
 
-      <div
-        className="absolute rounded-full bg-green-semidark"
-        style={{
-          top: "50%",
-          left: "50%",
-          width: thickness,
-          height: thickness,
-          transform: `translate(-50%, -50%) translateY(-${ringRadius}px)`,
-          zIndex: 2,
-        }}
-      />
+      {clamped > 0 && (
+        <div
+          className="absolute rounded-full bg-green-semidark"
+          style={{
+            top: "50%",
+            left: "50%",
+            width: thickness,
+            height: thickness,
+            transform: `translate(-50%, -50%) translateY(-${ringRadius}px)`,
+            zIndex: 2,
+          }}
+        />
+      )}
 
       <div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -98,7 +103,7 @@ export default function CircularProgress({
       </div>
 
       <div
-        className="flex items-center justify-center rounded-full bg-[#CBCDCD]"
+        className={`flex items-center justify-center rounded-full ${camTodoTheme.progressInner}`}
         style={{
           zIndex: 1,
           width: innerCircleSize,

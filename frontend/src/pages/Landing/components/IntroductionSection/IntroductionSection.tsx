@@ -1,4 +1,5 @@
 import type { RefObject } from "react";
+import Footer from "@/components/Footer/Footer";
 import IntroductionCard from "@/pages/Landing/components/IntroductionSection/IntroductionCard";
 
 type IntroductionSectionProps = {
@@ -40,12 +41,15 @@ export default function IntroductionSection({
         ref={(sec) => {
           sectionsRef.current[startIndex + 2] = sec;
         }}
-        className="h-screen"
+        className="relative h-screen"
       >
         <IntroductionCard
           functionName="투두리스트 관리"
           functionDescription="오늘 해야 할 일을 정리하고 끝까지 완주"
         />
+        <div className="absolute inset-x-0 bottom-0 z-10">
+          <Footer variant="light" />
+        </div>
       </section>
     </>
   );

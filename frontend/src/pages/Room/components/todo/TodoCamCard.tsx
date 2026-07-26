@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ToggleBtn from "@/components/ToggleBtn";
-import { BookCheck, CalendarClock } from "lucide-react";
+import { BookCheck, CalendarClock, Pencil } from "lucide-react";
 import TodoList from "./TodoList";
 import { groupApi } from "@/apis/domains/group/api";
 import type {
@@ -18,6 +18,8 @@ import {
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 import { todoApi } from "@/apis/domains/todo/api";
 import { useToastContext } from "@/contexts/ToastContext";
+import { PATHS } from "@/routes/path";
+import { camTodoTheme } from "./camTodoTheme";
 
 type TodoCamCardProps = {
   variant?: "default" | "panel";
@@ -82,9 +84,9 @@ export default function TodoCamCard({
   const groupsToShow = useMemo(
     () =>
       todosResponse
-        ? mapGroupMemberTodosToTodoGroups(todosResponse.sections)
+        ? mapGroupMemberTodosToTodoGroups(todosResponse.sections, view)
         : [],
-    [todosResponse],
+    [todosResponse, view],
   );
 
   const toggleTodoDoneMutation = useMutation({
@@ -166,7 +168,7 @@ export default function TodoCamCard({
                   ${idx !== 0 ? "ml-[-8px]" : ""}
                   ${
                     isActive
-                      ? "bg-gray-light text-green-dark font-semibold"
+                      ? camTodoTheme.tabActive
                       : "bg-green-dark text-white font-light shadow-[0_-2px_6px_rgba(0,0,0,0.25)]"
                   }
                 `}
@@ -178,15 +180,30 @@ export default function TodoCamCard({
         </div>
 
         <div
-          className="
-            bg-gray-light w-96 round-except-tl
+          className={`
+            ${camTodoTheme.cardBg} w-96 round-except-tl
             shadow-[0_4px_14px_rgba(0,0,0,0.15)]
             h-[600px]
             p-4
             flex flex-col
-          "
+          `}
         >
-          <div className="flex justify-end mb-3 select-none">
+          <div className="flex items-center justify-end gap-2 mb-3 select-none">
+            <button
+              type="button"
+              onClick={() =>
+                window.open(PATHS.TODO, "_blank", "noopener,noreferrer")
+              }
+              className="
+                inline-flex items-center gap-1 h-7 px-2.5 rounded-full
+                bg-green-semidark text-caption font-extralight text-white
+                transition-opacity hover:opacity-90
+              "
+              aria-label="투두 수정"
+            >
+              <Pencil size={12} absoluteStrokeWidth />
+              수정
+            </button>
             <ToggleBtn
               checked={isDayView}
               onChange={setIsDayView}
@@ -199,12 +216,16 @@ export default function TodoCamCard({
 
           <div className="flex-1 pb-8 space-y-4 overflow-y-auto ">
             {isPending && (
-              <p className="py-8 text-center text-caption text-gray-semidark">
+              <p
+                className={`py-8 text-center text-caption ${camTodoTheme.statusText}`}
+              >
                 투두를 불러오는 중이에요...
               </p>
             )}
             {isError && (
-              <p className="py-8 text-center text-caption text-gray-semidark">
+              <p
+                className={`py-8 text-center text-caption ${camTodoTheme.statusText}`}
+              >
                 투두를 불러오지 못했어요.
               </p>
             )}
@@ -222,7 +243,9 @@ export default function TodoCamCard({
                 />
               ))}
             {!isPending && !isError && groupsToShow.length === 0 && (
-              <p className="py-8 text-center text-caption text-gray-semidark">
+              <p
+                className={`py-8 text-center text-caption ${camTodoTheme.statusText}`}
+              >
                 등록된 투두가 없어요.
               </p>
             )}
