@@ -3,6 +3,7 @@ package grit.domain.group.livekit.controller;
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.group.livekit.constraint.ReactionEmoji;
 import grit.domain.group.livekit.dto.LiveKitReactionRequestDto;
+import grit.domain.group.livekit.dto.OtherRoomParticipationResponseDto;
 import grit.domain.group.livekit.dto.SupportReactionsResponseDto;
 import grit.domain.group.livekit.service.LiveKitService;
 import grit.domain.member.entity.Member;
@@ -63,12 +64,13 @@ public class LiveKitController {
             @ApiResponse(responseCode = "403", description = "그룹 멤버가 아님")
     })
     @GetMapping("/other-room")
-    public ResponseEntity<Boolean> isParticipatingInOtherRoom(
+    public ResponseEntity<OtherRoomParticipationResponseDto> isParticipatingInOtherRoom(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal,
             @PathVariable String groupCode) {
 
         Member member = memberService.findMemberById(memberPrincipal.id());
-        return ResponseEntity.ok(liveKitService.isParticipatingInOtherRoom(member, groupCode));
+        boolean isInOtherRoom = liveKitService.isParticipatingInOtherRoom(member, groupCode);
+        return ResponseEntity.ok(new OtherRoomParticipationResponseDto(isInOtherRoom));
     }
 
     @GetMapping("/reactions")
