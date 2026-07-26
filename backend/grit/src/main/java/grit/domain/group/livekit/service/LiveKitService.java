@@ -45,6 +45,7 @@ public class LiveKitService {
     private final ObjectMapper objectMapper;
     private final Clock clock;
     private final ObservationRegistry observationRegistry;
+    private final LiveKitRoomStatusService liveKitRoomStatusService;
     private RoomServiceClient client;
 
     @PostConstruct
@@ -67,6 +68,19 @@ public class LiveKitService {
                 new CanPublishData(false)
         );
         return token;
+    }
+
+    public boolean isParticipatingInOtherRoom(Member member, String groupCode) {
+        Group group = groupService.findGroupByCode(groupCode);
+        checkPermission(member, group);
+
+        return liveKitRoomStatusService.isParticipatingInOtherRoom(
+                member.getNickname(),
+                group.getCode(),
+                () -> groupService.getMyGroups(member).stream()
+                        .map(Group::getCode)
+                        .toList()
+        );
     }
 
     public void sendReaction(Member member, String groupCode, ReactionEmoji emoji) {

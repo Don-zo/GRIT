@@ -54,6 +54,23 @@ public class LiveKitController {
         return ResponseEntity.ok(Map.of("token", token.toJwt()));
     }
 
+    @Operation(
+            summary = "다른 LiveKit 방 참여 여부 조회",
+            description = "현재 그룹 방을 제외한 다른 그룹 방에 참여 중인지 true/false로 반환합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "그룹 멤버가 아님")
+    })
+    @GetMapping("/other-room")
+    public ResponseEntity<Boolean> isParticipatingInOtherRoom(
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
+            @PathVariable String groupCode) {
+
+        Member member = memberService.findMemberById(memberPrincipal.id());
+        return ResponseEntity.ok(liveKitService.isParticipatingInOtherRoom(member, groupCode));
+    }
+
     @GetMapping("/reactions")
     public ResponseEntity<List<SupportReactionsResponseDto>> getSupportReactions() {
 
