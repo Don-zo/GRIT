@@ -1,6 +1,8 @@
 import type {
+  GroupMemberTodo,
   GroupMemberTodoSection,
   GroupMemberTodosResponse,
+  GroupMemberTodoView,
 } from "./type";
 import type { TodoGroup } from "@/types/todo";
 
@@ -10,20 +12,59 @@ const TAG_EMPTY_LABEL = "태그 없음";
 const normalizeSectionLabel = (label: string) =>
   label === UNCATEGORIZED_LABEL ? TAG_EMPTY_LABEL : label;
 
+function compareGroupMemberTodos(
+  a: GroupMemberTodo,
+  b: GroupMemberTodo,
+  view: GroupMemberTodoView,
+): number {
+  // 완료(취소선) 항목은 항상 맨 아래
+  if (a.isDone !== b.isDone) {
+    return a.isDone ? 1 : -1;
+  }
+
+  // day 모드: 카테고리 사용자 지정 순서 → 그 안에서 ㄱㄴㄷ
+  if (view === "day") {
+    const aCategoryOrderNull = a.categorySortOrder == null ? 1 : 0;
+    const bCategoryOrderNull = b.categorySortOrder == null ? 1 : 0;
+    if (aCategoryOrderNull !== bCategoryOrderNull) {
+      return aCategoryOrderNull - bCategoryOrderNull;
+    }
+
+    const aCategoryOrder = a.categorySortOrder ?? 0;
+    const bCategoryOrder = b.categorySortOrder ?? 0;
+    if (aCategoryOrder !== bCategoryOrder) {
+      return aCategoryOrder - bCategoryOrder;
+    }
+  }
+
+  // category 모드(및 day 동일 카테고리 내): ㄱㄴㄷ
+  const byContent = a.content.localeCompare(b.content, "ko");
+  if (byContent !== 0) return byContent;
+
+  return a.id - b.id;
+}
+
 export function mapGroupMemberTodosToTodoGroups(
   sections: GroupMemberTodoSection[],
+  view: GroupMemberTodoView = "category",
 ): TodoGroup[] {
-  return sections.map((section) => ({
-    id: section.key,
-    title: normalizeSectionLabel(section.label),
-    totalCount: section.totalCount,
-    doneCount: section.doneCount,
-    items: section.todos.map((todo) => ({
-      id: todo.id,
-      label: todo.content,
-      done: todo.isDone,
-    })),
-  }));
+  return sections.map((section) => {
+    const sortedTodos = [...section.todos].sort((a, b) =>
+      compareGroupMemberTodos(a, b, view),
+    );
+
+    return {
+      id: section.key,
+      title: normalizeSectionLabel(section.label),
+      totalCount: section.totalCount,
+      doneCount: section.doneCount,
+      items: sortedTodos.map((todo) => ({
+        id: todo.id,
+        label: todo.content,
+        done: todo.isDone,
+      })),
+    };
+  });
 }
 
 export function sortGroupMembersWithMeFirst<T extends { me: boolean }>(
@@ -50,11 +91,15 @@ export function updateGroupMemberTodoDoneInCache(
 
       const doneDelta = isDone ? 1 : -1;
 
+      const todos = section.todos.map((todo) =>
+        todo.id === todoId ? { ...todo, isDone } : todo,
+      );
+
       return {
         ...section,
         doneCount: Math.max(0, section.doneCount + doneDelta),
-        todos: section.todos.map((todo) =>
-          todo.id === todoId ? { ...todo, isDone } : todo,
+        todos: [...todos].sort((a, b) =>
+          compareGroupMemberTodos(a, b, data.view),
         ),
       };
     }),

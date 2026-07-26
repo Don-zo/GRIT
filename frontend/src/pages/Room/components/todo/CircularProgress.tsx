@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { camTodoTheme } from "./camTodoTheme";
 
 interface CircularProgressProps {
   value: number;
@@ -59,7 +60,7 @@ export default function CircularProgress({
           background: `conic-gradient(
             from -360deg,
             #3E7358 0deg ${displayAngle}deg,
-            #41474D ${displayAngle}deg 360deg
+            ${camTodoTheme.progressTrack} ${displayAngle}deg 360deg
           )`,
           mask: `radial-gradient(farthest-side, transparent calc(100% - ${thickness}px), #000 calc(100% - ${thickness}px + 0.5px))`,
           WebkitMask: `radial-gradient(farthest-side, transparent calc(100% - ${thickness}px), #000 calc(100% - ${thickness}px + 0.5px))`,
@@ -102,7 +103,7 @@ export default function CircularProgress({
       </div>
 
       <div
-        className="flex items-center justify-center rounded-full bg-[#41474D]/80"
+        className={`flex items-center justify-center rounded-full ${camTodoTheme.progressInner}`}
         style={{
           zIndex: 1,
           width: innerCircleSize,
