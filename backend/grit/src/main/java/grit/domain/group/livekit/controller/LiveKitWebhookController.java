@@ -1,6 +1,7 @@
 package grit.domain.group.livekit.controller;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import grit.domain.group.livekit.pomodoro.service.PomodoroService;
 import grit.domain.group.livekit.service.LiveKitRoomStatusService;
 import grit.domain.studytime.service.StudyTimeLiveKitWebhookService;
 import io.livekit.server.WebhookReceiver;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LiveKitWebhookController {
 
     private final LiveKitRoomStatusService liveKitRoomStatusService;
+    private final PomodoroService pomodoroService;
     private final StudyTimeLiveKitWebhookService studyTimeLiveKitWebhookService;
 
     @Value("${livekit.api.key}")
@@ -50,7 +52,8 @@ public class LiveKitWebhookController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        liveKitRoomStatusService.applyWebhookEvent(event);
+        liveKitRoomStatusService.applyWebhookEvent(event)
+                .ifPresent(pomodoroService::stopForEmptyRoom);
         studyTimeLiveKitWebhookService.applyWebhookEvent(event);
         return ResponseEntity.noContent().build();
     }

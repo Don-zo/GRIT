@@ -3,6 +3,7 @@ package grit.domain.group.livekit.pomodoro.service;
 import grit.domain.group.GroupService;
 import grit.domain.group.entity.Group;
 import grit.domain.group.livekit.pomodoro.entity.Pomodoro;
+import grit.domain.group.livekit.pomodoro.entity.PomodoroStatus;
 import grit.domain.group.livekit.pomodoro.repository.PomodoroRepository;
 import grit.domain.group.livekit.service.LiveKitService;
 import grit.domain.member.entity.Member;
@@ -93,6 +94,19 @@ public class PomodoroService {
         sendPomodoroSyncAfterCommit("stop", member, group, savedPomodoro);
 
         return savedPomodoro;
+    }
+
+    @Transactional
+    public void stopForEmptyRoom(String groupCode) {
+        Group group = groupService.findGroupByCodeForUpdate(groupCode);
+        pomodoroRepository.findByGroup(group).ifPresent(pomodoro -> {
+            if (pomodoro.getStatus() == PomodoroStatus.IDLE) {
+                return;
+            }
+
+            pomodoro.stop();
+            pomodoroRepository.save(pomodoro);
+        });
     }
 
     private Pomodoro findByGroup(Group group) {
