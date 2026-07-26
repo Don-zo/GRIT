@@ -3,6 +3,7 @@ package grit.domain.group.livekit.controller;
 import grit.domain.auth.infrastructure.jwt.MemberPrincipal;
 import grit.domain.group.livekit.constraint.ReactionEmoji;
 import grit.domain.group.livekit.dto.LiveKitReactionRequestDto;
+import grit.domain.group.livekit.dto.OtherRoomParticipationResponseDto;
 import grit.domain.group.livekit.dto.SupportReactionsResponseDto;
 import grit.domain.group.livekit.service.LiveKitService;
 import grit.domain.member.entity.Member;
@@ -52,6 +53,24 @@ public class LiveKitController {
         Member member = memberService.findMemberById(memberPrincipal.id());
         AccessToken token = liveKitService.generateToken(member, groupCode);
         return ResponseEntity.ok(Map.of("token", token.toJwt()));
+    }
+
+    @Operation(
+            summary = "다른 LiveKit 방 참여 여부 조회",
+            description = "현재 그룹 방을 제외한 다른 그룹 방에 참여 중인지 true/false로 반환합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "그룹 멤버가 아님")
+    })
+    @GetMapping("/other-room")
+    public ResponseEntity<OtherRoomParticipationResponseDto> isParticipatingInOtherRoom(
+            @AuthenticationPrincipal MemberPrincipal memberPrincipal,
+            @PathVariable String groupCode) {
+
+        Member member = memberService.findMemberById(memberPrincipal.id());
+        boolean isInOtherRoom = liveKitService.isParticipatingInOtherRoom(member, groupCode);
+        return ResponseEntity.ok(new OtherRoomParticipationResponseDto(isInOtherRoom));
     }
 
     @GetMapping("/reactions")
