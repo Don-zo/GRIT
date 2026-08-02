@@ -1,0 +1,143 @@
+name: grit
+
+services:
+  postgres:
+    image: postgres:18.1
+    container_name: grit-postgres
+    restart: unless-stopped
+    shm_size: 256m
+    mem_limit: 768m
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: Asia/Seoul
+    command:
+      - postgres
+      - -c
+      - max_connections=60
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=512MB
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - wal_compression=on
+    volumes:
+      - /volume1/docker/grit/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - app
+
+  redis:
+    image: redis:8.4.0
+    container_name: grit-redis
+    restart: unless-stopped
+    mem_limit: 256m
+    command:
+      - redis-server
+      - --appendonly
+      - "no"
+      - --maxmemory
+      - 192mb
+      - --maxmemory-policy
+      - noeviction
+    ports:
+      - "127.0.0.1:16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app
+
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/don-zo/grit-backend:dev-backend}
+    container_name: grit-backend
+    restart: unless-stopped
+    init: true
+    mem_limit: 1024m
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+UseG1GC
+      DB_HOST: postgres:5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LIVEKIT_URL: ${LIVEKIT_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
+      AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-3600000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-2592000000}
+      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-http://host.docker.internal:4318/v1/traces}
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: 0.1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:18080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    networks:
+      - app
+
+  livekit:
+    image: livekit/livekit-server:v1.13.1
+    container_name: grit-livekit
+    restart: unless-stopped
+    init: true
+    mem_limit: 1536m
+    network_mode: host
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+      REDIS_HOST: 127.0.0.1:16379
+      LIVEKIT_CONFIG: |
+        port: 17880
+        rtc:
+          tcp_port: 7881
+          port_range_start: 50000
+          port_range_end: 60000
+          use_external_ip: true
+        room:
+          empty_timeout: 300
+          departure_timeout: 20
+          max_participants: 6
+        webhook:
+          api_key: ${LIVEKIT_API_KEY}
+          urls:
+            - http://127.0.0.1:18080/api/livekit/webhook
+        logging:
+          level: info
+          json: true
+    depends_on:
+      redis:
+        condition: service_healthy
+
+networks:
+  app:
+    name: grit-app

@@ -2,15 +2,28 @@ name: Backend Production CI/CD
 
 on:
   push:
-    branches: [ "main", "dev/backend" ]
+    branches:
+      - dev/backend
+
+concurrency:
+  group: backend-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/don-zo/grit-backend
 
 jobs:
-  # [CI] GitHub Runner에서 빌드 + 아티팩트 생성
   ci:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./backend/grit
+        working-directory: backend/grit
+    outputs:
+      image: ${{ steps.image.outputs.ref }}
 
     steps:
       - uses: actions/checkout@v4
@@ -18,64 +31,113 @@ jobs:
       - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
-          distribution: 'temurin'
-          cache: 'gradle'
+          java-version: "25"
+          distribution: temurin
+          cache: gradle
 
-      - name: Build with Gradle
+      - name: Test
         run: |
           chmod +x gradlew
-          ./gradlew clean build -x test
+          ./gradlew clean test --no-daemon
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          name: app-build
-          path: |
-            backend/grit/build/libs/*.jar
-            !backend/grit/build/libs/*-plain.jar
-          retention-days: 1
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-  # [CD] 실제 서버 배포 (Self-hosted) - 임시
+      - name: Set immutable image reference
+        id: image
+        run: echo "ref=${IMAGE_NAME}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+        working-directory: .
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend/grit
+          file: backend/grit/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.image.outputs.ref }}
+            ${{ env.IMAGE_NAME }}:dev-backend
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   cd:
     needs: ci
-    runs-on: self-hosted
+    runs-on: grit-prod
+    permissions:
+      contents: read
+      packages: read
+
     steps:
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          name: app-build
-          path: ./temp_artifact
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy
+      - name: Install deployment definition
+        shell: bash
         run: |
-          # 1. 경로 및 변수 설정
-          TARGET=$HOME/GRIT/backend
-          JAR_NAME=grit-app.jar
-          mkdir -p $TARGET
-
-          # 2. 기존 프로세스 종료
-          PID=$(pgrep -f "java.*$JAR_NAME") || true
-          if [ -n "$PID" ]; then
-            kill -15 $PID
-            sleep 10
-            kill -9 $PID 2>/dev/null || true
+          set -Eeuo pipefail
+          target=/volume1/docker/grit
+          test -f "$target/.env" || {
+            echo "Missing $target/.env; run deploy/nas/init-env.sh on the NAS first." >&2
+            exit 1
+          }
+          if grep -Eq '(^|=)change-me($|\.)' "$target/.env"; then
+            echo "Replace every change-me value in $target/.env before deployment." >&2
+            exit 1
           fi
+          cp deploy/nas/compose.yaml "$target/compose.yaml"
+          cp deploy/nas/migrate-postgres.sh "$target/migrate-postgres.sh"
+          chmod 755 "$target/migrate-postgres.sh"
 
-          # 3. 새 Jar 파일 이동
-          if [ -d "./temp_artifact" ]; then
-            find ./temp_artifact -name "*.jar" -exec mv {} $TARGET/$JAR_NAME \;
-            rm -rf ./temp_artifact
-          else
-            echo "Error: Artifact not found"
+      - name: Deploy exact commit image
+        shell: bash
+        env:
+          BACKEND_IMAGE: ${{ needs.ci.outputs.image }}
+        run: |
+          set -Eeuo pipefail
+          target=/volume1/docker/grit
+          candidate="$target/release.env.candidate"
+          current="$target/release.env"
+
+          printf 'BACKEND_IMAGE=%s\n' "$BACKEND_IMAGE" > "$candidate"
+          chmod 600 "$candidate"
+
+          compose_candidate=(
+            docker compose
+            --project-name grit
+            --env-file "$target/.env"
+            --env-file "$candidate"
+            -f "$target/compose.yaml"
+          )
+
+          "${compose_candidate[@]}" config --quiet
+          "${compose_candidate[@]}" pull backend
+
+          if ! "${compose_candidate[@]}" up -d --wait --wait-timeout 180; then
+            echo "Deployment failed; restoring the previously recorded backend image." >&2
+            if [[ -f "$current" ]]; then
+              docker compose \
+                --project-name grit \
+                --env-file "$target/.env" \
+                --env-file "$current" \
+                -f "$target/compose.yaml" \
+                up -d --wait --wait-timeout 180 backend
+            fi
+            rm -f "$candidate"
             exit 1
           fi
 
-          # 4. 백그라운드 실행
-          cd $TARGET
-          if [ -f .env ]; then
-            set -a; source .env; set +a
-          fi
-          chmod +x $JAR_NAME
-          export RUNNER_TRACKING_ID=""
-          nohup java -jar $JAR_NAME --spring.profiles.active=prod > app.log 2>&1 &
+          mv "$candidate" "$current"
