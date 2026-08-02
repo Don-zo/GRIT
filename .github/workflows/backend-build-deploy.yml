@@ -100,7 +100,6 @@ jobs:
           fi
           cp deploy/nas/compose.yaml "$target/compose.yaml"
           cp deploy/nas/migrate-postgres.sh "$target/migrate-postgres.sh"
-          chmod 755 "$target/migrate-postgres.sh"
 
       - name: Deploy exact commit image
         shell: bash
