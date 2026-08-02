@@ -60,7 +60,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/google", "/api/auth/refresh", "/error").permitAll()
                         .requestMatchers("/api/livekit/webhook").permitAll()
-                        .requestMatchers("/actuator", "/actuator/prometheus").permitAll()
+                        .requestMatchers(
+                                "/actuator",
+                                "/actuator/health",
+                                "/actuator/health/**",
+                                "/actuator/prometheus"
+                        ).permitAll()
                         .requestMatchers("/", "/**/*.html", "/**/*.css", "/**/*.js").permitAll()
                         .anyRequest().authenticated()
                 )
