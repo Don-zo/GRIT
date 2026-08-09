@@ -47,16 +47,15 @@ const AchievementCard: React.FC = () => {
     })) ?? EMPTY_WEEKLY_DATA;
 
   return (
-    <div className="w-full lg:w-1/2 h-64 bg-[#2E3039] rounded-2xl p-6 select-none">
-      {/* 오늘의 달성도 섹션 */}
+    <div className="flex min-h-64 w-full flex-col self-stretch rounded-2xl bg-[#2E3039] p-6 select-none lg:w-1/2">
       <div className="mb-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-green-normal" strokeWidth={2} />
-            <span className="text-white text-bodyLg">오늘의 달성도</span>
+            <Trophy className="h-6 w-6 text-green-normal" strokeWidth={2} />
+            <span className="text-bodyLg text-white">오늘의 달성도</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-white text-bodyLg">
+            <span className="text-bodyLg text-white">
               {resolvedTodayProgress}%
             </span>
             <button
@@ -66,39 +65,43 @@ const AchievementCard: React.FC = () => {
               className="shrink-0"
             >
               <Settings
-                className="w-4 h-4 text-white cursor-pointer"
+                className="h-4 w-4 cursor-pointer text-white"
                 strokeWidth={2}
               />
             </button>
           </div>
         </div>
-        <div className="w-full h-4 bg-gray-semidark rounded-full overflow-hidden">
+        <div className="h-4 w-full overflow-hidden rounded-full bg-gray-semidark">
           <div
-            className="h-full bg-green-normal rounded-full transition-all duration-600"
+            className="h-full rounded-full bg-green-normal transition-all duration-600"
             style={{ width: `${resolvedTodayProgress}%` }}
           />
         </div>
       </div>
 
-      {/* 이번 주 기록 섹션 */}
-      <div>
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-white text-bodyMd">이번 주 기록</h3>
-          {isLoading && <span className="text-caption text-gray-light">로딩 중…</span>}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="mb-2 mt-2 flex items-center justify-between">
+          <h3 className="text-bodyMd text-white">이번 주 기록</h3>
+          {isLoading && (
+            <span className="text-caption text-gray-light">로딩 중…</span>
+          )}
           {isError && !isLoading && (
             <span className="text-caption text-red-300">조회 실패</span>
           )}
         </div>
-        <div className="flex items-end gap-2">
+        <div className="flex min-h-0 flex-1 items-center gap-2 py-3">
           {resolvedWeeklyData.map((item, index) => (
-            <div key={index} className="flex-1 flex flex-col items-center gap-2">
-              <div className="w-5 h-16 bg-gray-semidark rounded-full overflow-hidden relative flex flex-col justify-end">
+            <div
+              key={index}
+              className="flex h-full max-h-36 min-h-0 flex-1 flex-col items-center gap-2"
+            >
+              <div className="relative flex min-h-20 w-5 flex-1 flex-col justify-end overflow-hidden rounded-full bg-gray-semidark">
                 <div
-                  className="w-full bg-green-normal rounded-full transition-all duration-600"
+                  className="w-full rounded-full bg-green-normal transition-all duration-600"
                   style={{ height: `${item.progress}%` }}
                 />
               </div>
-              <span className="text-white text-bodySm">{item.day}</span>
+              <span className="shrink-0 text-bodySm text-white">{item.day}</span>
             </div>
           ))}
         </div>
