@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
+import { useState } from "react";
 import LiveBadge from "./LiveBadge";
 import GroupCodeBadge from "./GroupCodeBadge";
 import GroupSettingsModal from "@/pages/Home/components/Modals/GroupSettingsModal";
@@ -9,7 +8,10 @@ import type { Group } from "@/apis/domains/group/type";
 import { studyTimeApi } from "@/apis/domains/studyTime/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
-type GroupCardProps = Group;
+type GroupCardProps = Group & {
+  onRequestEnter: (groupCode: string) => void;
+  isEntryPending?: boolean;
+};
 
 export default function GroupCard({
   groupCode,
@@ -18,18 +20,11 @@ export default function GroupCard({
   memberCount,
   isLive,
   liveParticipantCount,
+  onRequestEnter,
+  isEntryPending = false,
 }: GroupCardProps) {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const handleGoToRoom = () => {
-    void queryClient.prefetchQuery({
-      queryKey: QUERY_KEYS.studyTime.me,
-      queryFn: studyTimeApi.get,
-      staleTime: 5000,
-    });
-    navigate(`/room/${groupCode}`);
-  };
 
   const prefetchStudyTime = () => {
     void queryClient.prefetchQuery({
@@ -37,6 +32,12 @@ export default function GroupCard({
       queryFn: studyTimeApi.get,
       staleTime: 5000,
     });
+  };
+
+  const handleGoToRoom = () => {
+    if (isEntryPending) return;
+    prefetchStudyTime();
+    onRequestEnter(groupCode);
   };
 
   return (

@@ -1,6 +1,7 @@
 import apiClient from "@/apis/client/apiClient";
 import type {
   TokenResponse,
+  OtherRoomResponse,
   Reaction,
   SendReactionRequest,
 } from "@/apis/domains/livekit/type";
@@ -11,6 +12,15 @@ export const getLiveKitToken = async (groupCode: string): Promise<string> => {
     ENDPOINTS.LIVEKIT.TOKEN(groupCode),
   );
   return response.data.token;
+};
+
+export const checkIsInOtherRoom = async (
+  groupCode: string,
+): Promise<boolean> => {
+  const response = await apiClient.get<OtherRoomResponse>(
+    ENDPOINTS.LIVEKIT.OTHER_ROOM(groupCode),
+  );
+  return response.data.isInOtherRoom;
 };
 
 export const getReactions = async (groupCode: string): Promise<Reaction[]> => {
