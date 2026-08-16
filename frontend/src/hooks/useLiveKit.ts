@@ -177,10 +177,12 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
         .on(RoomEvent.LocalTrackPublished, () => {
           setLocalParticipant(newRoom.localParticipant);
           syncLocalMediaState(newRoom.localParticipant);
+          updateParticipant(newRoom.localParticipant);
         })
         .on(RoomEvent.LocalTrackUnpublished, () => {
           setLocalParticipant(newRoom.localParticipant);
           syncLocalMediaState(newRoom.localParticipant);
+          updateParticipant(newRoom.localParticipant);
         });
     },
     [syncLocalMediaState, updateParticipant],
@@ -217,10 +219,6 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
       roomRef.current = newRoom;
       pendingRoomRef.current = null;
       setLocalParticipant(newRoom.localParticipant);
-      syncLocalMediaState(newRoom.localParticipant);
-
-      await newRoom.localParticipant.setCameraEnabled(true);
-      await newRoom.localParticipant.setMicrophoneEnabled(true);
       syncLocalMediaState(newRoom.localParticipant);
 
       newRoom.remoteParticipants.forEach((participant) => {
