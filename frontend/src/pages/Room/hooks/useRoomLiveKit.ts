@@ -16,6 +16,7 @@ export function useRoomLiveKit(
     participants: remoteParticipants,
     room,
     error,
+    isConnected,
     isMicrophoneEnabled,
     isCameraEnabled,
     isMediaTogglePending,
@@ -55,6 +56,7 @@ export function useRoomLiveKit(
 
   return {
     remoteParticipants,
+    isConnected,
     isMicrophoneEnabled,
     isCameraEnabled,
     isMediaTogglePending,

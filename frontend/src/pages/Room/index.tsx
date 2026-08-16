@@ -6,6 +6,7 @@ import CamLayout from "@/pages/Room/components/Cam/CamLayout";
 import TodoCamCard from "@/pages/Room/components/todo/TodoCamCard";
 import ReactionFloater from "@/pages/Room/components/ReactionFloater";
 import RoomPomodoro from "@/pages/Room/components/RoomPomodoro";
+import Modal from "@/components/Modal";
 import {
   useRoomLiveKit,
   useRoomLiveKitData,
@@ -21,6 +22,7 @@ const RoomPage = () => {
 
   const {
     remoteParticipants,
+    isConnected,
     isMicrophoneEnabled,
     isCameraEnabled,
     isMediaTogglePending,
@@ -36,6 +38,17 @@ const RoomPage = () => {
 
   return (
     <div className="relative flex flex-col w-full h-screen bg-gray-darkest">
+      <Modal isOpen={!isConnected} onClose={handleLeaveRoom}>
+        <Modal.Overlay />
+        <Modal.Content className="flex flex-col items-center justify-center gap-4 py-16">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-[var(--color-green-semidark)] border-r-transparent" />
+          <div className="text-lg font-bold text-white">
+            방에 연결하는 중이에요
+          </div>
+          <div className="text-sm text-[#6b8a7a]">잠시만 기다려주세요</div>
+        </Modal.Content>
+      </Modal>
+
       <TopBar
         isTodoOpen={todoOpen}
         onToggleTodo={() => setTodoOpen((prev) => !prev)}
