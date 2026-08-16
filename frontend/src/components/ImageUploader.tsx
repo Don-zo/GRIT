@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
+import { compressImage } from "../utils/imageCompression";
 
 type ImageUploaderProps = {
   size?: number;
@@ -35,16 +36,17 @@ export function ImageUploader({
     fileInputRef.current?.click();
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      onImageChange?.(file);
+      const compressedFile = await compressImage(file);
+      onImageChange?.(compressedFile);
 
       if (previewImage && previewImage.startsWith("blob:")) {
         URL.revokeObjectURL(previewImage);
       }
 
-      const objectUrl = URL.createObjectURL(file);
+      const objectUrl = URL.createObjectURL(compressedFile);
       setPreviewImage(objectUrl);
     }
   };
