@@ -7,7 +7,7 @@ export interface UseLiveKitProps {
   onDataReceived?: (
     payload: Uint8Array,
     participant: RemoteParticipant | undefined,
-    kind: DataPacket_Kind,
+    kind: DataPacket_Kind | undefined,
     topic: string | undefined,
   ) => void;
 }
