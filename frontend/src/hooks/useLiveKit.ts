@@ -34,7 +34,11 @@ const getParticipantImageUrl = (metadata?: string): string | null => {
   }
 };
 
-export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps) => {
+export const useLiveKit = ({
+  serverUrl,
+  token,
+  onDataReceived,
+}: UseLiveKitProps) => {
   const [room, setRoom] = useState<Room | null>(null);
   const [participants, setParticipants] = useState<
     Map<string, ParticipantData>
@@ -56,16 +60,19 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
     onDataReceivedRef.current = onDataReceived;
   }, [onDataReceived]);
 
-  const syncLocalMediaState = useCallback((participant?: LocalParticipant | null) => {
-    if (!participant) {
-      setIsMicrophoneEnabled(false);
-      setIsCameraEnabled(false);
-      return;
-    }
+  const syncLocalMediaState = useCallback(
+    (participant?: LocalParticipant | null) => {
+      if (!participant) {
+        setIsMicrophoneEnabled(false);
+        setIsCameraEnabled(false);
+        return;
+      }
 
-    setIsMicrophoneEnabled(participant.isMicrophoneEnabled);
-    setIsCameraEnabled(participant.isCameraEnabled);
-  }, []);
+      setIsMicrophoneEnabled(participant.isMicrophoneEnabled);
+      setIsCameraEnabled(participant.isCameraEnabled);
+    },
+    [],
+  );
 
   const setMediaTogglePending = useCallback((pending: boolean) => {
     isMediaTogglePendingRef.current = pending;
@@ -101,6 +108,15 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
     [],
   );
 
+  const syncLocalParticipant = useCallback(
+    (participant: LocalParticipant) => {
+      setLocalParticipant(participant);
+      syncLocalMediaState(participant);
+      updateParticipant(participant);
+    },
+    [syncLocalMediaState, updateParticipant],
+  );
+
   const setupRoomListeners = useCallback(
     (newRoom: Room) => {
       newRoom
@@ -109,8 +125,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
         })
         .on(RoomEvent.Connected, () => {
           setIsConnected(true);
-          setLocalParticipant(newRoom.localParticipant);
-          syncLocalMediaState(newRoom.localParticipant);
+          syncLocalParticipant(newRoom.localParticipant);
         })
         .on(RoomEvent.Disconnected, () => {
           setIsConnected(false);
@@ -135,7 +150,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
         .on(
           RoomEvent.TrackSubscribed,
           (
-            track: RemoteTrack,
+            _track: RemoteTrack,
             _publication: RemoteTrackPublication,
             participant: RemoteParticipant,
           ) => {
@@ -145,7 +160,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
         .on(
           RoomEvent.TrackUnsubscribed,
           (
-            track: RemoteTrack,
+            _track: RemoteTrack,
             _publication: RemoteTrackPublication,
             participant: RemoteParticipant,
           ) => {
@@ -175,17 +190,13 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
           },
         )
         .on(RoomEvent.LocalTrackPublished, () => {
-          setLocalParticipant(newRoom.localParticipant);
-          syncLocalMediaState(newRoom.localParticipant);
-          updateParticipant(newRoom.localParticipant);
+          syncLocalParticipant(newRoom.localParticipant);
         })
         .on(RoomEvent.LocalTrackUnpublished, () => {
-          setLocalParticipant(newRoom.localParticipant);
-          syncLocalMediaState(newRoom.localParticipant);
-          updateParticipant(newRoom.localParticipant);
+          syncLocalParticipant(newRoom.localParticipant);
         });
     },
-    [syncLocalMediaState, updateParticipant],
+    [syncLocalParticipant, syncLocalMediaState, updateParticipant],
   );
 
   // LiveKit Room 연결
@@ -218,8 +229,6 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
       setRoom(newRoom);
       roomRef.current = newRoom;
       pendingRoomRef.current = null;
-      setLocalParticipant(newRoom.localParticipant);
-      syncLocalMediaState(newRoom.localParticipant);
 
       newRoom.remoteParticipants.forEach((participant) => {
         updateParticipant(participant);
@@ -228,7 +237,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
       console.error("LiveKit 연결 실패:", err);
       setError(err as Error);
     }
-  }, [serverUrl, token, setupRoomListeners, syncLocalMediaState, updateParticipant]);
+  }, [serverUrl, token, setupRoomListeners, updateParticipant]);
 
   // 마이크 토글
   const toggleMicrophone = useCallback(async () => {
