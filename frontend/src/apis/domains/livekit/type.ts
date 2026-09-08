@@ -4,6 +4,10 @@ export interface TokenResponse {
   token: string;
 }
 
+export interface OtherRoomResponse {
+  isInOtherRoom: boolean;
+}
+
 export interface Reaction {
   name: string;
   emoji: string;
