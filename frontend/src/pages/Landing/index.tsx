@@ -3,59 +3,57 @@ import HeroSection from "@/pages/Landing/components/HeroSection/HeroSection";
 import IntroductionSection from "@/pages/Landing/components/IntroductionSection/IntroductionSection";
 import { Header } from "@/components/Header";
 
+const SCROLL_LOCK_MS = 700;
+
 const LandingPage = () => {
-  const sectionsRef = useRef<(HTMLElement | null)[]>([]);
-  const currentIndexRef = useRef(0);
-  const isScrollingRef = useRef(false);
+  const isAnimatingRef = useRef(false);
 
   useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (isScrollingRef.current) {
-        e.preventDefault();
-        return;
-      }
+    const handleWheel = (event: WheelEvent) => {
+      if (event.deltaY === 0 || isAnimatingRef.current) return;
 
-      const delta = e.deltaY;
-      const total = sectionsRef.current.length;
-      let nextIndex = currentIndexRef.current;
+      const sections = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-landing-section]"),
+      );
+      if (sections.length === 0) return;
 
-      if (delta > 0 && nextIndex < total - 1) nextIndex++;
-      else if (delta < 0 && nextIndex > 0) nextIndex--;
+      const offsets = sections.map((section) => section.offsetTop);
+      const currentScroll = window.scrollY;
 
-      if (nextIndex !== currentIndexRef.current) {
-        e.preventDefault();
-        currentIndexRef.current = nextIndex;
-        isScrollingRef.current = true;
+      // 히어로 섹션(첫 스냅 지점 이전)에서는 자유 스크롤만 허용한다.
+      if (currentScroll < offsets[0] - 1) return;
 
-        sectionsRef.current[nextIndex]?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
+      const currentIndex = offsets.reduce(
+        (closestIndex, offset, index) => (offset <= currentScroll + 1 ? index : closestIndex),
+        0,
+      );
 
-        setTimeout(() => {
-          isScrollingRef.current = false;
-        }, 1000);
-      }
+      const direction = event.deltaY > 0 ? 1 : -1;
+      const nextIndex = currentIndex + direction;
+
+      if (nextIndex < 0) return;
+
+      event.preventDefault();
+      if (nextIndex > offsets.length - 1 || offsets[nextIndex] === currentScroll) return;
+
+      isAnimatingRef.current = true;
+      window.scrollTo({ top: offsets[nextIndex], behavior: "smooth" });
+      window.setTimeout(() => {
+        isAnimatingRef.current = false;
+      }, SCROLL_LOCK_MS);
     };
 
     window.addEventListener("wheel", handleWheel, { passive: false });
-
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-    };
+    return () => window.removeEventListener("wheel", handleWheel);
   }, []);
 
   return (
     <>
-      <Header variant="light" />
-      <section
-        ref={(el) => {
-          sectionsRef.current[0] = el;
-        }}
-      >
+      <Header variant="light" alwaysVisible />
+      <div className="landing-page-background">
         <HeroSection />
-      </section>
-      <IntroductionSection sectionsRef={sectionsRef} startIndex={1} />
+        <IntroductionSection />
+      </div>
     </>
   );
 };

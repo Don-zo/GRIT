@@ -56,16 +56,18 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
 
   const styles = {
     light: {
-      bg: "bg-[#e7ecea]",
+      bg: "bg-[#eef0ee]/75 backdrop-blur-md",
       text: "text-green-semidark/80",
       userInfo: "text-gray-700",
       button: "bg-green-semidark/80 hover:bg-green-semidark",
+      icon: "text-gray-700",
     },
     dark: {
       bg: "bg-[#2B2F36]",
       text: "text-[#3E7358]",
       userInfo: "text-gray-300",
       button: "bg-[#3E7358] hover:bg-emerald-800",
+      icon: "text-gray-50",
     },
   };
 
@@ -103,7 +105,7 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
       }`}
     >
       <div className="mx-auto flex w-full items-center justify-between">
-        <h1 className="text-3xl font-extrabold">
+        <h1 className="text-4xl font-extrabold tracking-wide">
           <Link
             to={PATHS.HOME}
             className={`${currentStyle.text} cursor-pointer`}
@@ -128,9 +130,9 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
                   }`}
                 >
                   {isDropDownOpen ? (
-                    <ChevronUp size={18} className="text-gray-50" />
+                    <ChevronUp size={18} className={currentStyle.icon} />
                   ) : (
-                    <ChevronDown size={18} className="text-gray-50" />
+                    <ChevronDown size={18} className={currentStyle.icon} />
                   )}
                 </button>
 
@@ -157,9 +159,9 @@ export function Header({ variant, alwaysVisible = false }: HeaderProps) {
           ) : (
             <button
               onClick={() => navigate(PATHS.SIGNUP)}
-              className="px-6 py-2 rounded-lg bg-green-semidark/80 text-white text-sm shadow-md hover:bg-green-semidark transition cursor-pointer"
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-green-semidark/80 px-6 text-sm text-white shadow-md transition hover:bg-green-semidark cursor-pointer"
             >
-              GRIT 시작하기
+              시작하기
             </button>
           )}
         </div>
