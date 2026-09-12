@@ -5,7 +5,6 @@
 
 html {
   scrollbar-gutter: stable;
-  scroll-snap-type: y proximity;
 }
 
 html,
@@ -39,15 +38,15 @@ body {
 }
 
 .hero-fade-in-delay-2 {
-  animation-delay: 180ms;
+  animation-delay: 900ms;
 }
 
 .hero-fade-in-delay-3 {
-  animation-delay: 260ms;
+  animation-delay: 1050ms;
 }
 
 .hero-window-enter {
-  animation-delay: 360ms;
+  animation-delay: 1200ms;
 }
 
 @keyframes landing-fade-up {
