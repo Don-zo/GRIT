@@ -105,24 +105,46 @@ export const useLiveKit = ({
         Track.Source.Microphone,
       );
 
-      const participantData: ParticipantData = {
-        identity: participant.identity,
-        name: participant.name || participant.identity,
-        imageUrl: getParticipantImageUrl(participant.metadata),
-        videoTrack: videoPublication?.track,
-        audioTrack: audioPublication?.track,
-        isMuted: audioPublication?.isMuted ?? true,
-        isVideoEnabled: !(videoPublication?.isMuted ?? true),
-      };
-
       setParticipants((prev) => {
         const next = new Map(prev);
+        const participantData: ParticipantData = {
+          identity: participant.identity,
+          name: participant.name || participant.identity,
+          imageUrl: getParticipantImageUrl(participant.metadata),
+          videoTrack: videoPublication?.track,
+          audioTrack: audioPublication?.track,
+          isMuted: audioPublication?.isMuted ?? true,
+          isVideoEnabled: !(videoPublication?.isMuted ?? true),
+          isSpeaking: prev.get(participant.identity)?.isSpeaking ?? false,
+        };
         next.set(participant.identity, participantData);
         return next;
       });
     },
     [],
   );
+
+  // 발화 중인 참가자 실시간 반영 (LiveKit ActiveSpeakersChanged)
+  const updateActiveSpeakers = useCallback((speakers: Participant[]) => {
+    const speakingIdentities = new Set(
+      speakers.map((speaker) => speaker.identity),
+    );
+
+    setParticipants((prev) => {
+      let hasChanged = false;
+      const next = new Map(prev);
+
+      next.forEach((data, identity) => {
+        const isSpeaking = speakingIdentities.has(identity);
+        if (data.isSpeaking !== isSpeaking) {
+          next.set(identity, { ...data, isSpeaking });
+          hasChanged = true;
+        }
+      });
+
+      return hasChanged ? next : prev;
+    });
+  }, []);
 
   const syncLocalParticipant = useCallback(
     (participant: LocalParticipant) => {
@@ -210,9 +232,15 @@ export const useLiveKit = ({
         })
         .on(RoomEvent.LocalTrackUnpublished, () => {
           syncLocalParticipant(newRoom.localParticipant);
-        });
+        })
+        .on(RoomEvent.ActiveSpeakersChanged, updateActiveSpeakers);
     },
-    [syncLocalParticipant, syncLocalMediaState, updateParticipant],
+    [
+      syncLocalParticipant,
+      syncLocalMediaState,
+      updateParticipant,
+      updateActiveSpeakers,
+    ],
   );
 
   // LiveKit Room 연결

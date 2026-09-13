@@ -55,6 +55,7 @@ export function useRoomParticipants(
           id: participant.identity,
           name: participant.name,
           isMuted: participant.isMuted,
+          isSpeaking: participant.isSpeaking,
           profileImageUrl,
           video: hasVideo ? (
             <VideoTile
