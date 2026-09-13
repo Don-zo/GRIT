@@ -61,7 +61,7 @@ export default function DayTodoScrollList({ children }: DayTodoScrollListProps) 
     <div className="relative flex min-h-0 flex-1 flex-col">
       <ul
         ref={listRef}
-        className="relative z-[1] flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain list-none px-2 pt-2 pb-4 [scrollbar-gutter:stable]"
+        className="relative z-[1] flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain list-none px-2 pt-2 pb-4 [scrollbar-gutter:stable_both-edges]"
       >
         {children}
       </ul>

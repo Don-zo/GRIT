@@ -648,9 +648,6 @@ export default function TagPicker({
               <X className="h-3 w-3" strokeWidth={2} />
             </button>
           </span>
-        ) : null}
-        {triggerSelected ? (
-          <span className="min-h-6 min-w-2 flex-1" aria-hidden />
         ) : (
           <>
             <span className={tagPickerTriggerPlaceholderClass}>

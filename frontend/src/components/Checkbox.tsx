@@ -56,7 +56,7 @@ export default function CustomCheckbox({
       {/* 라벨 */}
       {label && (
         <span
-          className="transition-all duration-200 ease-out text-bodyMd text-gray-darkest"
+          className="text-left transition-all duration-200 ease-out text-bodyMd text-gray-darkest"
           style={{
             fontFamily:
               '"Pretendard Variable", Pretendard, -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',

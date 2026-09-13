@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import CircularProgress from "./CircularProgress";
 import CustomCheckbox from "@/components/Checkbox";
-import { ChevronsDown, ChevronsUp } from "lucide-react";
+import { ChevronsDown, ChevronsUp, Pencil, Plus, Trash2 } from "lucide-react";
 import type { TodoItem } from "@/types/todo";
 
 interface TodoListProps {
@@ -11,6 +11,15 @@ interface TodoListProps {
   doneCount: number;
   canToggle?: boolean;
   onToggleItem?: (id: number, nextDone: boolean) => void;
+  canAdd?: boolean;
+  onStartAdd?: () => void;
+  addRow?: ReactNode;
+  /** 항목별 배지 텍스트(더미). day 뷰: 카테고리명, category 뷰: D-day */
+  badgeText?: string;
+  editingItemId?: number | null;
+  editRow?: ReactNode;
+  onEditItem?: (id: number) => void;
+  onDeleteItem?: (id: number) => void;
 }
 
 export default function TodoList({
@@ -20,6 +29,14 @@ export default function TodoList({
   doneCount,
   canToggle = false,
   onToggleItem,
+  canAdd = false,
+  onStartAdd,
+  addRow,
+  badgeText,
+  editingItemId,
+  editRow,
+  onEditItem,
+  onDeleteItem,
 }: TodoListProps) {
   const [open, setOpen] = useState(false);
 
@@ -42,6 +59,13 @@ export default function TodoList({
     setOpen((prev) => !prev);
   };
 
+  const hasAddRow = Boolean(addRow);
+  const isEditingHere = items.some((item) => item.id === editingItemId);
+  useEffect(() => {
+    if (!open || !contentRef.current) return;
+    setMaxHeight(contentRef.current.scrollHeight);
+  }, [open, hasAddRow, items.length, isEditingHere]);
+
   return (
     <div className="flex flex-col w-full mb-4">
       <div className="flex justify-between w-full h-20 gap-4 p-4 bg-gray-normal rounded-xl">
@@ -60,7 +84,7 @@ export default function TodoList({
         <button
           onClick={handleToggle}
           className="
-            bg-[#A2ADA9] h-7 w-7 rounded-[10px] p-1 text-white 
+            bg-[#A2ADA9] h-7 w-7 rounded-[10px] p-1 text-white
             flex items-center justify-center self-end transition-all
           "
         >
@@ -90,22 +114,73 @@ export default function TodoList({
             ${open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"}
           `}
         >
-          {items.map((item) => (
-            <div key={item.id} className="px-3 py-2 bg-gray-normal rounded-xl">
-              <CustomCheckbox
-                checked={item.done}
-                onChange={(nextDone) => handleToggleItem(item.id, nextDone)}
-                label={item.label}
-                ariaLabel={
-                  canToggle
-                    ? item.done
-                      ? "완료 해제"
-                      : "완료"
-                    : item.label
-                }
-              />
-            </div>
-          ))}
+          {canAdd &&
+            (addRow ?? (
+              <button
+                type="button"
+                onClick={onStartAdd}
+                aria-label="할 일 추가"
+                className="flex items-center justify-center px-3 py-2 bg-gray-normal rounded-xl text-gray-semidark hover:text-green-dark"
+              >
+                <Plus size={16} strokeWidth={2} />
+              </button>
+            ))}
+          {items.map((item) =>
+            item.id === editingItemId && editRow ? (
+              <div key={item.id}>{editRow}</div>
+            ) : (
+              <div
+                key={item.id}
+                className="group/row flex items-center justify-between gap-2 px-3 py-2 bg-gray-normal rounded-xl"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <CustomCheckbox
+                    checked={item.done}
+                    onChange={(nextDone) =>
+                      handleToggleItem(item.id, nextDone)
+                    }
+                    label={item.label}
+                    ariaLabel={
+                      canToggle
+                        ? item.done
+                          ? "완료 해제"
+                          : "완료"
+                        : item.label
+                    }
+                  />
+                  {canToggle && (onEditItem || onDeleteItem) && (
+                    <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover/row:opacity-100">
+                      {onEditItem && (
+                        <button
+                          type="button"
+                          onClick={() => onEditItem(item.id)}
+                          aria-label="수정"
+                          className="flex items-center justify-center text-gray-semidark hover:text-green-dark"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
+                      {onDeleteItem && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteItem(item.id)}
+                          aria-label="삭제"
+                          className="flex items-center justify-center text-red-400/80 hover:text-red-500"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {badgeText && (
+                  <span className="shrink-0 rounded-full bg-green-normal/15 px-2 py-0.5 text-caption text-green-dark">
+                    {badgeText}
+                  </span>
+                )}
+              </div>
+            ),
+          )}
         </div>
       </div>
     </div>
