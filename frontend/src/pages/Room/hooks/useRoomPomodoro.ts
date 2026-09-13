@@ -1,10 +1,12 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   isLiveKitPomodoroSyncMessage,
   toPomodoroStatusResponse,
 } from "@/apis/domains/livekit/pomodoroSync";
 import type {
+  PomodoroPhase,
   PomodoroStatusResponse,
   StartPomodoroRequest,
 } from "@/apis/domains/pomodoro/type";
@@ -75,6 +77,27 @@ export function useRoomPomodoro(groupCode: string | undefined) {
       groupCode,
       enabled: !!groupCode,
     });
+
+  const previousPhaseRef = useRef<PomodoroPhase>(null);
+
+  useEffect(() => {
+    previousPhaseRef.current = null;
+  }, [groupCode]);
+
+  useEffect(() => {
+    if (!pomodoroStatus) return;
+
+    if (
+      previousPhaseRef.current === "FOCUS" &&
+      pomodoroStatus.phase === "BREAK"
+    ) {
+      toast.success("공부 시간이 끝났어요! 잠시 쉬어가세요.", {
+        duration: 4000,
+      });
+    }
+
+    previousPhaseRef.current = pomodoroStatus.phase;
+  }, [pomodoroStatus]);
 
   const { mutate: startPomodoro, isPending: isStartingPomodoro } =
     useStartPomodoro(groupCode);
