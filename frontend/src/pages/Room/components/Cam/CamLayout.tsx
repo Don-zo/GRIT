@@ -7,6 +7,7 @@ interface Participant {
   id: string;
   name: string;
   isMuted?: boolean;
+  isSpeaking?: boolean;
   onToggleMute?: () => void;
   video?: React.ReactNode; // 실제 비디오 스트림 컴포넌트
   audio?: React.ReactNode;
@@ -81,7 +82,9 @@ export default function CamLayout({ participants, pomodoro }: CamLayoutProps) {
           return (
             <div
               key={box.id}
-              className={`relative rounded-3xl bg-green-dark overflow-hidden ${box.className}`}
+              className={`relative rounded-3xl bg-green-dark overflow-hidden ring-2 transition-colors ${
+                participant.isSpeaking ? "ring-white" : "ring-transparent"
+              } ${box.className}`}
               style={
                 "transform" in box && box.transform
                   ? { transform: box.transform }

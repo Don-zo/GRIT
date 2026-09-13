@@ -20,4 +20,5 @@ export interface ParticipantData {
   audioTrack?: Track | null;
   isMuted: boolean;
   isVideoEnabled: boolean;
+  isSpeaking: boolean;
 }
