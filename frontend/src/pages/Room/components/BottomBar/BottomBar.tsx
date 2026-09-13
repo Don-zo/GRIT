@@ -1,7 +1,8 @@
 import CustomBtn from "@/pages/Room/components/CustomBtn";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Mic, MicOff, Video, VideoOff, Smile, X } from "lucide-react";
 import type { Reaction } from "@/apis/domains/livekit/type";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 import EmojiModal from "./EmojiModal";
 import PomodoroModal from "./PomodoroModal";
 import type {
@@ -51,6 +52,16 @@ export default function BottomBar({
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [pomodoroOpen, setPomodoroOpen] = useState(false);
 
+  const emojiWrapperRef = useRef<HTMLDivElement>(null);
+  const pomodoroWrapperRef = useRef<HTMLDivElement>(null);
+
+  useOutsideClick(emojiWrapperRef, () => setEmojiOpen(false), emojiOpen);
+  useOutsideClick(
+    pomodoroWrapperRef,
+    () => setPomodoroOpen(false),
+    pomodoroOpen,
+  );
+
   const handleMicToggle = () => {
     if (isMediaTogglePending) return;
     void onToggleMic?.();
@@ -94,33 +105,35 @@ export default function BottomBar({
       />
 
       {/* 이모티콘 */}
-      <CustomBtn
-        isToggle
-        isActive={emojiOpen}
-        icon={<Smile />}
-        bgColor="bg-gray-dark"
-        activeBgColor="bg-green-semidark"
-        onClick={() =>
-          setEmojiOpen((prev) => {
-            const next = !prev;
-            if (next) setPomodoroOpen(false);
-            return next;
-          })
-        }
-      />
+      <div className="contents" ref={emojiWrapperRef}>
+        <CustomBtn
+          isToggle
+          isActive={emojiOpen}
+          icon={<Smile />}
+          bgColor="bg-gray-dark"
+          activeBgColor="bg-green-semidark"
+          onClick={() =>
+            setEmojiOpen((prev) => {
+              const next = !prev;
+              if (next) setPomodoroOpen(false);
+              return next;
+            })
+          }
+        />
 
-      {/* 이모지 모달 */}
-      <EmojiModal
-        open={emojiOpen}
-        reactions={reactions}
-        onSelect={(reaction) => {
-          onSendReaction?.(reaction);
-        }}
-        onClose={() => setEmojiOpen(false)}
-      />
+        {/* 이모지 모달 */}
+        <EmojiModal
+          open={emojiOpen}
+          reactions={reactions}
+          onSelect={(reaction) => {
+            onSendReaction?.(reaction);
+          }}
+          onClose={() => setEmojiOpen(false)}
+        />
+      </div>
 
       {/* 뽀모도로 */}
-      <div className="relative">
+      <div className="relative" ref={pomodoroWrapperRef}>
         <CustomBtn
           isToggle
           isActive={pomodoroOpen}
