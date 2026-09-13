@@ -14,8 +14,8 @@ const variantStyles = {
     separator: "text-gray-semidark",
   },
   light: {
-    bg: "bg-[#e7ecea]",
-    brand: "text-[#222222]",
+    bg: "bg-[#eef0ee]",
+    brand: "text-green-semidark/80",
     muted: "text-gray-semidark",
     link: "text-gray-semidark hover:text-[#222222]",
     separator: "text-gray-semidark",

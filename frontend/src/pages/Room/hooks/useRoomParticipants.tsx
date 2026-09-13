@@ -59,12 +59,17 @@ export function useRoomParticipants(
           video: hasVideo ? (
             <VideoTile
               videoTrack={participant.videoTrack ?? undefined}
-              audioTrack={participant.audioTrack ?? undefined}
+              audioTrack={
+                isCurrentParticipant
+                  ? undefined
+                  : (participant.audioTrack ?? undefined)
+              }
             />
           ) : undefined,
-          audio: !hasVideo ? (
-            <VideoTile audioTrack={participant.audioTrack ?? undefined} />
-          ) : undefined,
+          audio:
+            !hasVideo && !isCurrentParticipant ? (
+              <VideoTile audioTrack={participant.audioTrack ?? undefined} />
+            ) : undefined,
         };
       }),
     [currentMember, groupMemberByKey, remoteParticipants],

@@ -6,11 +6,13 @@ import {
   RemoteTrack,
   RemoteParticipant,
   LocalParticipant,
+  LocalVideoTrack,
   RemoteTrackPublication,
   TrackPublication,
   Participant,
 } from "livekit-client";
 import type { UseLiveKitProps, ParticipantData } from "@/types/livekit";
+import { MirrorVideoProcessor } from "@/pages/Room/utils/mirrorVideoProcessor";
 
 const getParticipantImageUrl = (metadata?: string): string | null => {
   if (!metadata) return null;
@@ -34,7 +36,11 @@ const getParticipantImageUrl = (metadata?: string): string | null => {
   }
 };
 
-export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps) => {
+export const useLiveKit = ({
+  serverUrl,
+  token,
+  onDataReceived,
+}: UseLiveKitProps) => {
   const [room, setRoom] = useState<Room | null>(null);
   const [participants, setParticipants] = useState<
     Map<string, ParticipantData>
@@ -56,20 +62,37 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
     onDataReceivedRef.current = onDataReceived;
   }, [onDataReceived]);
 
-  const syncLocalMediaState = useCallback((participant?: LocalParticipant | null) => {
-    if (!participant) {
-      setIsMicrophoneEnabled(false);
-      setIsCameraEnabled(false);
-      return;
-    }
+  const syncLocalMediaState = useCallback(
+    (participant?: LocalParticipant | null) => {
+      if (!participant) {
+        setIsMicrophoneEnabled(false);
+        setIsCameraEnabled(false);
+        return;
+      }
 
-    setIsMicrophoneEnabled(participant.isMicrophoneEnabled);
-    setIsCameraEnabled(participant.isCameraEnabled);
-  }, []);
+      setIsMicrophoneEnabled(participant.isMicrophoneEnabled);
+      setIsCameraEnabled(participant.isCameraEnabled);
+    },
+    [],
+  );
 
   const setMediaTogglePending = useCallback((pending: boolean) => {
     isMediaTogglePendingRef.current = pending;
     setIsMediaTogglePending(pending);
+  }, []);
+
+  // 카메라 트랙을 좌우반전하여 송출 (본인 화면 + 상대방 화면 모두 반전)
+  const applyCameraMirror = useCallback(async (participant: LocalParticipant) => {
+    const cameraTrack = participant.getTrackPublication(Track.Source.Camera)
+      ?.track as LocalVideoTrack | undefined;
+
+    if (cameraTrack && !cameraTrack.getProcessor()) {
+      try {
+        await cameraTrack.setProcessor(new MirrorVideoProcessor());
+      } catch (err) {
+        console.error("카메라 좌우반전 적용 실패:", err);
+      }
+    }
   }, []);
 
   // 참가자 데이터 업데이트
@@ -101,6 +124,15 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
     [],
   );
 
+  const syncLocalParticipant = useCallback(
+    (participant: LocalParticipant) => {
+      setLocalParticipant(participant);
+      syncLocalMediaState(participant);
+      updateParticipant(participant);
+    },
+    [syncLocalMediaState, updateParticipant],
+  );
+
   const setupRoomListeners = useCallback(
     (newRoom: Room) => {
       newRoom
@@ -109,8 +141,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
         })
         .on(RoomEvent.Connected, () => {
           setIsConnected(true);
-          setLocalParticipant(newRoom.localParticipant);
-          syncLocalMediaState(newRoom.localParticipant);
+          syncLocalParticipant(newRoom.localParticipant);
         })
         .on(RoomEvent.Disconnected, () => {
           setIsConnected(false);
@@ -135,7 +166,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
         .on(
           RoomEvent.TrackSubscribed,
           (
-            track: RemoteTrack,
+            _track: RemoteTrack,
             _publication: RemoteTrackPublication,
             participant: RemoteParticipant,
           ) => {
@@ -145,7 +176,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
         .on(
           RoomEvent.TrackUnsubscribed,
           (
-            track: RemoteTrack,
+            _track: RemoteTrack,
             _publication: RemoteTrackPublication,
             participant: RemoteParticipant,
           ) => {
@@ -175,15 +206,13 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
           },
         )
         .on(RoomEvent.LocalTrackPublished, () => {
-          setLocalParticipant(newRoom.localParticipant);
-          syncLocalMediaState(newRoom.localParticipant);
+          syncLocalParticipant(newRoom.localParticipant);
         })
         .on(RoomEvent.LocalTrackUnpublished, () => {
-          setLocalParticipant(newRoom.localParticipant);
-          syncLocalMediaState(newRoom.localParticipant);
+          syncLocalParticipant(newRoom.localParticipant);
         });
     },
-    [syncLocalMediaState, updateParticipant],
+    [syncLocalParticipant, syncLocalMediaState, updateParticipant],
   );
 
   // LiveKit Room 연결
@@ -216,12 +245,6 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
       setRoom(newRoom);
       roomRef.current = newRoom;
       pendingRoomRef.current = null;
-      setLocalParticipant(newRoom.localParticipant);
-      syncLocalMediaState(newRoom.localParticipant);
-
-      await newRoom.localParticipant.setCameraEnabled(true);
-      await newRoom.localParticipant.setMicrophoneEnabled(true);
-      syncLocalMediaState(newRoom.localParticipant);
 
       newRoom.remoteParticipants.forEach((participant) => {
         updateParticipant(participant);
@@ -230,7 +253,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
       console.error("LiveKit 연결 실패:", err);
       setError(err as Error);
     }
-  }, [serverUrl, token, setupRoomListeners, syncLocalMediaState, updateParticipant]);
+  }, [serverUrl, token, setupRoomListeners, updateParticipant]);
 
   // 마이크 토글
   const toggleMicrophone = useCallback(async () => {
@@ -257,7 +280,11 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
     setMediaTogglePending(true);
     try {
       const participant = roomRef.current.localParticipant;
-      await participant.setCameraEnabled(!participant.isCameraEnabled);
+      const nextEnabled = !participant.isCameraEnabled;
+      await participant.setCameraEnabled(nextEnabled);
+      if (nextEnabled) {
+        await applyCameraMirror(participant);
+      }
       syncLocalMediaState(participant);
     } catch (err) {
       console.error("카메라 토글 실패:", err);
@@ -266,7 +293,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
     } finally {
       setMediaTogglePending(false);
     }
-  }, [setMediaTogglePending, syncLocalMediaState]);
+  }, [setMediaTogglePending, syncLocalMediaState, applyCameraMirror]);
 
   // 로컬 비디오/오디오 활성화
   const enableCameraAndMicrophone = useCallback(async () => {
@@ -274,6 +301,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
 
     try {
       await roomRef.current.localParticipant.setCameraEnabled(true);
+      await applyCameraMirror(roomRef.current.localParticipant);
       await roomRef.current.localParticipant.setMicrophoneEnabled(true);
       syncLocalMediaState(roomRef.current.localParticipant);
     } catch (err) {
@@ -281,7 +309,7 @@ export const useLiveKit = ({ serverUrl, token, onDataReceived }: UseLiveKitProps
       setError(err as Error);
       syncLocalMediaState(roomRef.current.localParticipant);
     }
-  }, [syncLocalMediaState]);
+  }, [syncLocalMediaState, applyCameraMirror]);
 
   // 초기 연결
   useEffect(() => {

@@ -4,11 +4,17 @@ import type { MouseEvent } from "react";
 type IntroductionCardProps = {
   functionName: string;
   functionDescription: string;
+  imageSrc?: string | string[];
+  imageClassName?: string;
+  imageBoxClassName?: string;
 };
 
 export default function IntroductionCard({
   functionName,
   functionDescription,
+  imageSrc,
+  imageClassName = "",
+  imageBoxClassName = "h-[280px]",
 }: IntroductionCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -34,7 +40,7 @@ export default function IntroductionCard({
   };
 
   return (
-    <div className="min-h-screen bg-[#e7ecea] flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen flex items-center justify-center px-6 py-12">
       <div
         ref={cardRef}
         onMouseMove={handleMouseMove}
@@ -62,7 +68,32 @@ export default function IntroductionCard({
         </div>
 
         <div className="flex justify-center">
-          <div className="w-full max-w-xl h-[280px] bg-[#d1d5db] rounded-2xl shadow-md flex items-center justify-center text-[#374151] text-base font-medium"></div>
+          <div
+            className={`relative w-full max-w-xl rounded-2xl ${imageBoxClassName} ${Array.isArray(imageSrc) ? "" : "overflow-hidden bg-[#d1d5db] shadow-md"}`}
+          >
+            {Array.isArray(imageSrc) ? (
+              <div className="flex size-full items-center justify-center gap-8">
+                {imageSrc.map((src, index) => (
+                  <div
+                    key={src}
+                    className={`min-w-0 overflow-hidden shadow-md ${index === 0 ? "aspect-[772/660] w-[54%] rounded-xl" : "aspect-square w-[42%] rounded-full"}`}
+                  >
+                    <img
+                      src={src}
+                      alt={functionName}
+                      className={`size-full rounded-xl object-contain ${imageClassName}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : imageSrc ? (
+              <img
+                src={imageSrc}
+                alt={functionName}
+                className={`absolute inset-0 size-full object-cover ${imageClassName}`}
+              />
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
