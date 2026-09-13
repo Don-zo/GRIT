@@ -8,10 +8,10 @@ export default function EmojiModal({
   if (!open) return null;
 
   return (
-    <div className="absolute bottom-25 left-1/2 -translate-x-1/2">
+    <div className="absolute z-100 bottom-25 left-1/2 -translate-x-1/2">
       <div
         className="
-                relative z-100
+                relative
                 w-auto
                 bg-gray-dark/100
                 rounded-xl 
