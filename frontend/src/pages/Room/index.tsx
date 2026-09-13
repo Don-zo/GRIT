@@ -27,8 +27,10 @@ const RoomPage = () => {
     isMicrophoneEnabled,
     isCameraEnabled,
     isMediaTogglePending,
+    isBackgroundBlurEnabled,
     toggleMicrophone,
     toggleCamera,
+    setBackgroundBlurEnabled,
     handleLeaveRoom,
   } = useRoomLiveKit(groupCode, handleDataReceived);
 
@@ -61,6 +63,8 @@ const RoomPage = () => {
           weeklyStudyTimeGoalSeconds={
             studyTime.studyTime?.weeklyStudyTimeGoalSeconds
           }
+          isBackgroundBlurEnabled={isBackgroundBlurEnabled}
+          onToggleBackgroundBlur={setBackgroundBlurEnabled}
         />
 
         <div className="flex flex-1 overflow-hidden">

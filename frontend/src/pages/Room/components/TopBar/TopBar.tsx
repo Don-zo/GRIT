@@ -1,11 +1,14 @@
 import CustomBtn from "@/pages/Room/components/CustomBtn";
+import { useRef, useState } from "react";
 import { Pause, Play, ListChecks, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PATHS } from "@/routes/path";
 import { useMember } from "@/hooks/useMember";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { getDDayDisplayParts } from "@/utils/date";
 import { formatStudyGoalAsClock } from "@/utils/studyGoalTime";
 import { formatStudySecondsAsClock } from "@/utils/studyTime";
+import RoomSettingsModal from "./RoomSettingsModal";
 
 type TopBarProps = {
   isTodoOpen?: boolean;
@@ -15,6 +18,8 @@ type TopBarProps = {
   isStudyTimerPending?: boolean;
   onToggleStudyTimer?: () => void;
   weeklyStudyTimeGoalSeconds?: number | null;
+  isBackgroundBlurEnabled?: boolean;
+  onToggleBackgroundBlur?: (enabled: boolean) => void;
 };
 
 export default function TopBar({
@@ -25,8 +30,19 @@ export default function TopBar({
   isStudyTimerPending = false,
   onToggleStudyTimer,
   weeklyStudyTimeGoalSeconds,
+  isBackgroundBlurEnabled = false,
+  onToggleBackgroundBlur,
 }: TopBarProps) {
   const { data: member } = useMember();
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsWrapperRef = useRef<HTMLDivElement>(null);
+
+  useOutsideClick(
+    settingsWrapperRef,
+    () => setSettingsOpen(false),
+    settingsOpen,
+  );
 
   const { sign: dDaySign, days: dDayDays } = getDDayDisplayParts(
     member?.dDayDate,
@@ -90,12 +106,24 @@ export default function TopBar({
           onClick={onToggleTodo}
         />
 
-        <CustomBtn
-          isToggle
-          variant="ghost"
-          icon={<Settings />}
-          iconColor="text-green-normal"
-        />
+        <div className="relative" ref={settingsWrapperRef}>
+          <CustomBtn
+            isToggle
+            isActive={settingsOpen}
+            variant="ghost"
+            icon={<Settings />}
+            iconColor="text-green-normal"
+            onClick={() => setSettingsOpen((prev) => !prev)}
+          />
+
+          <RoomSettingsModal
+            open={settingsOpen}
+            isBackgroundBlurEnabled={isBackgroundBlurEnabled}
+            onToggleBackgroundBlur={(enabled) =>
+              onToggleBackgroundBlur?.(enabled)
+            }
+          />
+        </div>
       </div>
     </div>
   );
