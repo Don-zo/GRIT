@@ -11,7 +11,7 @@ export default function EmojiModal({
     <div className="absolute bottom-25 left-1/2 -translate-x-1/2">
       <div
         className="
-                relative z-10
+                relative z-100
                 w-auto
                 bg-gray-dark/100
                 rounded-xl 
