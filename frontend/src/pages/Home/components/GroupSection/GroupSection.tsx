@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import Button from "./Button";
@@ -6,6 +7,11 @@ import GroupCard from "./GroupCard";
 import { groupApi } from "@/apis/domains/group/api";
 import CreateGroupModal from "@/pages/Home/components/Modals/CreateGroupModal";
 import JoinGroupModal from "@/pages/Home/components/Modals/JoinGroupModal";
+import OtherRoomConfirmModal from "@/pages/Home/components/Modals/OtherRoomConfirmModal";
+import {
+  useRoomEntryFlow,
+  type RoomEntryLocationState,
+} from "@/pages/Home/hooks/useRoomEntryFlow";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
 
 const GROUPS_PER_PAGE = 8;
@@ -35,6 +41,28 @@ export default function GroupSection() {
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isJoinGroupModalOpen, setIsJoinGroupModalOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const locationState = location.state as RoomEntryLocationState | null;
+  const initialModalGroupCodeRef = useRef(
+    locationState?.openOtherRoomModalFor ?? null,
+  );
+
+  useEffect(() => {
+    if (!locationState?.openOtherRoomModalFor) return;
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, locationState?.openOtherRoomModalFor, navigate]);
+
+  const {
+    isOtherRoomModalOpen,
+    isRoomEntryPending,
+    requestEnterRoom,
+    confirmLeaveAndEnter,
+    cancelLeaveAndEnter,
+  } = useRoomEntryFlow({
+    initialModalGroupCode: initialModalGroupCodeRef.current,
+  });
 
   const {
     data: groups = [],
@@ -146,6 +174,10 @@ export default function GroupSection() {
                 imageUrl={group.imageUrl}
                 isLive={group.isLive}
                 liveParticipantCount={group.liveParticipantCount}
+                onRequestEnter={(code) => {
+                  void requestEnterRoom(code);
+                }}
+                isEntryPending={isRoomEntryPending}
               />
             ))}
         </div>
@@ -158,6 +190,14 @@ export default function GroupSection() {
       <JoinGroupModal
         open={isJoinGroupModalOpen}
         onClose={() => setIsJoinGroupModalOpen(false)}
+      />
+      <OtherRoomConfirmModal
+        open={isOtherRoomModalOpen}
+        onConfirm={() => {
+          void confirmLeaveAndEnter();
+        }}
+        onCancel={cancelLeaveAndEnter}
+        isPending={isRoomEntryPending}
       />
     </div>
   );

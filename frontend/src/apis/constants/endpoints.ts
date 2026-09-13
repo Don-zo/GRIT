@@ -32,6 +32,8 @@ export const ENDPOINTS = {
   },
   LIVEKIT: {
     TOKEN: (groupCode: string) => `/api/group/${groupCode}/livekit/token`,
+    OTHER_ROOM: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/other-room`,
     REACTIONS: (groupCode: string) =>
       `/api/group/${groupCode}/livekit/reactions`,
     REACTION: (groupCode: string) => `/api/group/${groupCode}/livekit/reaction`,
