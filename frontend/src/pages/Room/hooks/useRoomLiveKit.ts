@@ -45,8 +45,10 @@ export function useRoomLiveKit(
     isMicrophoneEnabled,
     isCameraEnabled,
     isMediaTogglePending,
+    isBackgroundBlurEnabled,
     toggleMicrophone,
     toggleCamera,
+    setBackgroundBlurEnabled,
   } = useLiveKit({
     serverUrl: token ? LIVEKIT_URL : "",
     token: token || "",
@@ -190,8 +192,10 @@ export function useRoomLiveKit(
     isMicrophoneEnabled,
     isCameraEnabled,
     isMediaTogglePending,
+    isBackgroundBlurEnabled,
     toggleMicrophone,
     toggleCamera,
+    setBackgroundBlurEnabled,
     handleLeaveRoom,
   };
 }

@@ -13,6 +13,9 @@ import {
 } from "livekit-client";
 import type { UseLiveKitProps, ParticipantData } from "@/types/livekit";
 import { MirrorVideoProcessor } from "@/pages/Room/utils/mirrorVideoProcessor";
+import { BackgroundBlurMirrorProcessor } from "@/pages/Room/utils/backgroundBlurMirrorProcessor";
+
+type CameraProcessorKind = "mirror" | "background-blur";
 
 const getParticipantImageUrl = (metadata?: string): string | null => {
   if (!metadata) return null;
@@ -52,11 +55,15 @@ export const useLiveKit = ({
   const [isMicrophoneEnabled, setIsMicrophoneEnabled] = useState(false);
   const [isCameraEnabled, setIsCameraEnabled] = useState(false);
   const [isMediaTogglePending, setIsMediaTogglePending] = useState(false);
+  const [isBackgroundBlurEnabled, setIsBackgroundBlurEnabled] =
+    useState(false);
 
   const roomRef = useRef<Room | null>(null);
   const pendingRoomRef = useRef<Room | null>(null);
   const onDataReceivedRef = useRef(onDataReceived);
   const isMediaTogglePendingRef = useRef(false);
+  const isBackgroundBlurEnabledRef = useRef(false);
+  const appliedProcessorKindRef = useRef<CameraProcessorKind | null>(null);
 
   useEffect(() => {
     onDataReceivedRef.current = onDataReceived;
@@ -81,19 +88,51 @@ export const useLiveKit = ({
     setIsMediaTogglePending(pending);
   }, []);
 
-  // 카메라 트랙을 좌우반전하여 송출 (본인 화면 + 상대방 화면 모두 반전)
-  const applyCameraMirror = useCallback(async (participant: LocalParticipant) => {
-    const cameraTrack = participant.getTrackPublication(Track.Source.Camera)
-      ?.track as LocalVideoTrack | undefined;
+  // 카메라 트랙에 좌우반전(+ 필요 시 배경 흐림)을 적용해 송출 (본인 화면 + 상대방 화면 모두 동일하게 적용)
+  const applyCameraVideoProcessor = useCallback(
+    async (participant: LocalParticipant) => {
+      const cameraTrack = participant.getTrackPublication(Track.Source.Camera)
+        ?.track as LocalVideoTrack | undefined;
+      if (!cameraTrack) return;
 
-    if (cameraTrack && !cameraTrack.getProcessor()) {
-      try {
-        await cameraTrack.setProcessor(new MirrorVideoProcessor());
-      } catch (err) {
-        console.error("카메라 좌우반전 적용 실패:", err);
+      const targetKind: CameraProcessorKind = isBackgroundBlurEnabledRef.current
+        ? "background-blur"
+        : "mirror";
+
+      if (
+        appliedProcessorKindRef.current === targetKind &&
+        cameraTrack.getProcessor()
+      ) {
+        return;
       }
-    }
-  }, []);
+
+      try {
+        await cameraTrack.setProcessor(
+          targetKind === "background-blur"
+            ? new BackgroundBlurMirrorProcessor()
+            : new MirrorVideoProcessor(),
+        );
+        appliedProcessorKindRef.current = targetKind;
+      } catch (err) {
+        console.error("카메라 영상 처리 적용 실패:", err);
+      }
+    },
+    [],
+  );
+
+  // 배경 흐리게 on/off
+  const setBackgroundBlurEnabled = useCallback(
+    async (enabled: boolean) => {
+      isBackgroundBlurEnabledRef.current = enabled;
+      setIsBackgroundBlurEnabled(enabled);
+
+      const participant = roomRef.current?.localParticipant;
+      if (participant?.isCameraEnabled) {
+        await applyCameraVideoProcessor(participant);
+      }
+    },
+    [applyCameraVideoProcessor],
+  );
 
   // 참가자 데이터 업데이트
   const updateParticipant = useCallback(
@@ -311,7 +350,7 @@ export const useLiveKit = ({
       const nextEnabled = !participant.isCameraEnabled;
       await participant.setCameraEnabled(nextEnabled);
       if (nextEnabled) {
-        await applyCameraMirror(participant);
+        await applyCameraVideoProcessor(participant);
       }
       syncLocalMediaState(participant);
     } catch (err) {
@@ -321,7 +360,7 @@ export const useLiveKit = ({
     } finally {
       setMediaTogglePending(false);
     }
-  }, [setMediaTogglePending, syncLocalMediaState, applyCameraMirror]);
+  }, [setMediaTogglePending, syncLocalMediaState, applyCameraVideoProcessor]);
 
   // 로컬 비디오/오디오 활성화
   const enableCameraAndMicrophone = useCallback(async () => {
@@ -329,7 +368,7 @@ export const useLiveKit = ({
 
     try {
       await roomRef.current.localParticipant.setCameraEnabled(true);
-      await applyCameraMirror(roomRef.current.localParticipant);
+      await applyCameraVideoProcessor(roomRef.current.localParticipant);
       await roomRef.current.localParticipant.setMicrophoneEnabled(true);
       syncLocalMediaState(roomRef.current.localParticipant);
     } catch (err) {
@@ -337,7 +376,7 @@ export const useLiveKit = ({
       setError(err as Error);
       syncLocalMediaState(roomRef.current.localParticipant);
     }
-  }, [syncLocalMediaState, applyCameraMirror]);
+  }, [syncLocalMediaState, applyCameraVideoProcessor]);
 
   // 초기 연결
   useEffect(() => {
@@ -372,10 +411,12 @@ export const useLiveKit = ({
     isMicrophoneEnabled,
     isCameraEnabled,
     isMediaTogglePending,
+    isBackgroundBlurEnabled,
     error,
     connectToRoom,
     enableCameraAndMicrophone,
     toggleMicrophone,
     toggleCamera,
+    setBackgroundBlurEnabled,
   };
 };
