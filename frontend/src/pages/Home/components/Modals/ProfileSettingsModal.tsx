@@ -56,6 +56,10 @@ export default function ProfileSettingsModal({
   const [dDayTitle, setDDayTitle] = useState("");
   const [studyGoalHours, setStudyGoalHours] = useState(0);
   const [studyGoalMinutes, setStudyGoalMinutes] = useState(0);
+  const [nicknameCheckResult, setNicknameCheckResult] = useState<{
+    isAvailable: boolean;
+    message: string;
+  } | null>(null);
 
   const { notify } = useToastContext();
 
@@ -84,6 +88,7 @@ export default function ProfileSettingsModal({
     setStudyGoalMinutes(normalizeStudyGoalMinutes(minutes));
     setImageFile(null);
     setIsImageRemoved(false);
+    setNicknameCheckResult(null);
   }, [open, member]);
 
   const queryClient = useQueryClient();
@@ -148,17 +153,26 @@ export default function ProfileSettingsModal({
       mutationFn: (trimmedNickname: string) =>
         userApi.checkNicknameAvailability(trimmedNickname),
       onSuccess: (data) => {
-        if (data.isAvailable) {
-          notify("사용 가능한 닉네임입니다.", "success");
-        } else {
-          notify("이미 사용중인 닉네임입니다.", "error");
-        }
+        setNicknameCheckResult({
+          isAvailable: data.isAvailable,
+          message: data.isAvailable
+            ? "사용 가능한 닉네임입니다."
+            : "이미 사용중인 닉네임입니다.",
+        });
       },
       onError: (error) => {
         console.log("닉네임 사용 불가", error);
-        notify("오류가 발생했습니다. 다시 시도해주세요.", "error");
+        setNicknameCheckResult({
+          isAvailable: false,
+          message: "오류가 발생했습니다. 다시 시도해주세요.",
+        });
       },
     });
+
+  const handleNicknameChange = (value: string) => {
+    setNickname(value);
+    setNicknameCheckResult(null);
+  };
 
   const handleCheckNicknameDuplicate = () => {
     const trimmedNickname = nickname.trim();
@@ -205,26 +219,39 @@ export default function ProfileSettingsModal({
                 }}
               />
               <div className="flex flex-col gap-4">
-                <div className="flex items-end gap-2">
-                  <FormInput
-                    label="닉네임"
-                    type="text"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    disabled={isFormDisabled}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleCheckNicknameDuplicate}
-                    disabled={isFormDisabled || isNicknameCheckPending}
-                    className="inline-flex h-12 min-w-[84px] shrink-0 items-center justify-center rounded-lg bg-[#3E7358] px-3 text-sm text-[#EDFFF4] transition hover:bg-emerald-800 disabled:opacity-50"
-                  >
-                    {isNicknameCheckPending ? (
-                      <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-                    ) : (
-                      "중복 확인"
-                    )}
-                  </button>
+                <div>
+                  <div className="flex items-end gap-2">
+                    <FormInput
+                      label="닉네임"
+                      type="text"
+                      value={nickname}
+                      onChange={(e) => handleNicknameChange(e.target.value)}
+                      disabled={isFormDisabled}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCheckNicknameDuplicate}
+                      disabled={isFormDisabled || isNicknameCheckPending}
+                      className="inline-flex h-12 min-w-[84px] shrink-0 items-center justify-center rounded-lg bg-[#3E7358] px-3 text-sm text-[#EDFFF4] transition hover:bg-emerald-800 disabled:opacity-50"
+                    >
+                      {isNicknameCheckPending ? (
+                        <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                      ) : (
+                        "중복 확인"
+                      )}
+                    </button>
+                  </div>
+                  {nicknameCheckResult && (
+                    <p
+                      className={`mt-1.5 text-xs ${
+                        nicknameCheckResult.isAvailable
+                          ? "text-emerald-400"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {nicknameCheckResult.message}
+                    </p>
+                  )}
                 </div>
                 <FormInput
                   label="한 줄 소개"
