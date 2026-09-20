@@ -12,11 +12,14 @@ import {
   useRoomLiveKit,
   useRoomLiveKitData,
   useRoomParticipants,
+  useRoomTitle,
 } from "@/pages/Room/hooks";
 
 const RoomPage = () => {
   const { groupCode } = useParams();
   const [todoOpen, setTodoOpen] = useState(false);
+
+  useRoomTitle(groupCode);
 
   const { pomodoro, reactions, studyTime, handleDataReceived } =
     useRoomLiveKitData(groupCode);
