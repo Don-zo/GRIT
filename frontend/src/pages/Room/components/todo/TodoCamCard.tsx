@@ -26,6 +26,7 @@ import { useTodoCategories } from "@/hooks/todo/useTodoCategories";
 import { useToastContext } from "@/contexts/ToastContext";
 import type { TodoGroup } from "@/types/todo";
 import { TODO_CONTENT_MAX_LENGTH } from "@/constants/todo";
+import { formatDDayLabel } from "@/utils/date";
 
 type TodoCamCardProps = {
   variant?: "default" | "panel";
@@ -42,12 +43,6 @@ const getDateKeyOffset = (offsetDays: number) => {
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${month}-${day}`;
-};
-
-/** day 뷰: 항목의 카테고리, category 뷰: 항목의 D-day. 백엔드 응답에 아직 없어 더미로 표시 */
-const DUMMY_BADGE_TEXT: Record<GroupMemberTodoView, string> = {
-  day: "공부",
-  category: "D-1",
 };
 
 export default function TodoCamCard({
@@ -172,8 +167,8 @@ export default function TodoCamCard({
   }, [todosResponse, view, categorySortOrderByCategoryId]);
 
   const groupsToShow = useMemo(
-    () => mapGroupMemberTodosToTodoGroups(sortedSections),
-    [sortedSections],
+    () => mapGroupMemberTodosToTodoGroups(sortedSections, view),
+    [sortedSections, view],
   );
 
   const todoById = useMemo(() => {
@@ -222,6 +217,7 @@ export default function TodoCamCard({
           id: todo.id,
           label: todo.content,
           done: todo.isDone,
+          badgeText: formatDDayLabel(todo.dueDate),
         })),
       };
     });
@@ -237,6 +233,7 @@ export default function TodoCamCard({
         id: todo.id,
         label: todo.content,
         done: todo.isDone,
+        badgeText: formatDDayLabel(todo.dueDate),
       })),
     });
 
@@ -587,7 +584,6 @@ export default function TodoCamCard({
                     canAdd={canToggleTodos}
                     onStartAdd={() => handleStartAdd(group.id)}
                     addRow={addRow}
-                    badgeText={DUMMY_BADGE_TEXT[view]}
                     editingItemId={editingTodoId}
                     editRow={editRow}
                     onEditItem={canToggleTodos ? handleStartEdit : undefined}

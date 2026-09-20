@@ -14,8 +14,6 @@ interface TodoListProps {
   canAdd?: boolean;
   onStartAdd?: () => void;
   addRow?: ReactNode;
-  /** 항목별 배지 텍스트(더미). day 뷰: 카테고리명, category 뷰: D-day */
-  badgeText?: string;
   editingItemId?: number | null;
   editRow?: ReactNode;
   onEditItem?: (id: number) => void;
@@ -31,7 +29,6 @@ export default function TodoList({
   canAdd = false,
   onStartAdd,
   addRow,
-  badgeText,
   editingItemId,
   editRow,
   onEditItem,
@@ -159,9 +156,9 @@ export default function TodoList({
                     </div>
                   )}
                 </div>
-                {badgeText && (
+                {item.badgeText && (
                   <span className="shrink-0 rounded-full bg-green-normal/15 px-2 py-0.5 text-caption text-green-dark">
-                    {badgeText}
+                    {item.badgeText}
                   </span>
                 )}
               </div>

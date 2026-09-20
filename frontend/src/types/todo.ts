@@ -2,6 +2,7 @@ export interface TodoItem {
   id: number;
   label: string;
   done: boolean;
+  badgeText?: string;
 }
 
 export interface TodoGroup {

@@ -5,12 +5,21 @@ import type {
   GroupMemberTodoView,
 } from "./type";
 import type { TodoGroup } from "@/types/todo";
+import { formatDDayLabel } from "@/utils/date";
 
 const UNCATEGORIZED_LABEL = "미분류";
 const TAG_EMPTY_LABEL = "태그 없음";
 
 const normalizeSectionLabel = (label: string) =>
   label === UNCATEGORIZED_LABEL ? TAG_EMPTY_LABEL : label;
+
+export const getTodoBadgeText = (
+  todo: GroupMemberTodo,
+  view: GroupMemberTodoView,
+): string =>
+  view === "day"
+    ? (todo.categoryName ?? TAG_EMPTY_LABEL)
+    : formatDDayLabel(todo.dueDate);
 
 function compareGroupMemberTodos(
   a: GroupMemberTodo,
@@ -59,6 +68,7 @@ export function mapGroupMemberTodosToTodoGroups(
         id: todo.id,
         label: todo.content,
         done: todo.isDone,
+        badgeText: getTodoBadgeText(todo, view),
       })),
     };
   });
