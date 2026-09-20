@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Setter
 public class CreateTodoRequestDTO {
     @NotBlank
-    @Size(max = 500)
+    @Size(max = 30, message = "투두 내용은 30자 이내로 입력해주세요.")
     @Schema(description = "투두 내용", example = "과제 제출하기")
     private String content;
 
