@@ -13,7 +13,6 @@ export default function CustomCheckbox({
   ariaLabel,
   size = "md",
 }: CustomCheckboxProps) {
-  const weight = checked ? 700 : 400;
   const isSm = size === "sm";
   const boxClass = isSm
     ? "h-4 w-4 rounded-full border-[0.5px] border-green-semidark bg-white"
@@ -25,11 +24,11 @@ export default function CustomCheckbox({
       type="button"
       onClick={() => onChange(!checked)}
       aria-label={ariaLabel}
-      className="flex cursor-pointer select-none items-center gap-2"
+      className="flex min-w-0 flex-1 cursor-pointer select-none items-start gap-2"
     >
       <div
         className={`
-          flex items-center justify-center
+          flex shrink-0 items-center justify-center mt-0.5
           ${boxClass}
           transition-all duration-200 ease-out
           ${checked ? "scale-110" : "scale-100"}
@@ -56,12 +55,17 @@ export default function CustomCheckbox({
       {/* 라벨 */}
       {label && (
         <span
-          className="text-left transition-all duration-200 ease-out text-bodyMd text-gray-darkest"
+          className={`
+            min-w-0 break-words text-left transition-all duration-200 ease-out text-bodyMd
+            ${
+              checked
+                ? "text-gray-semidark line-through decoration-gray-semidark/60"
+                : "text-gray-darkest"
+            }
+          `}
           style={{
             fontFamily:
               '"Pretendard Variable", Pretendard, -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            fontVariationSettings: `"wght" ${weight}`,
-            fontWeight: weight,
           }}
         >
           {label}

@@ -28,7 +28,15 @@ export function getDDayDisplayParts(
 }
 
 export function formatDDayLabel(iso: string | null | undefined): string {
+  const daysLeft = getDaysUntilDDay(iso ?? null);
+  if (daysLeft === null) return "D-?";
+  if (daysLeft === 0) return "D-DAY";
   const { sign, days } = getDDayDisplayParts(iso);
-  if (days === "?") return "D-?";
   return `D${sign}${days}`;
+}
+
+/** 오늘이거나 지난 일정이면 강조 표시가 필요함 */
+export function isDDayUrgent(iso: string | null | undefined): boolean {
+  const daysLeft = getDaysUntilDDay(iso ?? null);
+  return daysLeft !== null && daysLeft <= 0;
 }

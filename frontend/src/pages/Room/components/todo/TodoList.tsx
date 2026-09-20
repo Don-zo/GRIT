@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import CircularProgress from "./CircularProgress";
 import CustomCheckbox from "@/components/Checkbox";
-import { ChevronsDown, ChevronsUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronsDown, ChevronsUp, Pencil, Plus } from "lucide-react";
 import type { TodoItem } from "@/types/todo";
 
 interface TodoListProps {
@@ -14,12 +14,9 @@ interface TodoListProps {
   canAdd?: boolean;
   onStartAdd?: () => void;
   addRow?: ReactNode;
-  /** 항목별 배지 텍스트(더미). day 뷰: 카테고리명, category 뷰: D-day */
-  badgeText?: string;
   editingItemId?: number | null;
   editRow?: ReactNode;
   onEditItem?: (id: number) => void;
-  onDeleteItem?: (id: number) => void;
 }
 
 export default function TodoList({
@@ -32,11 +29,9 @@ export default function TodoList({
   canAdd = false,
   onStartAdd,
   addRow,
-  badgeText,
   editingItemId,
   editRow,
   onEditItem,
-  onDeleteItem,
 }: TodoListProps) {
   const [open, setOpen] = useState(false);
 
@@ -131,9 +126,9 @@ export default function TodoList({
             ) : (
               <div
                 key={item.id}
-                className="group/row flex items-center justify-between gap-2 px-3 py-2 bg-gray-normal rounded-xl"
+                className="group/row flex items-start justify-between gap-2 px-3 py-2 bg-gray-normal rounded-xl"
               >
-                <div className="flex min-w-0 items-center gap-2">
+                <div className="flex min-w-0 items-start gap-2">
                   <CustomCheckbox
                     checked={item.done}
                     onChange={(nextDone) =>
@@ -148,34 +143,28 @@ export default function TodoList({
                         : item.label
                     }
                   />
-                  {canToggle && (onEditItem || onDeleteItem) && (
-                    <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover/row:opacity-100">
-                      {onEditItem && (
-                        <button
-                          type="button"
-                          onClick={() => onEditItem(item.id)}
-                          aria-label="수정"
-                          className="flex items-center justify-center text-gray-semidark hover:text-green-dark"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                      )}
-                      {onDeleteItem && (
-                        <button
-                          type="button"
-                          onClick={() => onDeleteItem(item.id)}
-                          aria-label="삭제"
-                          className="flex items-center justify-center text-red-400/80 hover:text-red-500"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
+                  {canToggle && onEditItem && (
+                    <div className="flex h-[22px] shrink-0 items-center gap-1 opacity-0 transition group-hover/row:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => onEditItem(item.id)}
+                        aria-label="수정"
+                        className="flex items-center justify-center text-gray-semidark hover:text-green-dark"
+                      >
+                        <Pencil size={14} />
+                      </button>
                     </div>
                   )}
                 </div>
-                {badgeText && (
-                  <span className="shrink-0 rounded-full bg-green-normal/15 px-2 py-0.5 text-caption text-green-dark">
-                    {badgeText}
+                {item.badgeText && (
+                  <span
+                    className={`flex h-[22px] shrink-0 items-center rounded-full px-2 text-caption ${
+                      item.badgeTone === "urgent"
+                        ? "bg-tomato/15 font-semibold text-tomato"
+                        : "bg-green-normal/15 text-green-dark"
+                    }`}
+                  >
+                    {item.badgeText}
                   </span>
                 )}
               </div>

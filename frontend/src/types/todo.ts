@@ -2,6 +2,8 @@ export interface TodoItem {
   id: number;
   label: string;
   done: boolean;
+  badgeText?: string;
+  badgeTone?: "default" | "urgent";
 }
 
 export interface TodoGroup {

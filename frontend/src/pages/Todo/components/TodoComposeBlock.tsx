@@ -17,6 +17,7 @@ import {
   weeklyComposeBlockTodayBgClass,
   weeklyDueDayTone,
 } from "@/pages/Todo/components/weeklyTodo";
+import { TODO_CONTENT_MAX_LENGTH } from "@/constants/todo";
 
 type CategoryPickerSyncProps = {
   categories: Category[];
@@ -194,7 +195,8 @@ export default function TodoComposeBlock(props: TodoComposeBlockProps) {
   }, [categoryCreateFailedTempId, onCategoryCreateFailedConsumed]);
 
   const canDeleteCategory = categories.length > 0;
-  const canSave = title.trim().length > 0;
+  const canSave =
+    title.trim().length > 0 && title.length <= TODO_CONTENT_MAX_LENGTH;
 
   const handleRemoveCategory = (id: string) => {
     if (!canDeleteCategory) return;
@@ -271,15 +273,18 @@ export default function TodoComposeBlock(props: TodoComposeBlockProps) {
         <textarea
           ref={titleRef}
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) =>
+            setTitle(e.target.value.slice(0, TODO_CONTENT_MAX_LENGTH))
+          }
           onKeyDown={onTitleKeyDown}
           rows={1}
+          maxLength={TODO_CONTENT_MAX_LENGTH}
           placeholder="할 일"
           className="min-h-[1.25rem] w-full min-w-0 resize-none overflow-hidden border-0 bg-transparent pl-[calc(1rem+0.5rem)] text-bodySm leading-snug text-white/90 outline-none placeholder:text-white/35"
           aria-label="할 일 제목"
         />
       </div>
-      <div className="mt-2 flex items-center border-t border-white/10 pt-2">
+      <div className="mt-2 flex items-center gap-1.5 border-t border-white/10 pt-2">
         {isEdit ? (
           <button
             type="button"
@@ -290,6 +295,9 @@ export default function TodoComposeBlock(props: TodoComposeBlockProps) {
             <Trash2 className={iconSvg} absoluteStrokeWidth />
           </button>
         ) : null}
+        <span className="text-caption text-white/40 select-none">
+          {title.length}/{TODO_CONTENT_MAX_LENGTH}
+        </span>
         <span className="min-w-0 flex-1" aria-hidden />
         <div className="flex shrink-0 items-center gap-1">
           <button
