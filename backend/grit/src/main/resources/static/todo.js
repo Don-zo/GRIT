@@ -373,9 +373,14 @@ document.getElementById('todo-submit-btn').addEventListener('click', async () =>
     const categoryVal = document.getElementById('todo-category').value;
     const dueDate = document.getElementById('todo-duedate').value;
     const editId = document.getElementById('edit-todo-id').value;
+    const originalTodo = editId ? allTodos.find(todo => todo.id === Number(editId)) : null;
 
     if (!content) {
         showError('todo-error', '내용을 입력해주세요.');
+        return;
+    }
+    if (content.length > 30 && content !== originalTodo?.content) {
+        showError('todo-error', '투두 내용은 30자 이내로 입력해주세요.');
         return;
     }
     if (!dueDate) {

@@ -205,6 +205,9 @@ public class TodoService {
             if (trimmed.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "투두 내용을 입력해주세요.");
             }
+            if (trimmed.length() > 30 && !trimmed.equals(todo.getContent())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "투두 내용은 30자 이내로 입력해주세요.");
+            }
             todo.setContent(trimmed);
         }
         if (request.getIsDone() != null) {
