@@ -5,7 +5,7 @@ import type {
   GroupMemberTodoView,
 } from "./type";
 import type { TodoGroup } from "@/types/todo";
-import { formatDDayLabel } from "@/utils/date";
+import { formatDDayLabel, isDDayUrgent } from "@/utils/date";
 
 const UNCATEGORIZED_LABEL = "미분류";
 const TAG_EMPTY_LABEL = "태그 없음";
@@ -20,6 +20,13 @@ export const getTodoBadgeText = (
   view === "day"
     ? (todo.categoryName ?? TAG_EMPTY_LABEL)
     : formatDDayLabel(todo.dueDate);
+
+/** category 뷰에서 오늘이거나 지난 마감일이면 강조 표시 */
+export const getTodoBadgeTone = (
+  todo: GroupMemberTodo,
+  view: GroupMemberTodoView,
+): "default" | "urgent" =>
+  view === "category" && isDDayUrgent(todo.dueDate) ? "urgent" : "default";
 
 function compareGroupMemberTodos(
   a: GroupMemberTodo,
@@ -69,6 +76,7 @@ export function mapGroupMemberTodosToTodoGroups(
         label: todo.content,
         done: todo.isDone,
         badgeText: getTodoBadgeText(todo, view),
+        badgeTone: getTodoBadgeTone(todo, view),
       })),
     };
   });

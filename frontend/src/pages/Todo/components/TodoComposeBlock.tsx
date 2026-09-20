@@ -284,10 +284,7 @@ export default function TodoComposeBlock(props: TodoComposeBlockProps) {
           aria-label="할 일 제목"
         />
       </div>
-      <div className="mt-2 flex items-center border-t border-white/10 pt-2">
-        <span className="text-caption text-white/40 select-none">
-          {title.length}/{TODO_CONTENT_MAX_LENGTH}
-        </span>
+      <div className="mt-2 flex items-center gap-1.5 border-t border-white/10 pt-2">
         {isEdit ? (
           <button
             type="button"
@@ -298,6 +295,9 @@ export default function TodoComposeBlock(props: TodoComposeBlockProps) {
             <Trash2 className={iconSvg} absoluteStrokeWidth />
           </button>
         ) : null}
+        <span className="text-caption text-white/40 select-none">
+          {title.length}/{TODO_CONTENT_MAX_LENGTH}
+        </span>
         <span className="min-w-0 flex-1" aria-hidden />
         <div className="flex shrink-0 items-center gap-1">
           <button

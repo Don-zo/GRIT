@@ -144,7 +144,7 @@ export default function TodoList({
                     }
                   />
                   {canToggle && onEditItem && (
-                    <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover/row:opacity-100">
+                    <div className="flex h-[22px] shrink-0 items-center gap-1 opacity-0 transition group-hover/row:opacity-100">
                       <button
                         type="button"
                         onClick={() => onEditItem(item.id)}
@@ -157,7 +157,13 @@ export default function TodoList({
                   )}
                 </div>
                 {item.badgeText && (
-                  <span className="shrink-0 rounded-full bg-green-normal/15 px-2 py-0.5 text-caption text-green-dark">
+                  <span
+                    className={`flex h-[22px] shrink-0 items-center rounded-full px-2 text-caption ${
+                      item.badgeTone === "urgent"
+                        ? "bg-tomato/15 font-semibold text-tomato"
+                        : "bg-green-normal/15 text-green-dark"
+                    }`}
+                  >
                     {item.badgeText}
                   </span>
                 )}

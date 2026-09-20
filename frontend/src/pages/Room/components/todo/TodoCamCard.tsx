@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ToggleBtn from "@/components/ToggleBtn";
-import { BookCheck, CalendarClock, Check, X } from "lucide-react";
+import { BookCheck, CalendarClock, Check, Trash2, X } from "lucide-react";
 import TodoList from "./TodoList";
 import RoomCategorySelect from "./RoomCategorySelect";
 import { groupApi } from "@/apis/domains/group/api";
@@ -26,7 +26,7 @@ import { useTodoCategories } from "@/hooks/todo/useTodoCategories";
 import { useToastContext } from "@/contexts/ToastContext";
 import type { TodoGroup } from "@/types/todo";
 import { TODO_CONTENT_MAX_LENGTH } from "@/constants/todo";
-import { formatDDayLabel } from "@/utils/date";
+import { formatDDayLabel, isDDayUrgent } from "@/utils/date";
 
 type TodoCamCardProps = {
   variant?: "default" | "panel";
@@ -218,6 +218,7 @@ export default function TodoCamCard({
           label: todo.content,
           done: todo.isDone,
           badgeText: formatDDayLabel(todo.dueDate),
+          badgeTone: isDDayUrgent(todo.dueDate) ? "urgent" : "default",
         })),
       };
     });
@@ -234,6 +235,7 @@ export default function TodoCamCard({
         label: todo.content,
         done: todo.isDone,
         badgeText: formatDDayLabel(todo.dueDate),
+        badgeTone: isDDayUrgent(todo.dueDate) ? "urgent" : "default",
       })),
     });
 
@@ -393,6 +395,32 @@ export default function TodoCamCard({
     },
   });
 
+  const deleteTodoMutation = useMutation({
+    mutationFn: (todoId: number) => todoApi.deleteTodo(todoId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          "groups",
+          "memberTodos",
+          groupCode ?? "",
+          selectedMemberId ?? 0,
+        ],
+      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.todos.all });
+      notify("삭제됐어요.", "success");
+    },
+    onError: (err) => {
+      if (
+        isAxiosError(err) &&
+        (err.response?.status === 403 || err.response?.status === 404)
+      ) {
+        notify("할 일을 삭제할 수 없어요.", "error");
+      } else {
+        notify("삭제에 실패했어요.", "error");
+      }
+    },
+  });
+
   const handleStartEdit = (todoId: number) => {
     if (!canToggleTodos) return;
     const todo = todoById.get(todoId);
@@ -431,6 +459,12 @@ export default function TodoCamCard({
       }
     }
     updateTodoMutation.mutate({ todoId: editingTodoId, body });
+  };
+
+  const handleDeleteItem = (todoId: number) => {
+    if (!canToggleTodos || deleteTodoMutation.isPending) return;
+    if (editingTodoId === todoId) handleCancelEdit();
+    deleteTodoMutation.mutate(todoId);
   };
 
   const isPanel = variant === "panel";
@@ -562,6 +596,7 @@ export default function TodoCamCard({
                       onTitleChange={setEditTitle}
                       onCancel={handleCancelEdit}
                       onSubmit={handleSubmitEdit}
+                      onDelete={() => handleDeleteItem(editingTodoId)}
                     >
                       <RoomCategorySelect
                         categories={categories}
@@ -607,6 +642,7 @@ type TodoFormRowProps = {
   onTitleChange: (value: string) => void;
   onCancel: () => void;
   onSubmit: () => void;
+  onDelete?: () => void;
   children: ReactNode;
 };
 
@@ -615,6 +651,7 @@ function TodoFormRow({
   onTitleChange,
   onCancel,
   onSubmit,
+  onDelete,
   children,
 }: TodoFormRowProps) {
   return (
@@ -628,6 +665,7 @@ function TodoFormRow({
           }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
               e.preventDefault();
               onSubmit();
             } else if (e.key === "Escape") {
@@ -643,6 +681,16 @@ function TodoFormRow({
         <div className="shrink-0">{children}</div>
       </div>
       <div className="flex items-center gap-2">
+        {onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            aria-label="삭제"
+            className="flex items-center justify-center text-red-400/80 hover:text-red-500"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
         <span className="text-caption text-gray-semidark select-none">
           {title.length}/{TODO_CONTENT_MAX_LENGTH}
         </span>
