@@ -82,8 +82,8 @@ const ProfileCard = ({
                 </span>
                 <span className="text-bodyMd leading-bodyMd"> 님, 화이팅 ^^</span>
               </p>
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 shrink-0 text-green-light" />
+              <div className="flex items-start gap-2">
+                <MessageCircle className="mt-px h-4 w-4 shrink-0 text-green-light" />
                 <p className="line-clamp-2 break-keep text-bodySm leading-bodySm text-green-light">
                   {isLoading ? "불러오는 중…" : motivation}
                 </p>
