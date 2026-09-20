@@ -22,7 +22,7 @@ export default function Toast({ toast, onClear }: ToastProps) {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[90] flex justify-center px-4 pb-8 md:pb-10"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-toast)] flex justify-center px-4 pb-8 md:pb-10"
       aria-live={toast?.variant === "error" ? "assertive" : "polite"}
     >
       <AnimatePresence mode="wait">
