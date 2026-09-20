@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ToggleBtn from "@/components/ToggleBtn";
-import { BookCheck, CalendarClock, Check, Trash2, X } from "lucide-react";
+import { BookCheck, CalendarClock, Check, X } from "lucide-react";
 import TodoList from "./TodoList";
 import RoomCategorySelect from "./RoomCategorySelect";
 import { groupApi } from "@/apis/domains/group/api";
@@ -25,6 +25,7 @@ import { buildCreateTodoBody } from "@/hooks/todo/mappers";
 import { useTodoCategories } from "@/hooks/todo/useTodoCategories";
 import { useToastContext } from "@/contexts/ToastContext";
 import type { TodoGroup } from "@/types/todo";
+import { TODO_CONTENT_MAX_LENGTH } from "@/constants/todo";
 
 type TodoCamCardProps = {
   variant?: "default" | "panel";
@@ -350,7 +351,12 @@ export default function TodoCamCard({
 
   const handleSubmitAdd = (dueDate: string, categoryId: string) => {
     const content = newTitle.trim();
-    if (!content || createTodoMutation.isPending) return;
+    if (
+      !content ||
+      content.length > TODO_CONTENT_MAX_LENGTH ||
+      createTodoMutation.isPending
+    )
+      return;
     createTodoMutation.mutate({ title: content, dueDate, categoryId });
   };
 
@@ -390,32 +396,6 @@ export default function TodoCamCard({
     },
   });
 
-  const deleteTodoMutation = useMutation({
-    mutationFn: (todoId: number) => todoApi.deleteTodo(todoId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [
-          "groups",
-          "memberTodos",
-          groupCode ?? "",
-          selectedMemberId ?? 0,
-        ],
-      });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.todos.all });
-      notify("삭제됐어요.", "success");
-    },
-    onError: (err) => {
-      if (
-        isAxiosError(err) &&
-        (err.response?.status === 403 || err.response?.status === 404)
-      ) {
-        notify("할 일을 삭제할 수 없어요.", "error");
-      } else {
-        notify("삭제에 실패했어요.", "error");
-      }
-    },
-  });
-
   const handleStartEdit = (todoId: number) => {
     if (!canToggleTodos) return;
     const todo = todoById.get(todoId);
@@ -435,7 +415,12 @@ export default function TodoCamCard({
   const handleSubmitEdit = () => {
     if (editingTodoId == null) return;
     const content = editTitle.trim();
-    if (!content || updateTodoMutation.isPending) return;
+    if (
+      !content ||
+      content.length > TODO_CONTENT_MAX_LENGTH ||
+      updateTodoMutation.isPending
+    )
+      return;
     const body: UpdateTodoBody = { content };
     const raw = editCategoryId.trim();
     if (!raw) {
@@ -449,12 +434,6 @@ export default function TodoCamCard({
       }
     }
     updateTodoMutation.mutate({ todoId: editingTodoId, body });
-  };
-
-  const handleDeleteItem = (todoId: number) => {
-    if (!canToggleTodos || deleteTodoMutation.isPending) return;
-    if (editingTodoId === todoId) handleCancelEdit();
-    deleteTodoMutation.mutate(todoId);
   };
 
   const isPanel = variant === "panel";
@@ -586,7 +565,6 @@ export default function TodoCamCard({
                       onTitleChange={setEditTitle}
                       onCancel={handleCancelEdit}
                       onSubmit={handleSubmitEdit}
-                      onDelete={() => handleDeleteItem(editingTodoId)}
                     >
                       <RoomCategorySelect
                         categories={categories}
@@ -613,9 +591,6 @@ export default function TodoCamCard({
                     editingItemId={editingTodoId}
                     editRow={editRow}
                     onEditItem={canToggleTodos ? handleStartEdit : undefined}
-                    onDeleteItem={
-                      canToggleTodos ? handleDeleteItem : undefined
-                    }
                   />
                 );
               })}
@@ -636,7 +611,6 @@ type TodoFormRowProps = {
   onTitleChange: (value: string) => void;
   onCancel: () => void;
   onSubmit: () => void;
-  onDelete?: () => void;
   children: ReactNode;
 };
 
@@ -645,7 +619,6 @@ function TodoFormRow({
   onTitleChange,
   onCancel,
   onSubmit,
-  onDelete,
   children,
 }: TodoFormRowProps) {
   return (
@@ -654,7 +627,9 @@ function TodoFormRow({
         <input
           type="text"
           value={title}
-          onChange={(e) => onTitleChange(e.target.value)}
+          onChange={(e) =>
+            onTitleChange(e.target.value.slice(0, TODO_CONTENT_MAX_LENGTH))
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -665,22 +640,16 @@ function TodoFormRow({
             }
           }}
           placeholder="할 일을 입력하세요"
+          maxLength={TODO_CONTENT_MAX_LENGTH}
           autoFocus
           className="flex-1 min-w-0 bg-transparent text-bodySm text-green-darkest outline-none placeholder:text-gray-semidark"
         />
         <div className="shrink-0">{children}</div>
       </div>
       <div className="flex items-center gap-2">
-        {onDelete && (
-          <button
-            type="button"
-            onClick={onDelete}
-            aria-label="삭제"
-            className="flex items-center justify-center text-red-400/80 hover:text-red-500"
-          >
-            <Trash2 size={16} />
-          </button>
-        )}
+        <span className="text-caption text-gray-semidark select-none">
+          {title.length}/{TODO_CONTENT_MAX_LENGTH}
+        </span>
         <div className="flex-1" />
         <button
           type="button"
@@ -693,7 +662,7 @@ function TodoFormRow({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={!title.trim()}
+          disabled={!title.trim() || title.length > TODO_CONTENT_MAX_LENGTH}
           aria-label="저장"
           className="flex items-center justify-center text-green-dark disabled:text-gray-semidark"
         >

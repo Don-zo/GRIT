@@ -1,0 +1,1 @@
+export const TODO_CONTENT_MAX_LENGTH = 30;
