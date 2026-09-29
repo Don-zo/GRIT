@@ -3,7 +3,7 @@
 @import "./styles/tokens.css" layer(theme);
 @import "./styles/fonts.css" layer(theme);
 
-html {
+html:has(.landing-page-background) {
   scrollbar-gutter: stable;
 }
 
@@ -16,7 +16,11 @@ body {
 
 .landing-page-background {
   background-color: #eef0ee;
-  background-image: radial-gradient(circle, rgb(24 49 41 / 0.16) 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle,
+    rgb(24 49 41 / 0.16) 1px,
+    transparent 1px
+  );
   background-size: 18px 18px;
 }
 
