@@ -1,13 +1,19 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import SocialLoginButton from "@/components/auth/SocialLoginButton";
 import { PATHS } from "@/routes/path";
 import { redirectToGoogleAuth } from "@/utils/oauth";
+import { getAccessToken } from "@/utils/tokenStorage";
 
 const SignupPage = () => {
   const handleGoogleLogin = () => {
     redirectToGoogleAuth();
   };
+
+  if (getAccessToken()) {
+    return <Navigate to={PATHS.HOME} replace />;
+  }
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#f5f5f5]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(34,34,34,0)_0%,rgba(62,115,88,0.12)_100%)]" />
