@@ -10,13 +10,28 @@ import { getAccessToken } from "@/utils/tokenStorage";
 import { PATHS } from "@/routes/path";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"] as const;
-const EMPTY_WEEKLY_DATA = Array.from({ length: 7 }, (_, index) => {
-  const date = dayjs().subtract(7 - index, "day");
-  return {
-    day: DAY_LABELS[date.day()],
-    progress: 0,
-  };
-});
+// 오른쪽 끝 막대는 툴팁이 카드 밖으로 나가지 않도록 왼쪽에 표시
+const TOOLTIP_FLIP_INDEX = 5;
+
+type WeeklyItem = {
+  day: string;
+  dateLabel: string;
+  progress: number;
+  totalCount: number | null;
+};
+
+const EMPTY_WEEKLY_DATA: WeeklyItem[] = Array.from(
+  { length: 7 },
+  (_, index) => {
+    const date = dayjs().subtract(7 - index, "day");
+    return {
+      day: DAY_LABELS[date.day()],
+      dateLabel: date.format("M/D"),
+      progress: 0,
+      totalCount: null,
+    };
+  },
+);
 
 const AchievementCard: React.FC = () => {
   const navigate = useNavigate();
@@ -40,10 +55,12 @@ const AchievementCard: React.FC = () => {
   });
 
   const resolvedTodayProgress = data?.today.achievementRate ?? 0;
-  const resolvedWeeklyData =
+  const resolvedWeeklyData: WeeklyItem[] =
     data?.last7Days.map((item) => ({
       day: DAY_LABELS[dayjs(item.date).day()] ?? "",
+      dateLabel: dayjs(item.date).format("M/D"),
       progress: item.achievementRate ?? 0,
+      totalCount: item.totalCount,
     })) ?? EMPTY_WEEKLY_DATA;
 
   return (
@@ -90,20 +107,54 @@ const AchievementCard: React.FC = () => {
           )}
         </div>
         <div className="flex min-h-0 flex-1 items-center gap-2 py-3">
-          {resolvedWeeklyData.map((item, index) => (
-            <div
-              key={index}
-              className="flex h-full max-h-36 min-h-0 flex-1 flex-col items-center gap-2"
-            >
-              <div className="relative flex min-h-20 w-5 flex-1 flex-col justify-end overflow-hidden rounded-full bg-gray-semidark">
+          {resolvedWeeklyData.map((item, index) => {
+            const hasTodos = (item.totalCount ?? 0) > 0;
+            const isFlipped = index >= TOOLTIP_FLIP_INDEX;
+            return (
+              <div
+                key={index}
+                tabIndex={0}
+                className="group relative flex h-full max-h-36 min-h-0 flex-1 flex-col items-center gap-2 outline-none"
+              >
+                <div className="relative flex min-h-20 w-5 flex-1 flex-col justify-end overflow-hidden rounded-full bg-gray-semidark">
+                  <div
+                    className="w-full rounded-full bg-green-normal transition-all duration-600"
+                    style={{ height: `${item.progress}%` }}
+                  />
+                </div>
+                <span className="shrink-0 text-bodySm text-white">
+                  {item.day}
+                </span>
+
                 <div
-                  className="w-full rounded-full bg-green-normal transition-all duration-600"
-                  style={{ height: `${item.progress}%` }}
-                />
+                  role="tooltip"
+                  className={`pointer-events-none invisible absolute top-1/2 z-10 -translate-y-1/2 whitespace-nowrap rounded-xl border border-white/30 bg-[#1e2228] px-3 py-2 text-left opacity-0 transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 ${
+                    isFlipped
+                      ? "right-[calc(50%+18px)]"
+                      : "left-[calc(50%+18px)]"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-45 bg-[#1e2228] ${
+                      isFlipped
+                        ? "right-0 translate-x-1/2 border-t border-r border-white/30"
+                        : "left-0 -translate-x-1/2 border-b border-l border-white/30"
+                    }`}
+                  />
+                  <p className="text-caption text-gray-light">
+                    {item.dateLabel} ({item.day})
+                  </p>
+                  {hasTodos ? (
+                    <p className="text-bodySm font-semibold text-[#D6FDE5]">
+                      {item.progress}%
+                    </p>
+                  ) : (
+                    <p className="text-bodySm text-white">할 일 없음</p>
+                  )}
+                </div>
               </div>
-              <span className="shrink-0 text-bodySm text-white">{item.day}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
