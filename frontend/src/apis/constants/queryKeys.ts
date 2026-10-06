@@ -43,4 +43,8 @@ export const QUERY_KEYS = {
   pomodoro: {
     status: (groupCode: string) => ["pomodoro", "status", groupCode] as const,
   },
+  groupStudyTime: {
+    list: (groupCode: string) =>
+      ["groupStudyTime", "list", groupCode] as const,
+  },
 } as const;

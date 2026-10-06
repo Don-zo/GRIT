@@ -6,3 +6,8 @@ export type MemberStudyTimeResponse = {
   serverNow: string;
   lastStartedAt: string | null;
 };
+
+export type GroupMemberStudyTimeResponse = MemberStudyTimeResponse & {
+  memberId: number;
+  nickname: string;
+};

@@ -94,6 +94,7 @@ const RoomPage = () => {
                 variant="panel"
                 groupCode={groupCode}
                 members={groupMembers}
+                getMemberStudyProgress={studyTime.getMemberStudyProgress}
               />
             </div>
           </div>
