@@ -3,6 +3,7 @@ package grit.domain.group.livekit.service;
 import grit.domain.group.GroupService;
 import grit.domain.group.entity.Group;
 import grit.domain.group.livekit.constraint.ReactionEmoji;
+import grit.domain.group.livekit.dto.GroupStudyTimeMemberResponseDto;
 import grit.domain.group.livekit.pomodoro.entity.Pomodoro;
 import grit.domain.member.entity.Member;
 import grit.global.exception.AccessDeniedException;
@@ -118,6 +119,16 @@ public class LiveKitService {
                         "senderNickname", member.getNickname()
                 ), Kind.RELIABLE);
     }
+
+            public void sendStudyTimeSync(Member member, Group group, GroupStudyTimeMemberResponseDto studyTime) {
+            sendData(roomName(group.getCode()),
+                "study-time.sync",
+                Map.of(
+                    "type", "study-time.sync",
+                    "member", studyTime,
+                    "senderNickname", member.getNickname()
+                ), Kind.RELIABLE);
+            }
 
     private void sendData(String roomName, String messageType, Object payload, Kind kind) {
         Observation observation = Observation.createNotStarted("livekit.send_data", observationRegistry)
