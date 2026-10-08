@@ -4,6 +4,7 @@ import { useState } from "react";
 import LiveBadge from "./LiveBadge";
 import GroupCodeBadge from "./GroupCodeBadge";
 import GroupSettingsModal from "@/pages/Home/components/Modals/GroupSettingsModal";
+import GroupMembersModal from "@/pages/Home/components/Modals/GroupMembersModal";
 import type { Group } from "@/apis/domains/group/type";
 import { studyTimeApi } from "@/apis/domains/studyTime/api";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
@@ -25,6 +26,7 @@ export default function GroupCard({
 }: GroupCardProps) {
   const queryClient = useQueryClient();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
 
   const prefetchStudyTime = () => {
     void queryClient.prefetchQuery({
@@ -81,9 +83,17 @@ export default function GroupCard({
                 <Pencil className="h-4 w-4 text-green-light transition-transform hover:scale-110" />
               </button>
             </div>
-            <span className="flex shrink-0 text-[15px] font-thin opacity-90">
+            <button
+              type="button"
+              aria-label="그룹 멤버 보기"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMembersOpen(true);
+              }}
+              className="pointer-events-auto flex shrink-0 cursor-pointer text-[15px] font-thin opacity-90 transition-opacity hover:opacity-100 hover:underline"
+            >
               {liveParticipantCount}/{memberCount}
-            </span>
+            </button>
           </div>
         </div>
       </div>
@@ -94,6 +104,12 @@ export default function GroupCard({
         groupCode={groupCode}
         initialName={name}
         initialImage={imageUrl}
+      />
+      <GroupMembersModal
+        open={isMembersOpen}
+        onClose={() => setIsMembersOpen(false)}
+        groupCode={groupCode}
+        groupName={name}
       />
     </div>
   );
