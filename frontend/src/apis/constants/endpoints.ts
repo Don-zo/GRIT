@@ -37,6 +37,12 @@ export const ENDPOINTS = {
     REACTIONS: (groupCode: string) =>
       `/api/group/${groupCode}/livekit/reactions`,
     REACTION: (groupCode: string) => `/api/group/${groupCode}/livekit/reaction`,
+    STUDY_TIME: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/study-time`,
+    STUDY_TIME_RESUME: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/study-time/resume`,
+    STUDY_TIME_PAUSE: (groupCode: string) =>
+      `/api/group/${groupCode}/livekit/study-time/pause`,
   },
   POMODORO: {
     STATUS: (groupCode: string) => `/api/group/${groupCode}/livekit/pomodoro`,

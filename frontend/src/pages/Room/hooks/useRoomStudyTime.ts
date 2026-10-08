@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import type { MemberStudyTimeResponse } from "@/apis/domains/studyTime/type";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { groupStudyTimeApi } from "@/apis/domains/studyTime/api";
+import type { GroupMemberStudyTimeResponse } from "@/apis/domains/studyTime/type";
+import { isLiveKitStudyTimeSyncMessage } from "@/apis/domains/livekit/studyTimeSync";
 import type { PomodoroStatusResponse } from "@/apis/domains/pomodoro/type";
 import { QUERY_KEYS } from "@/apis/constants/queryKeys";
-import { useStudyTime } from "@/hooks/useStudyTime";
-import { usePauseStudyTime } from "@/hooks/usePauseStudyTime";
-import { useResumeStudyTime } from "@/hooks/useResumeStudyTime";
+import { useMember } from "@/hooks/useMember";
 import {
   getPomodoroStudyPhase,
   shouldStudyTimerRunForPhase,
@@ -35,33 +35,23 @@ function writeKeepRunningIntent(keepRunning: boolean) {
   }
 }
 
-function buildOptimisticRunning(
-  prev: MemberStudyTimeResponse | undefined,
+function buildOptimisticMember(
+  prev: GroupMemberStudyTimeResponse | undefined,
+  memberId: number,
+  nickname: string,
   displayedSeconds: number,
-): MemberStudyTimeResponse {
+  running: boolean,
+): GroupMemberStudyTimeResponse {
   const nowIso = new Date().toISOString();
   return {
+    memberId,
+    nickname,
     weekStartDate: prev?.weekStartDate ?? nowIso.slice(0, 10),
     weeklyStudyTimeGoalSeconds: prev?.weeklyStudyTimeGoalSeconds ?? null,
     currentWeekStudyTimeSeconds: displayedSeconds,
-    running: true,
+    running,
     serverNow: nowIso,
-    lastStartedAt: nowIso,
-  };
-}
-
-function buildOptimisticPaused(
-  prev: MemberStudyTimeResponse | undefined,
-  displayedSeconds: number,
-): MemberStudyTimeResponse {
-  const nowIso = new Date().toISOString();
-  return {
-    weekStartDate: prev?.weekStartDate ?? nowIso.slice(0, 10),
-    weeklyStudyTimeGoalSeconds: prev?.weeklyStudyTimeGoalSeconds ?? null,
-    currentWeekStudyTimeSeconds: displayedSeconds,
-    running: false,
-    serverNow: nowIso,
-    lastStartedAt: null,
+    lastStartedAt: running ? nowIso : null,
   };
 }
 
@@ -70,69 +60,115 @@ function isPomodoroBlockingPhase(phase: PomodoroStudyPhase): boolean {
 }
 
 type UseRoomStudyTimeOptions = {
+  groupCode: string | undefined;
   pomodoroStatus: PomodoroStatusResponse | undefined;
 };
 
-export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
+export function useRoomStudyTime({
+  groupCode,
+  pomodoroStatus,
+}: UseRoomStudyTimeOptions) {
   const queryClient = useQueryClient();
-  const { data: studyTime, dataUpdatedAt, isLoading, isFetching } =
-    useStudyTime();
+  const { data: currentMember } = useMember();
+  const queryKey = QUERY_KEYS.groupStudyTime.list(groupCode ?? "");
 
-  const { mutateAsync: resumeStudyTimeAsync } = useResumeStudyTime();
-  const { mutateAsync: pauseStudyTimeAsync } = usePauseStudyTime();
+  const fetchedAtByMemberIdRef = useRef(new Map<number, number>());
+
+  const {
+    data: members = [],
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      const data = await groupStudyTimeApi.getAll(groupCode!);
+      const fetchedAt = Date.now();
+      data.forEach((member) => {
+        fetchedAtByMemberIdRef.current.set(member.memberId, fetchedAt);
+      });
+      return data;
+    },
+    enabled: !!groupCode,
+  });
+
+  const membersByMemberId = useMemo(() => {
+    const map = new Map<number, GroupMemberStudyTimeResponse>();
+    members.forEach((member) => map.set(member.memberId, member));
+    return map;
+  }, [members]);
+
+  const myMemberId = currentMember?.id;
+  const myState = myMemberId != null ? membersByMemberId.get(myMemberId) : undefined;
+
+  const getMyState = useCallback((): GroupMemberStudyTimeResponse | undefined => {
+    if (myMemberId == null) return undefined;
+    const list = queryClient.getQueryData<GroupMemberStudyTimeResponse[]>(queryKey);
+    return list?.find((member) => member.memberId === myMemberId);
+  }, [myMemberId, queryClient, queryKey]);
+
+  const getDisplayedSecondsFor = useCallback(
+    (memberId: number) => {
+      const member = membersByMemberId.get(memberId);
+      if (!member) return 0;
+      return getDisplayedStudySeconds(
+        member,
+        Date.now(),
+        fetchedAtByMemberIdRef.current.get(memberId),
+      );
+    },
+    [membersByMemberId],
+  );
+
+  const getMemberStudyProgress = useCallback(
+    (memberId: number) => {
+      const member = membersByMemberId.get(memberId);
+      if (!member) return undefined;
+      return {
+        displayedSeconds: getDisplayedSecondsFor(memberId),
+        weeklyStudyTimeGoalSeconds: member.weeklyStudyTimeGoalSeconds,
+        running: member.running,
+      };
+    },
+    [getDisplayedSecondsFor, membersByMemberId],
+  );
+
+  // 1초마다 리렌더를 강제해 러닝 중인 멤버들의 표시 초를 흘려보낸다.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!members.some((member) => member.running)) return;
+    const interval = window.setInterval(() => setTick((t) => t + 1), 1000);
+    return () => window.clearInterval(interval);
+  }, [members]);
+
+  const upsertMember = useCallback(
+    (member: GroupMemberStudyTimeResponse, fetchedAt = Date.now()) => {
+      fetchedAtByMemberIdRef.current.set(member.memberId, fetchedAt);
+      queryClient.setQueryData(
+        queryKey,
+        (prev: GroupMemberStudyTimeResponse[] | undefined) => {
+          if (!prev) return [member];
+          const idx = prev.findIndex((m) => m.memberId === member.memberId);
+          if (idx === -1) return [...prev, member];
+          const next = [...prev];
+          next[idx] = member;
+          return next;
+        },
+      );
+    },
+    [queryClient, queryKey],
+  );
+
+  const { mutateAsync: resumeStudyTimeAsync } = useMutation({
+    mutationFn: () => groupStudyTimeApi.resume(groupCode!),
+  });
+  const { mutateAsync: pauseStudyTimeAsync } = useMutation({
+    mutationFn: () => groupStudyTimeApi.pause(groupCode!),
+  });
 
   const [isSyncing, setIsSyncing] = useState(false);
-
   const desiredRunningRef = useRef<boolean | null>(null);
   const inflightRef = useRef(false);
-  const fetchedAtRef = useRef<number | undefined>(undefined);
-  const displayedSecondsRef = useRef(0);
-  const prevPomodoroPhaseRef = useRef<PomodoroStudyPhase | null>(null);
-  const didBindPomodoroPhaseRef = useRef(false);
-  const pomodoroStatusRef = useRef(pomodoroStatus);
-
-  pomodoroStatusRef.current = pomodoroStatus;
-
-  useEffect(() => {
-    if (dataUpdatedAt) {
-      fetchedAtRef.current = dataUpdatedAt;
-    }
-  }, [dataUpdatedAt]);
-
-  const [displayedSeconds, setDisplayedSeconds] = useState(0);
-
-  useEffect(() => {
-    const tick = () => {
-      const next = getDisplayedStudySeconds(
-        studyTime,
-        Date.now(),
-        fetchedAtRef.current,
-      );
-      displayedSecondsRef.current = next;
-      setDisplayedSeconds(next);
-    };
-
-    tick();
-    if (!studyTime?.running) return;
-
-    const interval = window.setInterval(tick, 1000);
-    return () => window.clearInterval(interval);
-  }, [studyTime]);
-
-  const applyOptimistic = useCallback(
-    (next: MemberStudyTimeResponse) => {
-      fetchedAtRef.current = Date.now();
-      queryClient.setQueryData(QUERY_KEYS.studyTime.me, next);
-      const seconds = getDisplayedStudySeconds(
-        next,
-        Date.now(),
-        fetchedAtRef.current,
-      );
-      displayedSecondsRef.current = seconds;
-      setDisplayedSeconds(seconds);
-    },
-    [queryClient],
-  );
 
   const flushDesired = useCallback(async () => {
     if (inflightRef.current) return;
@@ -151,29 +187,21 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
 
           const latestDesired = desiredRunningRef.current;
           if (latestDesired !== null && latestDesired !== data.running) {
-            const current = queryClient.getQueryData<MemberStudyTimeResponse>(
-              QUERY_KEYS.studyTime.me,
-            );
-            applyOptimistic(
-              latestDesired
-                ? buildOptimisticRunning(current, displayedSecondsRef.current)
-                : buildOptimisticPaused(current, displayedSecondsRef.current),
+            const current = getMyState();
+            upsertMember(
+              buildOptimisticMember(
+                current,
+                data.memberId,
+                data.nickname,
+                getDisplayedSecondsFor(data.memberId),
+                latestDesired,
+              ),
             );
           } else {
-            fetchedAtRef.current = Date.now();
-            queryClient.setQueryData(QUERY_KEYS.studyTime.me, data);
-            const seconds = getDisplayedStudySeconds(
-              data,
-              Date.now(),
-              fetchedAtRef.current,
-            );
-            displayedSecondsRef.current = seconds;
-            setDisplayedSeconds(seconds);
+            upsertMember(data);
           }
         } catch {
-          await queryClient.invalidateQueries({
-            queryKey: QUERY_KEYS.studyTime.me,
-          });
+          await refetch();
           desiredRunningRef.current = null;
           break;
         }
@@ -186,31 +214,28 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
         void flushDesired();
       }
     }
-  }, [
-    applyOptimistic,
-    pauseStudyTimeAsync,
-    queryClient,
-    resumeStudyTimeAsync,
-  ]);
+  }, [getDisplayedSecondsFor, getMyState, pauseStudyTimeAsync, refetch, resumeStudyTimeAsync, upsertMember]);
 
   const setDesiredRunning = useCallback(
     (running: boolean) => {
-      const current = queryClient.getQueryData<MemberStudyTimeResponse>(
-        QUERY_KEYS.studyTime.me,
-      );
-      if (current?.running === running) return;
+      const current = getMyState();
+      if (current?.running === running || myMemberId == null) return;
 
       writeKeepRunningIntent(running);
       desiredRunningRef.current = running;
-      applyOptimistic(
-        running
-          ? buildOptimisticRunning(current, displayedSecondsRef.current)
-          : buildOptimisticPaused(current, displayedSecondsRef.current),
+      upsertMember(
+        buildOptimisticMember(
+          current,
+          myMemberId,
+          currentMember?.nickname ?? current?.nickname ?? "",
+          getDisplayedSecondsFor(myMemberId),
+          running,
+        ),
       );
 
       void flushDesired();
     },
-    [applyOptimistic, flushDesired, queryClient],
+    [currentMember?.nickname, flushDesired, getDisplayedSecondsFor, getMyState, myMemberId, upsertMember],
   );
 
   const syncResume = useCallback(() => {
@@ -222,46 +247,40 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
   }, [setDesiredRunning]);
 
   const handleToggle = useCallback(() => {
-    const current = queryClient.getQueryData<MemberStudyTimeResponse>(
-      QUERY_KEYS.studyTime.me,
-    );
+    const current = getMyState();
     setDesiredRunning(!current?.running);
-  }, [queryClient, setDesiredRunning]);
+  }, [getMyState, setDesiredRunning]);
 
   /** 재생 의도인데 서버/캐시가 멈춤이면 다시 재생 (탭 복귀·refetch 대응) */
   const restoreKeepRunningIfNeeded = useCallback(() => {
     if (!readKeepRunningIntent()) return;
 
-    const phase = pomodoroStatusRef.current
-      ? getPomodoroStudyPhase(pomodoroStatusRef.current)
-      : "idle";
+    const phase = pomodoroStatus ? getPomodoroStudyPhase(pomodoroStatus) : "idle";
     if (isPomodoroBlockingPhase(phase)) return;
 
-    const current = queryClient.getQueryData<MemberStudyTimeResponse>(
-      QUERY_KEYS.studyTime.me,
-    );
+    const current = getMyState();
     if (!current || current.running) return;
 
     syncResume();
-  }, [queryClient, syncResume]);
+  }, [getMyState, pomodoroStatus, syncResume]);
 
   useEffect(() => {
-    if (!studyTime) return;
+    if (!myState) return;
 
-    if (studyTime.running) {
+    if (myState.running) {
       writeKeepRunningIntent(true);
       return;
     }
 
     restoreKeepRunningIfNeeded();
-  }, [studyTime, restoreKeepRunningIfNeeded]);
+  }, [myState, restoreKeepRunningIfNeeded]);
 
   useEffect(() => {
     const handleVisible = () => {
       if (document.visibilityState !== "visible") return;
 
       // 탭 복귀 시 최신 서버 상태 확인 + 재생 의도 복구
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.studyTime.me });
+      void refetch();
       restoreKeepRunningIfNeeded();
     };
 
@@ -271,7 +290,10 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
       document.removeEventListener("visibilitychange", handleVisible);
       window.removeEventListener("focus", handleVisible);
     };
-  }, [queryClient, restoreKeepRunningIfNeeded]);
+  }, [refetch, restoreKeepRunningIfNeeded]);
+
+  const prevPomodoroPhaseRef = useRef<PomodoroStudyPhase | null>(null);
+  const didBindPomodoroPhaseRef = useRef(false);
 
   useEffect(() => {
     if (!pomodoroStatus) return;
@@ -297,15 +319,27 @@ export function useRoomStudyTime({ pomodoroStatus }: UseRoomStudyTimeOptions) {
     syncPause();
   }, [pomodoroStatus, syncPause, syncResume]);
 
+  const applyLiveKitSync = useCallback(
+    (data: unknown): boolean => {
+      if (!isLiveKitStudyTimeSyncMessage(data)) return false;
+
+      upsertMember(data.member);
+      return true;
+    },
+    [upsertMember],
+  );
+
   return {
-    studyTime,
-    displayedSeconds,
-    isRunning: !!studyTime?.running,
+    studyTime: myState,
+    displayedSeconds: myMemberId != null ? getDisplayedSecondsFor(myMemberId) : 0,
+    isRunning: !!myState?.running,
     isLoading,
     isFetching,
     isTogglePending: isSyncing,
     handleToggle,
     syncResume,
     syncPause,
+    applyLiveKitSync,
+    getMemberStudyProgress,
   };
 }

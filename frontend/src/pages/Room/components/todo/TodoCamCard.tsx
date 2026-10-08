@@ -27,12 +27,69 @@ import { useToastContext } from "@/contexts/ToastContext";
 import type { TodoGroup } from "@/types/todo";
 import { TODO_CONTENT_MAX_LENGTH } from "@/constants/todo";
 import { formatDDayLabel, isDDayUrgent } from "@/utils/date";
+import {
+  formatStudySecondsAsClock,
+  getStudyTimeProgressPercent,
+} from "@/utils/studyTime";
+
+type MemberStudyProgress = {
+  displayedSeconds: number;
+  weeklyStudyTimeGoalSeconds: number | null;
+  running: boolean;
+};
 
 type TodoCamCardProps = {
   variant?: "default" | "panel";
   groupCode?: string;
   members?: GroupMember[];
+  getMemberStudyProgress?: (memberId: number) => MemberStudyProgress | undefined;
 };
+
+function MemberStudyProgressCard({
+  progress,
+}: {
+  progress: MemberStudyProgress | undefined;
+}) {
+  const displayedSeconds = progress?.displayedSeconds ?? 0;
+  const goalSeconds = progress?.weeklyStudyTimeGoalSeconds ?? null;
+  const percent = getStudyTimeProgressPercent(displayedSeconds, goalSeconds);
+
+  return (
+    <div className="mb-3 shrink-0 rounded-xl bg-gray-normal p-3 select-none">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-baseline gap-1">
+          <span className="text-h5 font-bold text-green-darkest">
+            {formatStudySecondsAsClock(displayedSeconds)}
+          </span>
+          <span className="text-bodySm text-gray-semidark">
+            {goalSeconds != null
+              ? `/ ${formatStudySecondsAsClock(goalSeconds)}`
+              : "/ 목표 미설정"}
+          </span>
+        </div>
+
+        {progress?.running ? (
+          <span className="flex shrink-0 items-center gap-1 text-caption font-semibold text-green-dark">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-light animate-pulse" />
+            공부 중
+          </span>
+        ) : (
+          <span className="flex shrink-0 items-center gap-1 text-caption font-semibold text-gray-semidark">
+            <span className="h-1.5 w-1.5 rounded-full bg-gray-semidark/50" />
+            쉬는 중
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-light">
+        <div
+          className="h-full rounded-full bg-green-normal transition-all duration-300"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 const truncateNickname = (nickname: string) =>
   nickname.length > 3 ? `${nickname.slice(0, 3)}...` : nickname;
@@ -49,6 +106,7 @@ export default function TodoCamCard({
   variant = "default",
   groupCode,
   members = [],
+  getMemberStudyProgress,
 }: TodoCamCardProps) {
   const queryClient = useQueryClient();
   const { notify } = useToastContext();
@@ -519,6 +577,12 @@ export default function TodoCamCard({
               circleIconOff={<CalendarClock size={12} color="#284F43" />}
             />
           </div>
+
+          {selectedMember && (
+            <MemberStudyProgressCard
+              progress={getMemberStudyProgress?.(selectedMember.id)}
+            />
+          )}
 
           <div className="flex-1 pb-8 space-y-4 overflow-y-auto ">
             {isPending && (

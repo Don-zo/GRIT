@@ -7,6 +7,7 @@ export function useRoomLiveKitData(groupCode: string | undefined) {
   const pomodoro = useRoomPomodoro(groupCode);
   const reactions = useRoomReactions(groupCode);
   const studyTime = useRoomStudyTime({
+    groupCode,
     pomodoroStatus: pomodoro.pomodoroStatus,
   });
 
@@ -16,12 +17,13 @@ export function useRoomLiveKitData(groupCode: string | undefined) {
         const data = JSON.parse(new TextDecoder().decode(payload));
 
         if (pomodoro.applyLiveKitSync(data)) return;
+        if (studyTime.applyLiveKitSync(data)) return;
         reactions.applyLiveKitReaction(data);
       } catch {
         // 파싱 불가한 메시지는 무시
       }
     },
-    [pomodoro.applyLiveKitSync, reactions.applyLiveKitReaction],
+    [pomodoro.applyLiveKitSync, studyTime.applyLiveKitSync, reactions.applyLiveKitReaction],
   );
 
   return {
