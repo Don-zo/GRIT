@@ -149,7 +149,7 @@ const AchievementCard: React.FC = () => {
                       {item.progress}%
                     </p>
                   ) : (
-                    <p className="text-bodySm text-white">할 일 없음</p>
+                    <p className="text-bodySm text-white">기록 없음</p>
                   )}
                 </div>
               </div>
