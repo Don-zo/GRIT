@@ -40,7 +40,6 @@ public class MemberWithdrawalService {
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원입니다."));
 
         Instant now = clock.instant();
-        // 참조하는 행부터 삭제하여 외래 키와 다른 회원의 데이터를 보존한다.
         refreshTokenRepository.deleteAllForMember(memberId);
         todoRepository.deleteAllForMember(memberId);
         todoCategoryRepository.deleteAllForMember(memberId);
@@ -59,7 +58,6 @@ public class MemberWithdrawalService {
         memberRepository.delete(member);
         memberRepository.flush();
 
-        // 프로필 이미지가 다른 회원에게도 사용 중이면 공유 객체는 보존한다.
         if (member.getImageName() != null && !memberRepository.existsByImageName(member.getImageName())) {
             cleanupRepository.save(WithdrawalCleanup.create(member.getImageName(), now));
         }

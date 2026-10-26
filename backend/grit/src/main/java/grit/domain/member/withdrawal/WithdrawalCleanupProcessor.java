@@ -18,7 +18,6 @@ public class WithdrawalCleanupProcessor {
     private final S3Service s3;
     private final Clock clock;
 
-    // 작업 행만 잠근다. 탈퇴 요청의 트랜잭션에서는 외부 API를 호출하지 않는다.
     @Transactional
     public boolean processNext() {
         var next = repository.findNextForUpdate(clock.instant());
@@ -27,7 +26,6 @@ public class WithdrawalCleanupProcessor {
         }
         WithdrawalCleanup task = next.get();
         try {
-            // 처리 대기 중 이미지가 다시 사용되었으면 공유 객체를 보존한다.
             if (!members.existsByImageName(task.getImageName())) {
                 s3.deleteObject(S3Directory.PROFILE_IMAGES, task.getImageName().toString());
             }
