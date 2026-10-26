@@ -9,9 +9,11 @@ import grit.domain.member.dto.MemberResponseDto;
 import grit.domain.member.dto.MemberStudyTimeResponseDto;
 import grit.domain.member.entity.Member;
 import grit.domain.member.service.MemberService;
+import grit.domain.member.service.MemberWithdrawalService;
 import grit.domain.studytime.service.StudyTimeService;
 import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
+import grit.global.util.CookieUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -19,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,6 +34,8 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+    private final MemberWithdrawalService memberWithdrawalService;
+    private final CookieUtils cookieUtils;
     private final S3Service s3Service;
     private final StudyTimeService studyTimeService;
 
@@ -111,18 +116,22 @@ public class MemberController {
         return ResponseEntity.ok(new MemberNickNameAvailabilityResponseDto(isAvailable));
     }
 
-    @Operation(summary = "회원 탈퇴", description = "사용자를 삭제(탈퇴)합니다.")
+    @Operation(summary = "회원 탈퇴", description = "회원과 개인 데이터를 영구 삭제하고 친구·그룹 관계 및 인증 토큰을 정리합니다. 재가입 시 새 회원으로 시작합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "삭제 성공 (반환값 없음)"),
-            @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자")
+            @ApiResponse(responseCode = "204", description = "탈퇴 성공 및 refresh cookie 만료 (반환값 없음)"),
+            @ApiResponse(responseCode = "401", description = "인증 실패 또는 이미 탈퇴한 회원", content = @Content),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자", content = @Content),
+            @ApiResponse(responseCode = "500", description = "DB 삭제 또는 외부 정리 작업 저장 실패 (DB 변경 롤백)", content = @Content)
     })
     @DeleteMapping("/me")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal MemberPrincipal memberPrincipal) {
 
-        Member member = getAuthenticatedMember(memberPrincipal);
-        memberService.delete(member);
-        return ResponseEntity.noContent().build();
+        memberWithdrawalService.withdraw(memberPrincipal.id());
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE,
+                        cookieUtils.createEmptyRefreshTokenCookie().toString())
+                .build();
     }
 
     @PostMapping("/me/profile-image/upload-url")

@@ -114,11 +114,6 @@ public class MemberService {
                 weeklyStudyTimeGoal);
     }
 
-    // 회원 탈퇴
-    public void delete(Member member) {
-        memberRepository.delete(member);
-    }
-
     public Optional<Member> getBySocialAccount(SocialProvider provider, String providerId) {
         return memberRepository.findByProviderAndProviderId(provider, providerId);
     }

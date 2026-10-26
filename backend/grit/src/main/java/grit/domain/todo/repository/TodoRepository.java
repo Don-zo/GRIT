@@ -1,12 +1,13 @@
 package grit.domain.todo.repository;
+
 import grit.domain.todo.entity.Todo;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
 
 public interface TodoRepository extends JpaRepository<Todo, Long> {
 
@@ -71,4 +72,8 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Todo t SET t.category = null WHERE t.category.id = :categoryId")
     void clearCategoryRefsByCategoryId(@Param("categoryId") Long categoryId);
+
+    @Modifying
+    @Query("delete from Todo e where e.owner.id = :memberId")
+    void deleteAllForMember(@Param("memberId") Long memberId);
 }

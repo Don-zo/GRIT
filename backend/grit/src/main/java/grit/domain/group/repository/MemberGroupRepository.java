@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MemberGroupRepository extends JpaRepository<MemberGroup, Long> {
+    long countByGroup(Group group);
+
     Optional<MemberGroup> findByMemberAndGroup(Member member, Group group);
 
     List<MemberGroup> findAllByMember(Member member);
