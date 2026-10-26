@@ -1,5 +1,6 @@
 package grit.domain.auth.infrastructure.jwt;
 
+import grit.domain.member.repository.MemberRepository;
 import grit.global.handler.CustomAuthenticationEntryPoint;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +23,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private static final String LIVEKIT_WEBHOOK_PATH = "/api/livekit/webhook";
 
     private final JwtProvider jwtProvider;
+    private final MemberRepository memberRepository;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
@@ -37,6 +40,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         if (token != null) {
             try {
                 Authentication authentication = jwtProvider.getAuthentication(token);
+                MemberPrincipal principal = (MemberPrincipal) authentication.getPrincipal();
+                if (!memberRepository.existsById(principal.id())) {
+                    throw new BadCredentialsException("Member no longer exists");
+                }
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (AuthenticationException ex) {
                 SecurityContextHolder.clearContext();

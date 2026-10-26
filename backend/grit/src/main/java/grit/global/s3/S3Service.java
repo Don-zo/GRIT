@@ -35,6 +35,10 @@ public class S3Service {
                 duration, metadata, null);
     }
 
+    public void deleteObject(String dir, String filename) {
+        s3Template.deleteObject(bucketName, dir + "/" + filename);
+    }
+
     public boolean isObjectExists(String dir, String filename) {
         return s3Template.objectExists(bucketName, dir + "/" + filename);
     }

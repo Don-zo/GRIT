@@ -3,6 +3,7 @@ package grit.domain.group;
 import grit.domain.group.dto.GroupProfileImageUploadUrlResponseDto;
 import grit.domain.group.entity.Group;
 import grit.domain.group.entity.MemberGroup;
+import grit.domain.group.livekit.pomodoro.repository.PomodoroRepository;
 import grit.domain.group.repository.GroupRepository;
 import grit.domain.group.repository.MemberGroupRepository;
 import grit.domain.member.entity.Member;
@@ -13,16 +14,15 @@ import grit.global.exception.InvalidInputException;
 import grit.global.s3.S3Directory;
 import grit.global.s3.S3Service;
 import grit.global.util.GroupCodeGenerator;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.text.Collator;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -33,6 +33,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final MemberGroupRepository memberGroupRepository;
     private final S3Service s3Service;
+    private final PomodoroRepository pomodoroRepository;
 
     @Transactional
     public Group createGroup(Member member, String name, UUID imageName) {
@@ -74,7 +75,7 @@ public class GroupService {
 
     @Transactional
     public Group joinGroup(Member member, String groupCode) {
-        Group group = findGroupByCode(groupCode);
+        Group group = findGroupByCodeForUpdate(groupCode);
 
         boolean isAlreadyMember = memberGroupRepository.existsByMemberAndGroup(member, group);
         if (isAlreadyMember) {
@@ -98,16 +99,19 @@ public class GroupService {
 
     @Transactional
     public void deleteGroupByCode(Member member, String groupCode) {
-        Group group = findGroupByCode(groupCode);
+        Group group = findGroupByCodeForUpdate(groupCode);
 
         MemberGroup memberGroup = memberGroupRepository.findByMemberAndGroup(member, group)
                 .orElseThrow(() -> new AccessDeniedException("참여 중인 그룹이 아닙니다."));
 
         memberGroupRepository.delete(memberGroup);
 
-        group.decreaseMemberCount();
+        memberGroupRepository.flush();
+        group.setMemberCount((int) memberGroupRepository.countByGroup(group));
 
         if (group.getMemberCount() <= 0) {
+            pomodoroRepository.findByGroup(group).ifPresent(pomodoroRepository::delete);
+            pomodoroRepository.flush();
             groupRepository.delete(group);
         }
     }
