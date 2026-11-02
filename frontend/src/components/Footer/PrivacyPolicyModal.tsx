@@ -18,7 +18,7 @@ export default function PrivacyPolicyModal({
           <Modal.Title size="sm">개인정보 처리방침</Modal.Title>
         </Modal.Header>
 
-        <Modal.Body className="max-h-[min(70vh,640px)] overflow-y-auto px-6 pb-8 text-bodySm text-green-light/85">
+        <Modal.Body className="max-h-[min(70vh,640px)] overflow-y-auto overscroll-contain px-6 pb-8 text-bodySm text-green-light/85">
           <p className="leading-relaxed">
             <strong className="text-green-light">GRIT</strong>
             (
