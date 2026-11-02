@@ -34,10 +34,15 @@ function Modal({ isOpen, onClose, children }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    document.body.style.overflow = "hidden";
+    // html에 overflow-x: hidden이 걸려 있어 html이 스크롤 컨테이너가 되므로 함께 잠금
+    const { documentElement: html, body } = document;
+    const originalHtmlOverflow = html.style.overflow;
+    const originalBodyOverflow = body.style.overflow;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = originalStyle;
+      html.style.overflow = originalHtmlOverflow;
+      body.style.overflow = originalBodyOverflow;
     };
   }, [isOpen]);
 
