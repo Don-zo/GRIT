@@ -1,6 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { useRef } from "react";
-import type { MouseEvent } from "react";
+import LandingImageFrame from "../LandingImageFrame";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "@/routes/path";
 import { getAccessToken } from "@/utils/tokenStorage";
@@ -9,27 +8,9 @@ import SplitText from "@/pages/Landing/components/HeroSection/SplitText";
 
 export default function HeroSection() {
   const navigate = useNavigate();
-  const windowRef = useRef<HTMLDivElement>(null);
 
   const handleStartClick = () => {
     navigate(getAccessToken() ? PATHS.HOME : PATHS.SIGNUP);
-  };
-
-  const handleWindowMouseMove = (event: MouseEvent<HTMLDivElement>) => {
-    if (!windowRef.current) return;
-
-    const windowElement = windowRef.current;
-    const bounds = windowElement.getBoundingClientRect();
-    const normalizedX = (event.clientX - bounds.left) / bounds.width - 0.5;
-    const normalizedY = (event.clientY - bounds.top) / bounds.height - 0.5;
-
-    windowElement.style.transform = `perspective(1000px) rotateX(${-normalizedY * 10}deg) rotateY(${normalizedX * 10}deg) scale3d(1.02, 1.02, 1.02)`;
-  };
-
-  const handleWindowMouseLeave = () => {
-    if (!windowRef.current) return;
-    windowRef.current.style.transform =
-      "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
   };
 
   return (
@@ -67,29 +48,13 @@ export default function HeroSection() {
 
         <div className="relative w-full max-w-5xl mx-auto mt-16 hero-window-enter">
           <div className="absolute -inset-x-8 -top-20 -z-10 h-64 rounded-full bg-[#82c397]/20 blur-3xl" />
-          <div
-            ref={windowRef}
-            onMouseMove={handleWindowMouseMove}
-            onMouseLeave={handleWindowMouseLeave}
-            className="relative w-full rounded-2xl bg-[#f3f4f3] p-8 shadow-lg transition-transform duration-200 ease-out"
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            <div className="absolute flex items-center gap-2 left-5 top-5">
-              <span className="h-3.5 w-3.5 rounded-full bg-[#f87171]" />
-              <span className="h-3.5 w-3.5 rounded-full bg-[#facc15]" />
-              <span className="h-3.5 w-3.5 rounded-full bg-[#4ade80]" />
-            </div>
-            <div className="absolute flex flex-col gap-1 right-5 top-5">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#9ca3af]" />
-              <span className="h-1.5 w-1.5 rounded-full bg-[#9ca3af]" />
-              <span className="h-1.5 w-1.5 rounded-full bg-[#9ca3af]" />
-            </div>
+          <LandingImageFrame>
             <img
               src={heroGroupImage}
               alt="GRIT 스터디룸"
-              className="mt-8 block aspect-[3024/1720] w-full rounded-2xl object-cover shadow-lg"
+              className="absolute inset-0 size-full rounded-2xl object-cover shadow-lg"
             />
-          </div>
+          </LandingImageFrame>
         </div>
       </div>
     </main>

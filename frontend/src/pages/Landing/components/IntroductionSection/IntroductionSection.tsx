@@ -8,16 +8,15 @@ import IntroductionCard from "@/pages/Landing/components/IntroductionSection/Int
 export default function IntroductionSection() {
   return (
     <>
-      <section id="features" data-landing-section className="h-screen">
+      <section id="features" data-landing-section className="min-h-screen">
         <IntroductionCard
           functionName="캠스터디"
           functionDescription="함께 켜고, 함께 버티는 실시간 집중 공간"
           imageSrc={groupStudyImage}
-          imageBoxClassName="aspect-[7210/4101]"
         />
       </section>
 
-      <section data-landing-section className="h-screen">
+      <section data-landing-section className="min-h-screen">
         <IntroductionCard
           functionName="뽀모도로"
           functionDescription="집중과 휴식을 반복하며 그릿을 쌓는 시간 관리"
@@ -25,7 +24,7 @@ export default function IntroductionSection() {
         />
       </section>
 
-      <section data-landing-section className="relative h-screen">
+      <section data-landing-section className="relative min-h-screen pb-24">
         <IntroductionCard
           functionName="투두리스트 관리"
           functionDescription="오늘 해야 할 일을 정리하고 끝까지 완주"
