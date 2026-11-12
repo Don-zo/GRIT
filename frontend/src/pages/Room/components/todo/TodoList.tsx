@@ -56,6 +56,7 @@ export default function TodoList({
 
   const hasAddRow = Boolean(addRow);
   const isEditingHere = items.some((item) => item.id === editingItemId);
+  const isEmpty = items.length === 0 && !canAdd;
   useEffect(() => {
     if (!open || !contentRef.current) return;
     setMaxHeight(contentRef.current.scrollHeight);
@@ -99,12 +100,12 @@ export default function TodoList({
         }}
         className={`
           overflow-hidden
-          ${open ? "mt-2" : ""}
+          ${open ? "mt-1" : ""}
         `}
       >
         <div
           className={`
-            bg-gray-light rounded-xl p-3 flex flex-col gap-2
+            bg-gray-light rounded-xl px-3 pt-1 flex flex-col gap-2
             transition-all duration-500 ease-out
             ${open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"}
           `}
@@ -120,6 +121,11 @@ export default function TodoList({
                 <Plus size={16} strokeWidth={2} />
               </button>
             ))}
+          {isEmpty && (
+            <div className="flex items-center justify-center px-3 py-2 bg-gray-normal rounded-xl text-caption text-gray-semidark select-none">
+              아직 등록된 할 일이 없어요.
+            </div>
+          )}
           {items.map((item) =>
             item.id === editingItemId && editRow ? (
               <div key={item.id}>{editRow}</div>
