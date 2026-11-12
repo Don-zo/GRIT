@@ -225,6 +225,7 @@ export default function ProfileSettingsModal({
                       label="닉네임"
                       type="text"
                       value={nickname}
+                      maxLength={10}
                       onChange={(e) => handleNicknameChange(e.target.value)}
                       disabled={isFormDisabled}
                     />
@@ -257,6 +258,7 @@ export default function ProfileSettingsModal({
                   label="한 줄 소개"
                   type="text"
                   value={introduction}
+                  maxLength={40}
                   onChange={(e) => setIntroduction(e.target.value)}
                 />
               </div>
