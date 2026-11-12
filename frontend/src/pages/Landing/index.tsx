@@ -12,6 +12,9 @@ const LandingPage = () => {
     const handleWheel = (event: WheelEvent) => {
       if (event.deltaY === 0 || isAnimatingRef.current) return;
 
+      // 모달이 열려 있으면 섹션 스냅을 하지 않는다 (모달 내부 스크롤 허용 + 배경 이동 방지)
+      if (document.querySelector('[aria-modal="true"]')) return;
+
       const sections = Array.from(
         document.querySelectorAll<HTMLElement>("[data-landing-section]"),
       );
