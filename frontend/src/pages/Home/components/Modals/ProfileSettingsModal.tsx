@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import { isAxiosError } from "axios";
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "@/contexts/ToastContext";
@@ -141,6 +142,19 @@ export default function ProfileSettingsModal({
     },
     onError: (error) => {
       console.error("프로필 저장 에러", error);
+      const serverMessage: unknown = isAxiosError(error)
+        ? error.response?.data?.message
+        : undefined;
+      const nicknameMessage = typeof serverMessage === "string"
+        ? serverMessage.split(", ").find((message) => message.startsWith("nickname: "))
+        : undefined;
+      if (nicknameMessage) {
+        setNicknameCheckResult({
+          isAvailable: false,
+          message: nicknameMessage.slice("nickname: ".length),
+        });
+        return;
+      }
       notify(
         error instanceof Error ? error.message : "저장에 실패했습니다.",
         "error",
@@ -174,13 +188,28 @@ export default function ProfileSettingsModal({
     setNicknameCheckResult(null);
   };
 
-  const handleCheckNicknameDuplicate = () => {
+  const validateNickname = () => {
     const trimmedNickname = nickname.trim();
-    if (!trimmedNickname) return;
+    const message = !trimmedNickname
+      ? "닉네임을 입력해주세요"
+      : trimmedNickname.length > 10
+        ? "닉네임은 10자 이하여야 합니다."
+        : null;
+    if (message) {
+      setNicknameCheckResult({ isAvailable: false, message });
+      return false;
+    }
+    return true;
+  };
+
+  const handleCheckNicknameDuplicate = () => {
+    if (!validateNickname()) return;
+    const trimmedNickname = nickname.trim();
     checkNicknameDuplicate(trimmedNickname);
   };
 
   const handleSave = async () => {
+    if (!validateNickname()) return;
     await saveProfile();
   };
 
