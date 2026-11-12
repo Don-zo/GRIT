@@ -9,7 +9,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByToken(String token);
-    void deleteByToken(String token);
+    @Modifying
+    @Query("delete from RefreshToken r where r.token = :token")
+    int deleteByToken(@Param("token") String token);
 
     @Modifying
     @Query("delete from RefreshToken e where e.member.id = :memberId")
