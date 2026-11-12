@@ -1,8 +1,23 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ToggleBtn from "@/components/ToggleBtn";
-import { BookCheck, CalendarClock, Check, Trash2, X } from "lucide-react";
+import {
+  BookCheck,
+  CalendarClock,
+  Check,
+  Crown,
+  Trash2,
+  UserRound,
+  X,
+} from "lucide-react";
 import TodoList from "./TodoList";
 import RoomCategorySelect from "./RoomCategorySelect";
 import { groupApi } from "@/apis/domains/group/api";
@@ -31,6 +46,17 @@ import {
   formatStudySecondsAsClock,
   getStudyTimeProgressPercent,
 } from "@/utils/studyTime";
+
+/** 멤버 탭 닉네임이 펼쳐지는 시간(ms) — duration-300과 맞춘다 */
+const TAB_EXPAND_MS = 300;
+/** 멤버 탭 줄이 넘지 말아야 할 폭 — 아래 패널(w-96)과 같다 */
+const TAB_ROW_MAX_WIDTH = 384;
+/** 접힌 탭 폭(px-4 양쪽 + 아이콘 16px), 탭끼리 겹치는 폭(ml-[-8px]) */
+const TAB_COLLAPSED_WIDTH = 48;
+const TAB_OVERLAP = 8;
+/** 닉네임 앞 간격(ml-1.5), 닉네임 최대 폭(max-w-30) */
+const TAB_NAME_GAP = 6;
+const TAB_NAME_MAX_WIDTH = 120;
 
 type MemberStudyProgress = {
   displayedSeconds: number;
@@ -90,9 +116,6 @@ function MemberStudyProgressCard({
     </div>
   );
 }
-
-const truncateNickname = (nickname: string) =>
-  nickname.length > 3 ? `${nickname.slice(0, 3)}...` : nickname;
 
 const getDateKeyOffset = (offsetDays: number) => {
   const d = new Date();
@@ -525,6 +548,123 @@ export default function TodoCamCard({
     deleteTodoMutation.mutate(todoId);
   };
 
+  // 멤버 탭 호버: 탭이 펼쳐지며 옆 탭이 밀릴 때 커서 밑으로 다른 탭이 지나가도 호버가 바뀌지 않도록
+  // 실제 마우스 이동(mousemove)으로만 바꾸고, 펼쳐지는 동안은 잠깐 고정한다.
+  const [hoveredTabId, setHoveredTabId] = useState<GroupMember["id"] | null>(
+    null,
+  );
+  const hoverLockUntilRef = useRef(0);
+  // 고정 중에 마지막으로 커서가 있던 탭 — 고정이 풀리면 반영한다
+  const pendingHoverIdRef = useRef<GroupMember["id"] | null>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    },
+    [],
+  );
+
+  // 다른 탭을 누르면 이전 선택 탭이 바로 접히면서 누른 탭이 커서 밑에서 밀려나 버린다.
+  // 그래서 이전 선택 탭은 커서가 다른 탭으로 가거나 탭 줄을 벗어날 때까지 펼쳐 둔다.
+  const [stickyTabId, setStickyTabId] = useState<GroupMember["id"] | null>(
+    null,
+  );
+
+  const handleTabClick = (memberId: GroupMember["id"]) => {
+    if (memberId === selectedMemberId) return;
+    setStickyTabId(selectedMemberId);
+    setSelectedMemberId(memberId);
+  };
+
+  const applyTabHover = (memberId: GroupMember["id"]) => {
+    hoverLockUntilRef.current = performance.now() + TAB_EXPAND_MS;
+    setHoveredTabId(memberId);
+    setStickyTabId(null);
+  };
+
+  const handleTabMouseMove = (memberId: GroupMember["id"]) => {
+    const remaining = hoverLockUntilRef.current - performance.now();
+    if (remaining <= 0) {
+      if (memberId !== hoveredTabId) applyTabHover(memberId);
+      return;
+    }
+    pendingHoverIdRef.current = memberId;
+    if (hoverTimerRef.current) return;
+    hoverTimerRef.current = setTimeout(() => {
+      hoverTimerRef.current = null;
+      const pendingId = pendingHoverIdRef.current;
+      pendingHoverIdRef.current = null;
+      if (pendingId !== null) applyTabHover(pendingId);
+    }, remaining);
+  };
+
+  const handleTabsMouseLeave = () => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = null;
+    pendingHoverIdRef.current = null;
+    hoverLockUntilRef.current = 0;
+    setHoveredTabId(null);
+    setStickyTabId(null);
+  };
+
+  // 펼쳐진 탭이 여러 개여도 탭 줄이 패널 폭을 넘지 않도록 남는 폭을 닉네임에 나눠 준다.
+  // 짧은 닉네임은 필요한 만큼만 받고, 남은 폭은 긴 닉네임에 몰아줘서 쓸데없이 말줄임되지 않게 한다.
+  const nameMeasureRef = useRef<HTMLDivElement | null>(null);
+  const [nameWidths, setNameWidths] = useState<Map<GroupMember["id"], number>>(
+    () => new Map(),
+  );
+
+  useLayoutEffect(() => {
+    const el = nameMeasureRef.current;
+    if (!el) return;
+    const update = () => {
+      const next = new Map<GroupMember["id"], number>();
+      Array.from(el.children).forEach((child, i) => {
+        const member = sortedMembers[i];
+        if (member) {
+          next.set(member.id, Math.ceil(child.getBoundingClientRect().width));
+        }
+      });
+      setNameWidths(next);
+    };
+    update();
+    // 웹폰트가 늦게 로드되면 너비가 바뀌므로 다시 잰다
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [sortedMembers]);
+
+  const expandedTabIds = [selectedMemberId, hoveredTabId, stickyTabId].filter(
+    (id, i, ids): id is GroupMember["id"] =>
+      id !== null &&
+      ids.indexOf(id) === i &&
+      sortedMembers.some((member) => member.id === id),
+  );
+  const collapsedRowWidth =
+    sortedMembers.length * TAB_COLLAPSED_WIDTH -
+    Math.max(0, sortedMembers.length - 1) * TAB_OVERLAP;
+
+  const tabNameMaxWidths = new Map<GroupMember["id"], number>();
+  let remainingNameWidth = Math.max(
+    0,
+    TAB_ROW_MAX_WIDTH -
+      collapsedRowWidth -
+      expandedTabIds.length * TAB_NAME_GAP,
+  );
+  expandedTabIds
+    .map((id) => ({
+      id,
+      width: Math.min(nameWidths.get(id) ?? TAB_NAME_MAX_WIDTH, TAB_NAME_MAX_WIDTH),
+    }))
+    .sort((a, b) => a.width - b.width)
+    .forEach(({ id, width }, i, list) => {
+      const share = remainingNameWidth / (list.length - i);
+      const given = Math.min(width, share);
+      tabNameMaxWidths.set(id, Math.floor(given));
+      remainingNameWidth -= given;
+    });
+
   const isPanel = variant === "panel";
 
   return (
@@ -532,27 +672,74 @@ export default function TodoCamCard({
       <div
         className={`flex flex-col items-start ${isPanel ? "mr-0 mt-0" : "mr-20 mt-30"}`}
       >
-        <div className="relative flex self-start select-none">
+        {/* 선택된 탭은 닉네임을 항상, 나머지는 아이콘만 있다가 마우스를 올리면 펼쳐지며 닉네임이 보인다.
+            탭은 아래로 16px 더 길게 그려 패널 뒤로 들어가게 해서(-mb-4, 패널 z-10),
+            패널 둥근 모서리 틈으로 배경 대신 탭 색이 보이게 한다. */}
+        <div
+          onMouseLeave={handleTabsMouseLeave}
+          className="relative flex self-start -mb-4 select-none"
+        >
+          {/* 닉네임 실제 너비 측정용 (굵게 렌더링해 활성 탭 기준으로 잰다) */}
+          <div
+            ref={nameMeasureRef}
+            aria-hidden
+            className="absolute top-0 left-0 flex w-max invisible pointer-events-none text-bodyMd font-semibold whitespace-nowrap"
+          >
+            {sortedMembers.map((member) => (
+              <span key={member.id}>{member.nickname}</span>
+            ))}
+          </div>
           {sortedMembers.map((member, idx) => {
             const isActive = selectedMemberId === member.id;
+            const isExpanded = tabNameMaxWidths.has(member.id);
             const z = sortedMembers.length - idx;
 
             return (
               <div
                 key={member.id}
-                onClick={() => setSelectedMemberId(member.id)}
-                style={{ zIndex: z }}
+                title={member.nickname}
+                onClick={() => handleTabClick(member.id)}
+                onMouseMove={() => handleTabMouseMove(member.id)}
+                style={{
+                  zIndex:
+                    hoveredTabId === member.id ? sortedMembers.length + 1 : z,
+                }}
                 className={`
-                  round-except-bt w-auto shrink-0 whitespace-nowrap px-6 py-[4px] text-bodyMd cursor-pointer
+                  round-except-bt flex shrink-0 items-center whitespace-nowrap
+                  px-4 pt-[4px] pb-[20px] text-bodyMd cursor-pointer
                   ${idx !== 0 ? "ml-[-8px]" : ""}
                   ${
                     isActive
                       ? "bg-gray-light text-green-dark font-semibold"
-                      : "bg-green-dark text-white font-light shadow-[0_-2px_6px_rgba(0,0,0,0.25)]"
+                      : "bg-[#33614E] text-white font-light shadow-[0_-2px_6px_rgba(0,0,0,0.25)]"
                   }
                 `}
               >
-                {truncateNickname(member.nickname)}
+                {member.me ? (
+                  // 내 탭 강조: 금색 왕관 (밝은 활성 탭 위에선 대비를 위해 더 진하게)
+                  <Crown
+                    size={16}
+                    strokeWidth={2}
+                    fill="currentColor"
+                    className={`shrink-0 ${isActive ? "text-[#D4A017]" : "text-[#F5C842]"}`}
+                  />
+                ) : (
+                  <UserRound size={16} strokeWidth={2} className="shrink-0" />
+                )}
+                <span
+                  className={`
+                    overflow-hidden text-ellipsis
+                    transition-[max-width,margin,opacity] duration-300 ease-out
+                    ${isExpanded ? "ml-1.5 opacity-100" : "opacity-0"}
+                  `}
+                  style={{
+                    maxWidth: isExpanded
+                      ? (tabNameMaxWidths.get(member.id) ?? 0)
+                      : 0,
+                  }}
+                >
+                  {member.nickname}
+                </span>
               </div>
             );
           })}
@@ -562,9 +749,11 @@ export default function TodoCamCard({
           className="
             bg-gray-light w-96 round-except-tl
             shadow-[0_4px_14px_rgba(0,0,0,0.15)]
+            [clip-path:inset(0_-24px_-24px_-24px)]
             h-[600px]
             p-4
             flex flex-col
+            relative z-10
           "
         >
           <div className="flex justify-end mb-3 select-none">
