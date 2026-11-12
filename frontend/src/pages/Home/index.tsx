@@ -33,7 +33,10 @@ const HomePage = () => {
               />
             </div>
           </aside>
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+          <div
+            data-scroll-container
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
+          >
             <div className="mx-auto w-full max-w-[1180px] px-16 pb-16">
               <div className="mt-18 flex flex-col-reverse items-stretch justify-center gap-4 lg:flex-row">
                 <Achievement />

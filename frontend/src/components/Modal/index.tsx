@@ -35,14 +35,20 @@ function Modal({ isOpen, onClose, children }: ModalProps) {
     if (!isOpen) return;
 
     // html에 overflow-x: hidden이 걸려 있어 html이 스크롤 컨테이너가 되므로 함께 잠금
-    const { documentElement: html, body } = document;
-    const originalHtmlOverflow = html.style.overflow;
-    const originalBodyOverflow = body.style.overflow;
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
+    // Home처럼 페이지 내부 div가 스크롤 컨테이너인 경우 data-scroll-container로 표시해 함께 잠금
+    const targets: HTMLElement[] = [
+      document.documentElement,
+      document.body,
+      ...document.querySelectorAll<HTMLElement>("[data-scroll-container]"),
+    ];
+    const originalOverflows = targets.map((el) => el.style.overflow);
+    targets.forEach((el) => {
+      el.style.overflow = "hidden";
+    });
     return () => {
-      html.style.overflow = originalHtmlOverflow;
-      body.style.overflow = originalBodyOverflow;
+      targets.forEach((el, i) => {
+        el.style.overflow = originalOverflows[i];
+      });
     };
   }, [isOpen]);
 
