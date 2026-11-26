@@ -69,10 +69,22 @@ class Deployment:
     def set_images(self, state):
         atomic(self.images, 'BLUE_IMAGE={}\nGREEN_IMAGE={}\n'.format(state['images']['blue'], state['images']['green']))
 
-    def route_text(self, slot, image):
+    def route_text(self, slot, image, address='127.0.0.1'):
+        # The response identifies the actual upstream, not merely the desired route.
+        upstream = address + ':8080'
         return ('upstream grit_backend { server backend-' + slot + ':8080; keepalive 16; }\n'
-                'map $host $grit_slot { default "' + slot + '"; }\n'
-                'map $host $grit_revision { default "' + image + '"; }\n')
+                'map $upstream_addr $grit_slot { default "invalid"; "' + upstream + '" "' + slot + '"; }\n'
+                'map $upstream_addr $grit_revision { default "invalid"; "' + upstream + '" "' + image + '"; }\n')
+
+    def address(self, slot, image):
+        container = json.loads(self.docker('container', 'inspect', 'grit-backend-' + slot).stdout)[0]
+        expected = json.loads(self.docker('image', 'inspect', image).stdout)[0]
+        if not container['State']['Running'] or container['Image'] != expected['Id']:
+            raise RuntimeError('Running candidate image mismatch')
+        address = container['NetworkSettings']['Networks']['grit-app']['IPAddress']
+        if not re.fullmatch(r'[0-9]+(?:\.[0-9]+){3}', address):
+            raise RuntimeError('Candidate has no application-network address')
+        return address
 
     def workers(self):
         result = self.docker('exec', 'grit-backend-gateway', 'ps', '-o', 'pid,args')
@@ -92,15 +104,11 @@ class Deployment:
             time.sleep(1)
 
     def candidate_ready(self, slot, image):
-        container = 'grit-backend-' + slot
-        for endpoint in ('health/readiness', 'info'):
-            result = self.docker('exec', container, 'curl', '--fail', '--silent', '--max-time', '5',
-                                 'http://127.0.0.1:8080/actuator/' + endpoint)
-            body = json.loads(result.stdout)
-            if endpoint == 'health/readiness' and body.get('status') != 'UP':
-                raise RuntimeError('Candidate not ready')
-            if endpoint == 'info' and body.get('app', {}).get('revision') != image:
-                raise RuntimeError('Candidate revision mismatch')
+        self.address(slot, image)
+        result = self.docker('exec', 'grit-backend-' + slot, 'curl', '--fail', '--silent', '--max-time', '5',
+                             'http://127.0.0.1:8080/actuator/health/readiness')
+        if json.loads(result.stdout).get('status') != 'UP':
+            raise RuntimeError('Candidate not ready')
 
     def wait_ready(self, slot, image):
         deadline = time.monotonic() + self.timeout
@@ -117,19 +125,17 @@ class Deployment:
         raise RuntimeError('Candidate readiness deadline exceeded')
 
     def proxy_check(self, state):
+        self.address(state['active'], state['images'][state['active']])
         rendered = json.loads(self.compose('config', '--format', 'json'))
         port = rendered['services']['proxy']['ports'][0]['published']
-        for endpoint in ('health/readiness', 'info'):
-            with urllib.request.urlopen('http://127.0.0.1:{}/actuator/{}'.format(port, endpoint), timeout=5) as response:
-                body = json.load(response)
-                if response.headers.get('X-Grit-Slot') != state['active']:
-                    raise RuntimeError('Proxy slot mismatch')
-                if response.headers.get('X-Grit-Revision') != state['images'][state['active']]:
-                    raise RuntimeError('Proxy image mismatch')
-                if endpoint == 'health/readiness' and body.get('status') != 'UP':
-                    raise RuntimeError('Routed backend not ready')
-                if endpoint == 'info' and body.get('app', {}).get('revision') != state['images'][state['active']]:
-                    raise RuntimeError('Routed application revision mismatch')
+        with urllib.request.urlopen('http://127.0.0.1:{}/actuator/health/readiness'.format(port), timeout=5) as response:
+            body = json.load(response)
+            if response.headers.get('X-Grit-Slot') != state['active']:
+                raise RuntimeError('Proxy upstream slot mismatch')
+            if response.headers.get('X-Grit-Revision') != state['images'][state['active']]:
+                raise RuntimeError('Proxy upstream image mismatch')
+            if body.get('status') != 'UP':
+                raise RuntimeError('Routed backend not ready')
 
     def wait_proxy(self, state, bootstrap=False):
         deadline = time.monotonic() + (self.timeout if bootstrap else min(self.timeout, 15))
@@ -171,7 +177,8 @@ class Deployment:
             self.compose('up', '-d', '--no-deps', 'backend-' + previous['active'])
             self.wait_ready(previous['active'], previous['images'][previous['active']])
             workers = self.workers()
-            atomic(self.route, journal['previous_route'])
+            atomic(self.route, self.route_text(previous['active'], previous['images'][previous['active']],
+                                               self.address(previous['active'], previous['images'][previous['active']])))
             self.reload()
             self.wait_proxy(previous)
             self.wait_workers(workers)
@@ -217,7 +224,7 @@ class Deployment:
                 if not journal['workers']:
                     raise RuntimeError('No proxy worker found; refusing an unverified cutover')
                 self.save(self.journal, journal)
-            atomic(self.route, self.route_text(slot, image))
+            atomic(self.route, self.route_text(slot, image, self.address(slot, image)))
             if previous:
                 self.reload()
             else:
