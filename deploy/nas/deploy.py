@@ -75,16 +75,16 @@ class Deployment:
                 'map $host $grit_revision { default "' + image + '"; }\n')
 
     def workers(self):
-        result = self.docker('exec', 'grit-backend', 'ps', '-o', 'pid,args')
+        result = self.docker('exec', 'grit-backend-gateway', 'ps', '-o', 'pid,args')
         return [line.split()[0] for line in result.stdout.splitlines()
                 if 'nginx: worker process' in line and line.split()[0].isdigit()]
 
     def wait_workers(self, pids):
         deadline = time.monotonic() + self.drain_timeout
         while pids:
-            result = self.docker('exec', 'grit-backend', 'sh', '-c',
+            result = self.docker('exec', 'grit-backend-gateway', 'sh', '-c',
                                  'for p do test ! -d "/proc/$p" || exit 1; done', 'sh', *pids, check=False)
-            retiring = self.docker('exec', 'grit-backend', 'ps', '-o', 'pid,args', check=False)
+            retiring = self.docker('exec', 'grit-backend-gateway', 'ps', '-o', 'pid,args', check=False)
             if result.returncode == 0 and retiring.returncode == 0 and 'worker process is shutting down' not in retiring.stdout:
                 return
             if time.monotonic() >= deadline:
@@ -143,8 +143,8 @@ class Deployment:
                 time.sleep(1)
 
     def reload(self):
-        self.docker('exec', 'grit-backend', 'nginx', '-t')
-        self.docker('exec', 'grit-backend', 'nginx', '-s', 'reload')
+        self.docker('exec', 'grit-backend-gateway', 'nginx', '-t')
+        self.docker('exec', 'grit-backend-gateway', 'nginx', '-s', 'reload')
 
     def finish(self, journal):
         state = journal['next']
@@ -194,8 +194,8 @@ class Deployment:
         if bootstrap != (previous is None):
             raise RuntimeError('Use bootstrap exactly once, then deploy')
         if bootstrap:
-            if self.docker('inspect', 'grit-backend', check=False).returncode == 0:
-                raise RuntimeError('Existing grit-backend detected; complete the initial migration first')
+            if self.docker('inspect', 'grit-backend-gateway', check=False).returncode == 0:
+                raise RuntimeError('Existing gateway detected; inspect its deployment state before bootstrap')
         else:
             self.proxy_check(previous)
         slot = 'green' if previous and previous['active'] == 'blue' else 'blue'

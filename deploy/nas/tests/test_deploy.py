@@ -124,7 +124,7 @@ class DeploymentTest(unittest.TestCase):
         with self.assertRaises(BlockingIOError):
             module.Deployment(self.temp.name)
 
-    def test_bootstrap_rejects_existing_legacy_container_and_mutable_tag(self):
+    def test_bootstrap_rejects_existing_gateway_and_mutable_tag(self):
         self.d.legacy = True
         with self.assertRaises(RuntimeError):
             self.d.deploy(NEW, bootstrap=True)

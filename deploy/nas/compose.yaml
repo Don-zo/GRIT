@@ -209,7 +209,7 @@ services:
     - backend
   proxy:
     image: nginx:1.30.8-alpine
-    container_name: grit-backend
+    container_name: grit-backend-gateway
     restart: unless-stopped
     ports:
     - 127.0.0.1:${BACKEND_PROXY_PORT:-14036}:8080

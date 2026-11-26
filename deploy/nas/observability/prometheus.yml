@@ -8,7 +8,7 @@ scrape_configs:
   - job_name: spring-app
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: [grit-backend:8080]
+      - targets: [grit-backend-gateway:8080]
   - job_name: synology-snmp
     scrape_interval: 1m
     metrics_path: /snmp
