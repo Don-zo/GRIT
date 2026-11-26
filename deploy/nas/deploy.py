@@ -195,7 +195,7 @@ class Deployment:
             raise RuntimeError('Use bootstrap exactly once, then deploy')
         if bootstrap:
             if self.docker('inspect', 'grit-backend', check=False).returncode == 0:
-                raise RuntimeError('Existing grit-backend detected; complete the documented initial migration first')
+                raise RuntimeError('Existing grit-backend detected; complete the initial migration first')
         else:
             self.proxy_check(previous)
         slot = 'green' if previous and previous['active'] == 'blue' else 'blue'

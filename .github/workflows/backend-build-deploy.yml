@@ -125,7 +125,7 @@ jobs:
           target=/volume1/docker/grit
           test -f "$target/.env"
           test -f "$target/runtime/state.json" || {
-            echo "Complete the one-time blue/green bootstrap described in deploy/nas/README.md first." >&2
+            echo "Complete the one-time blue/green bootstrap with deploy.py before enabling CD." >&2
             exit 1
           }
           for definition in compose.backend.yaml nginx/nginx.conf; do

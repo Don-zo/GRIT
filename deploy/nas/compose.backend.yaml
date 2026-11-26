@@ -65,7 +65,7 @@ services:
     container_name: grit-backend
     restart: unless-stopped
     ports:
-      - '127.0.0.1:${BACKEND_PROXY_PORT:-18080}:8080'
+      - '127.0.0.1:${BACKEND_PROXY_PORT:-14036}:8080'
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./runtime/nginx:/etc/nginx/routes:ro
