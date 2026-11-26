@@ -143,10 +143,6 @@ jobs:
           set -Eeuo pipefail
           target=/volume1/docker/grit
           test -f "$target/.env"
-          test -f "$target/runtime/state.json" || {
-            echo "Complete the one-time blue/green bootstrap with deploy.py before enabling CD." >&2
-            exit 1
-          }
           for definition in compose.yaml nginx/nginx.conf observability/prometheus.yml observability/loki.yml observability/tempo.yml observability/grafana/provisioning/datasources/default.yml; do
             cmp -s "deploy/nas/$definition" "$target/$definition" || {
               echo "Deployment definition differs: $definition. Apply its reviewed migration first." >&2
@@ -161,4 +157,8 @@ jobs:
           BACKEND_IMAGE: ${{ needs.ci.outputs.image }}
         run: |
           set -Eeuo pipefail
-          python3 /volume1/docker/grit/deploy.py deploy "$BACKEND_IMAGE"
+          command=bootstrap
+          if test -f /volume1/docker/grit/runtime/state.json; then
+            command=deploy
+          fi
+          python3 /volume1/docker/grit/deploy.py "$command" "$BACKEND_IMAGE"
