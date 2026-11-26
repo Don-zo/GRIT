@@ -4,7 +4,6 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import Mock
 
 spec = importlib.util.spec_from_file_location('deployment', Path(__file__).parents[1] / 'deploy.py')
 module = importlib.util.module_from_spec(spec)
@@ -167,17 +166,27 @@ class CandidateIdentityTest(unittest.TestCase):
             self.d.address('blue', NEW)
 
     def test_proxy_rejects_response_from_unexpected_upstream(self):
-        self.d.compose = lambda *args: json.dumps({'services': {'proxy': {'ports': [{'published': '14036'}]}}})
-        response = Mock()
-        response.read.return_value = b'{"status":"UP"}'
-        response.headers = {'X-Grit-Slot': 'invalid', 'X-Grit-Revision': 'invalid'}
-        context = Mock()
-        context.__enter__ = Mock(return_value=response)
-        context.__exit__ = Mock(return_value=False)
-        from unittest.mock import patch
-        with patch.object(module.urllib.request, 'urlopen', return_value=context):
-            with self.assertRaisesRegex(RuntimeError, 'upstream slot mismatch'):
-                self.d.proxy_check({'active': 'blue', 'images': {'blue': NEW}})
+        inspect = self.d.docker
+        def docker(*args, **kwargs):
+            if args[0] == 'exec':
+                self.assertEqual(args[1], 'grit-backend-gateway')
+                return subprocess.CompletedProcess(args, 0, '{"status":"UP"}',
+                                                   '  X-Grit-Slot: invalid\n  X-Grit-Revision: invalid\n')
+            return inspect(*args, **kwargs)
+        self.d.docker = docker
+        with self.assertRaisesRegex(RuntimeError, 'upstream slot mismatch'):
+            self.d.proxy_check({'active': 'blue', 'images': {'blue': NEW}})
+
+    def test_gateway_probe_works_without_runner_host_network(self):
+        inspect = self.d.docker
+        def docker(*args, **kwargs):
+            if args[0] == 'exec':
+                self.assertEqual(args[1], 'grit-backend-gateway')
+                return subprocess.CompletedProcess(args, 0, '{"status":"UP"}',
+                                                   '  X-Grit-Slot: blue\n  X-Grit-Revision: ' + NEW + '\n')
+            return inspect(*args, **kwargs)
+        self.d.docker = docker
+        self.d.proxy_check({'active': 'blue', 'images': {'blue': NEW}})
 
 
 if __name__ == '__main__':
