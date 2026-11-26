@@ -9,7 +9,6 @@ import re
 import subprocess
 import sys
 import time
-import urllib.request
 
 IMAGE = re.compile(r'^[a-z0-9][a-z0-9./_-]*(?::[0-9a-f]{40}|@sha256:[0-9a-f]{64})$')
 
@@ -126,16 +125,20 @@ class Deployment:
 
     def proxy_check(self, state):
         self.address(state['active'], state['images'][state['active']])
-        rendered = json.loads(self.compose('config', '--format', 'json'))
-        port = rendered['services']['proxy']['ports'][0]['published']
-        with urllib.request.urlopen('http://127.0.0.1:{}/actuator/health/readiness'.format(port), timeout=5) as response:
-            body = json.load(response)
-            if response.headers.get('X-Grit-Slot') != state['active']:
-                raise RuntimeError('Proxy upstream slot mismatch')
-            if response.headers.get('X-Grit-Revision') != state['images'][state['active']]:
-                raise RuntimeError('Proxy upstream image mismatch')
-            if body.get('status') != 'UP':
-                raise RuntimeError('Routed backend not ready')
+        # A Docker runner's loopback is not the NAS loopback. Probe the actual
+        # gateway worker inside its container, regardless of runner networking.
+        response = self.docker('exec', 'grit-backend-gateway', 'wget', '-S', '-O', '-', '-T', '5',
+                               'http://127.0.0.1:8080/actuator/health/readiness')
+        body = json.loads(response.stdout)
+        def header(name):
+            values = re.findall(r'^\s*' + re.escape(name) + r':\s*(.*?)\s*$', response.stderr, re.M | re.I)
+            return values[-1] if values else None
+        if header('X-Grit-Slot') != state['active']:
+            raise RuntimeError('Proxy upstream slot mismatch')
+        if header('X-Grit-Revision') != state['images'][state['active']]:
+            raise RuntimeError('Proxy upstream image mismatch')
+        if body.get('status') != 'UP':
+            raise RuntimeError('Routed backend not ready')
 
     def wait_proxy(self, state, bootstrap=False):
         deadline = time.monotonic() + (self.timeout if bootstrap else min(self.timeout, 15))
