@@ -65,7 +65,7 @@ jobs:
             "$(image_for loki)" -config.file=/etc/loki/config.yml -verify-config=true
           docker run --rm \
             -v "$PWD/deploy/nas/observability/tempo.yml:/etc/tempo/tempo.yml:ro" \
-            "$(image_for tempo)" -config.file=/etc/tempo/tempo.yml -config.verify
+            "$(image_for tempo)" -config.file=/etc/tempo/tempo.yml -config.verify=true
 
   ci:
     if: github.event_name == 'push'
