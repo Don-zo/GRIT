@@ -140,7 +140,7 @@ services:
       MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
       MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db,redis
       MANAGEMENT_INFO_ENV_ENABLED: 'true'
-      INFO_APP_REVISION: ${BLUE_IMAGE}
+      INFO_APP_REVISION: ${BLUE_IMAGE:-ghcr.io/don-zo/grit-backend:2c86577dadf8bf3c276354e02f0c63cf6ebca221}
       LOKI_URL: http://loki:3100/loki/api/v1/push
     extra_hosts: &id002
     - host.docker.internal:host-gateway
@@ -157,7 +157,7 @@ services:
       start_period: 60s
     networks: &id004
     - app
-    image: ${BLUE_IMAGE:?Run deploy.py bootstrap or deploy}
+    image: ${BLUE_IMAGE:-ghcr.io/don-zo/grit-backend:2c86577dadf8bf3c276354e02f0c63cf6ebca221}
     container_name: grit-backend-blue
     logging: *id001
     profiles:
@@ -197,12 +197,12 @@ services:
       MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
       MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db,redis
       MANAGEMENT_INFO_ENV_ENABLED: 'true'
-      INFO_APP_REVISION: ${GREEN_IMAGE}
+      INFO_APP_REVISION: ${GREEN_IMAGE:-ghcr.io/don-zo/grit-backend:2c86577dadf8bf3c276354e02f0c63cf6ebca221}
       LOKI_URL: http://loki:3100/loki/api/v1/push
     extra_hosts: *id002
     healthcheck: *id003
     networks: *id004
-    image: ${GREEN_IMAGE:?Run deploy.py bootstrap or deploy}
+    image: ${GREEN_IMAGE:-ghcr.io/don-zo/grit-backend:2c86577dadf8bf3c276354e02f0c63cf6ebca221}
     container_name: grit-backend-green
     logging: *id001
     profiles:
