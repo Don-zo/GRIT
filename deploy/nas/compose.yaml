@@ -1,5 +1,5 @@
+# Unified NAS stack. Backend slots are started explicitly by deploy.py.
 name: grit
-
 services:
   postgres:
     image: postgres:18.1
@@ -13,51 +13,64 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: Asia/Seoul
     command:
-      - postgres
-      - -c
-      - max_connections=60
-      - -c
-      - shared_buffers=256MB
-      - -c
-      - effective_cache_size=512MB
-      - -c
-      - checkpoint_completion_target=0.9
-      - -c
-      - wal_compression=on
+    - postgres
+    - -c
+    - max_connections=60
+    - -c
+    - shared_buffers=256MB
+    - -c
+    - effective_cache_size=512MB
+    - -c
+    - checkpoint_completion_target=0.9
+    - -c
+    - wal_compression=on
     volumes:
-      - /volume1/docker/grit/postgres:/var/lib/postgresql
+    - /volume1/docker/grit/postgres:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test:
+      - CMD-SHELL
+      - pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 20s
     networks:
-      - app
-
+    - app
+    logging: &id001
+      driver: json-file
+      options:
+        max-size: 1m
+        max-file: '2'
   redis:
     image: redis:8.4.0
     container_name: grit-redis
-    restart: unless-stopped
+    restart: always
     mem_limit: 256m
     command:
-      - redis-server
-      - --appendonly
-      - "no"
-      - --maxmemory
-      - 192mb
-      - --maxmemory-policy
-      - noeviction
+    - redis-server
+    - --appendonly
+    - 'no'
+    - --maxmemory
+    - 192mb
+    - --maxmemory-policy
+    - noeviction
+    - --save
+    - ''
     ports:
-      - "127.0.0.1:16379:6379"
+    - 127.0.0.1:16379:6379
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+      - CMD
+      - redis-cli
+      - ping
       interval: 10s
       timeout: 3s
       retries: 10
     networks:
-      - app
-
+    - app
+    logging: *id001
+    tmpfs:
+    - /data:rw,size=64m,mode=1777
   livekit:
     image: livekit/livekit-server:v1.13.1
     container_name: grit-livekit
@@ -66,15 +79,17 @@ services:
     mem_limit: 1536m
     network_mode: host
     environment:
-      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+      LIVEKIT_KEYS: '${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}'
       REDIS_HOST: 127.0.0.1:16379
       LIVEKIT_CONFIG: |
         port: 17880
+        prometheus_port: 6789
         rtc:
           tcp_port: 7881
           port_range_start: 50000
           port_range_end: 60000
           use_external_ip: true
+          advertise_internal_ip: true
         room:
           empty_timeout: 300
           departure_timeout: 20
@@ -89,7 +104,255 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-
+    logging: *id001
+  backend-blue:
+    restart: unless-stopped
+    init: true
+    mem_limit: 1024m
+    stop_grace_period: 90s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+UseG1GC
+      DB_HOST: postgres:5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LIVEKIT_URL: ${LIVEKIT_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
+      AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-3600000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-2592000000}
+      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-http://tempo:4318/v1/traces}
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: 0.1
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 30s
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db,redis
+      MANAGEMENT_INFO_ENV_ENABLED: 'true'
+      INFO_APP_REVISION: ${BLUE_IMAGE}
+      LOKI_URL: http://loki:3100/loki/api/v1/push
+    extra_hosts: &id002
+    - host.docker.internal:host-gateway
+    healthcheck: &id003
+      test:
+      - CMD
+      - curl
+      - --fail
+      - --silent
+      - http://127.0.0.1:8080/actuator/health/readiness
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 60s
+    networks: &id004
+    - app
+    image: ${BLUE_IMAGE:?Run deploy.py bootstrap or deploy}
+    container_name: grit-backend-blue
+    logging: *id001
+    profiles:
+    - backend
+  backend-green:
+    restart: unless-stopped
+    init: true
+    mem_limit: 1024m
+    stop_grace_period: 90s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+UseG1GC
+      DB_HOST: postgres:5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LIVEKIT_URL: ${LIVEKIT_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
+      AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-3600000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-2592000000}
+      OTEL_ENDPOINT: ${OTEL_ENDPOINT:-http://tempo:4318/v1/traces}
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: 0.1
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 30s
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db,redis
+      MANAGEMENT_INFO_ENV_ENABLED: 'true'
+      INFO_APP_REVISION: ${GREEN_IMAGE}
+      LOKI_URL: http://loki:3100/loki/api/v1/push
+    extra_hosts: *id002
+    healthcheck: *id003
+    networks: *id004
+    image: ${GREEN_IMAGE:?Run deploy.py bootstrap or deploy}
+    container_name: grit-backend-green
+    logging: *id001
+    profiles:
+    - backend
+  proxy:
+    image: nginx:1.30.8-alpine
+    container_name: grit-backend
+    restart: unless-stopped
+    ports:
+    - 127.0.0.1:${BACKEND_PROXY_PORT:-14036}:8080
+    volumes:
+    - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./runtime/nginx:/etc/nginx/routes:ro
+    networks:
+    - app
+    healthcheck:
+      test:
+      - CMD
+      - wget
+      - -q
+      - -O
+      - /dev/null
+      - http://127.0.0.1:8080/actuator/health/readiness
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    stop_grace_period: 90s
+    logging: *id001
+    profiles:
+    - backend
+  prometheus:
+    restart: unless-stopped
+    networks: &id005
+    - app
+    logging: *id001
+    image: prom/prometheus@sha256:e4254400b85610324913f0dc4acf92603d9984e7519414c5a12811aa6146acc3
+    container_name: prometheus
+    mem_limit: 1536m
+    command:
+    - --config.file=/etc/prometheus/prometheus.yml
+    - --storage.tsdb.path=/prometheus
+    - --storage.tsdb.retention.time=6h
+    - --storage.tsdb.retention.size=700MB
+    - --web.enable-lifecycle
+    ports:
+    - 9090:9090
+    volumes:
+    - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    tmpfs:
+    - /prometheus:rw,size=1g,uid=65534,gid=65534,mode=1777
+    extra_hosts:
+    - host.docker.internal:host-gateway
+  loki:
+    restart: unless-stopped
+    networks: *id005
+    logging: *id001
+    image: grafana/loki@sha256:191d4fdfb7264f16989f0a57f320872620a5a7c2ceeec6229212c4190ec49b86
+    container_name: loki
+    mem_limit: 1024m
+    command:
+    - -config.file=/etc/loki/config.yml
+    ports:
+    - 3101:3100
+    volumes:
+    - ./observability/loki.yml:/etc/loki/config.yml:ro
+    tmpfs:
+    - /loki:rw,size=512m,uid=10001,gid=10001,mode=0775
+  tempo:
+    restart: unless-stopped
+    networks: *id005
+    logging: *id001
+    image: grafana/tempo@sha256:cac9de2ac9f6da8efca5b64b690a7cb8c786a0c49cac7b4517dd1b0089a6c703
+    container_name: tempo
+    mem_limit: 1024m
+    command:
+    - -config.file=/etc/tempo/tempo.yml
+    ports:
+    - 3200:3200
+    - 4317:4317
+    - 4318:4318
+    volumes:
+    - ./observability/tempo.yml:/etc/tempo/tempo.yml:ro
+    tmpfs:
+    - /tmp/tempo:rw,size=512m,uid=10001,gid=10001,mode=0775
+  grafana:
+    restart: unless-stopped
+    networks: *id005
+    logging: *id001
+    image: grafana/grafana@sha256:9b031995a5483a44f80a5dd214a70cecb31448b42d765b44d3756e17b855775f
+    container_name: grafana
+    ports:
+    - 3030:3000
+    environment:
+      GF_DATABASE_URL: sqlite3://?_synchronous=NORMAL
+      GF_DATABASE_WAL: 'true'
+      GF_LOG_MODE: console
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD}
+    volumes:
+    - /volume1/docker/grafana/data:/var/lib/grafana
+    - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+  snmp-exporter:
+    restart: unless-stopped
+    networks: *id005
+    logging: *id001
+    image: prom/snmp-exporter@sha256:9b0914d7bd409cd97d5a123752b35fdc634998101ac1c51ee3cf1d3e5c8a88b3
+    container_name: snmp-exporter
+    command:
+    - --config.file=/etc/snmp_exporter/snmp.yml
+    ports:
+    - 9116:9116
+    volumes:
+    - ${SNMP_CONFIG_PATH:-/volume1/docker/snmp-exporter/snmp.yml}:/etc/snmp_exporter/snmp.yml:ro
 networks:
   app:
     name: grit-app
+x-backend:
+  restart: unless-stopped
+  init: true
+  mem_limit: 1024m
+  stop_grace_period: 90s
+  environment:
+    SPRING_PROFILES_ACTIVE: prod
+    JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+UseG1GC
+    DB_HOST: postgres:5432
+    DB_NAME: ${POSTGRES_DB}
+    DB_USER: ${POSTGRES_USER}
+    DB_PASSWORD: ${POSTGRES_PASSWORD}
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    LIVEKIT_URL: ${LIVEKIT_URL}
+    LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+    LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+    AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
+    AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
+    AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+    GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+    GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+    GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+    JWT_SECRET: ${JWT_SECRET}
+    JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-3600000}
+    JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-2592000000}
+    OTEL_ENDPOINT: ${OTEL_ENDPOINT:-http://host.docker.internal:4318/v1/traces}
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+    MANAGEMENT_TRACING_SAMPLING_PROBABILITY: 0.1
+    SERVER_SHUTDOWN: graceful
+    SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 30s
+    SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+    MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+    MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db,redis
+    MANAGEMENT_INFO_ENV_ENABLED: 'true'
+  extra_hosts: *id002
+  healthcheck: *id003
+  networks: *id004

@@ -13,6 +13,7 @@ umask 077
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
 LIVEKIT_API_KEY="API$(openssl rand -hex 8)"
 LIVEKIT_API_SECRET=$(openssl rand -hex 32)
+GRAFANA_ADMIN_PASSWORD=$(openssl rand -hex 32)
 JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n')
 
 cat > "$ENV_FILE" <<EOF
@@ -37,7 +38,9 @@ JWT_SECRET=$JWT_SECRET
 JWT_ACCESS_EXPIRATION=3600000
 JWT_REFRESH_EXPIRATION=2592000000
 
-OTEL_ENDPOINT=http://host.docker.internal:4318/v1/traces
+OTEL_ENDPOINT=http://tempo:4318/v1/traces
+GRAFANA_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD
+SNMP_CONFIG_PATH=/volume1/docker/snmp-exporter/snmp.yml
 EOF
 
 chmod 600 "$ENV_FILE"

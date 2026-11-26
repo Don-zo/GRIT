@@ -46,9 +46,9 @@ class Deployment:
         self.images = self.runtime / 'images.env'
         self.route = self.runtime / 'nginx' / 'active.conf'
         self.timeout, self.drain_timeout, self.observe = timeout, drain_timeout, observe
-        self.base = ['docker', 'compose', '--project-name', 'grit-backend',
+        self.base = ['docker', 'compose', '--project-name', 'grit', '--profile', 'backend',
                      '--env-file', str(self.root / '.env'), '--env-file', str(self.images),
-                     '-f', str(self.root / 'compose.backend.yaml')]
+                     '-f', str(self.root / 'compose.yaml')]
 
     def docker(self, *args, check=True):
         return subprocess.run(['docker', *args], check=check, text=True, capture_output=True)

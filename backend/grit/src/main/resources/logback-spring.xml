@@ -24,7 +24,7 @@
       </message>
 
       <http>
-        <url>http://192.168.32.152:3101/loki/api/v1/push</url>
+        <url>${LOKI_URL:-http://loki:3100/loki/api/v1/push}</url>
         <connectTimeoutMs>3000</connectTimeoutMs>
         <requestTimeoutMs>5000</requestTimeoutMs>
       </http>

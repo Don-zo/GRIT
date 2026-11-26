@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: livekit
+    metrics_path: /metrics
+    static_configs:
+      - targets: [host.docker.internal:6789]
+  - job_name: spring-app
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [grit-backend:8080]
+  - job_name: synology-snmp
+    scrape_interval: 1m
+    metrics_path: /snmp
+    params:
+      module: [synology]
+    static_configs:
+      - targets: [192.168.32.152]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: snmp-exporter:9116

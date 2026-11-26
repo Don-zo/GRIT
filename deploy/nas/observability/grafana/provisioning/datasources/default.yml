@@ -1,0 +1,18 @@
+apiVersion: 1
+datasources:
+  - name: prometheus
+    uid: cfai7mvixryf4b
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+  - name: loki
+    uid: dfe10yps4bnk0b
+    type: loki
+    access: proxy
+    url: http://loki:3100
+  - name: tempo
+    uid: cfg63jwv30j5sb
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
