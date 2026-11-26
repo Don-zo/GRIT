@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - dev/backend
+  pull_request:
+    paths:
+      - "deploy/nas/**"
+      - ".github/workflows/backend-build-deploy.yml"
 
 concurrency:
   group: backend-production
@@ -17,7 +21,55 @@ env:
   IMAGE_NAME: ghcr.io/don-zo/grit-backend
 
 jobs:
+  deployment-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test deployment failure and recovery paths
+        run: python3 -m unittest discover -s deploy/nas/tests -v
+      - name: Validate Compose and Nginx
+        env:
+          BLUE_IMAGE: ghcr.io/don-zo/grit-backend:1111111111111111111111111111111111111111
+          GREEN_IMAGE: ghcr.io/don-zo/grit-backend:2222222222222222222222222222222222222222
+        run: |
+          set -Eeuo pipefail
+          docker compose --env-file deploy/nas/.env.example -f deploy/nas/compose.yaml config --quiet
+          mkdir -p "$RUNNER_TEMP/nginx-route"
+          python3 - "$RUNNER_TEMP/nginx-route/active.conf" <<'PYTHON'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, 'deploy/nas')
+          from deploy import Deployment
+          Path(sys.argv[1]).write_text(Deployment.route_text(None, 'blue', 'ghcr.io/don-zo/grit-backend:' + '1' * 40))
+          PYTHON
+          docker run --rm --add-host backend-blue:127.0.0.1 \
+            -v "$PWD/deploy/nas/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" \
+            -v "$RUNNER_TEMP/nginx-route:/etc/nginx/routes:ro" \
+            nginx:1.30.8-alpine nginx -t
+
+      - name: Validate observability configurations
+        env:
+          BLUE_IMAGE: ghcr.io/don-zo/grit-backend:1111111111111111111111111111111111111111
+          GREEN_IMAGE: ghcr.io/don-zo/grit-backend:2222222222222222222222222222222222222222
+        run: |
+          set -Eeuo pipefail
+          docker compose --profile backend --env-file deploy/nas/.env.example -f deploy/nas/compose.yaml config --format json > "$RUNNER_TEMP/grit-stack.json"
+          image_for() {
+            python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["services"][sys.argv[2]]["image"])' "$RUNNER_TEMP/grit-stack.json" "$1"
+          }
+          docker run --rm --entrypoint /bin/promtool \
+            -v "$PWD/deploy/nas/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
+            "$(image_for prometheus)" check config /etc/prometheus/prometheus.yml
+          docker run --rm \
+            -v "$PWD/deploy/nas/observability/loki.yml:/etc/loki/config.yml:ro" \
+            "$(image_for loki)" -config.file=/etc/loki/config.yml -verify-config=true
+          docker run --rm \
+            -v "$PWD/deploy/nas/observability/tempo.yml:/etc/tempo/tempo.yml:ro" \
+            "$(image_for tempo)" -config.file=/etc/tempo/tempo.yml -config.verify=true
+
   ci:
+    if: github.event_name == 'push'
+    needs: deployment-checks
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -85,21 +137,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install deployment definition
+      - name: Install backend deployment tool
         shell: bash
         run: |
           set -Eeuo pipefail
           target=/volume1/docker/grit
-          test -f "$target/.env" || {
-            echo "Missing $target/.env; run deploy/nas/init-env.sh on the NAS first." >&2
+          test -f "$target/.env"
+          test -f "$target/runtime/state.json" || {
+            echo "Complete the one-time blue/green bootstrap with deploy.py before enabling CD." >&2
             exit 1
           }
-          if grep -Eq '(^|=)change-me($|\.)' "$target/.env"; then
-            echo "Replace every change-me value in $target/.env before deployment." >&2
-            exit 1
-          fi
-          cp deploy/nas/compose.yaml "$target/compose.yaml"
-          cp deploy/nas/migrate-postgres.sh "$target/migrate-postgres.sh"
+          for definition in compose.yaml nginx/nginx.conf observability/prometheus.yml observability/loki.yml observability/tempo.yml observability/grafana/provisioning/datasources/default.yml; do
+            cmp -s "deploy/nas/$definition" "$target/$definition" || {
+              echo "Deployment definition differs: $definition. Apply its reviewed migration first." >&2
+              exit 1
+            }
+          done
+          cp deploy/nas/deploy.py "$target/deploy.py"
 
       - name: Deploy exact commit image
         shell: bash
@@ -107,36 +161,4 @@ jobs:
           BACKEND_IMAGE: ${{ needs.ci.outputs.image }}
         run: |
           set -Eeuo pipefail
-          target=/volume1/docker/grit
-          candidate="$target/release.env.candidate"
-          current="$target/release.env"
-
-          printf 'BACKEND_IMAGE=%s\n' "$BACKEND_IMAGE" > "$candidate"
-          chmod 600 "$candidate"
-
-          compose_candidate=(
-            docker compose
-            --project-name grit
-            --env-file "$target/.env"
-            --env-file "$candidate"
-            -f "$target/compose.yaml"
-          )
-
-          "${compose_candidate[@]}" config --quiet
-          "${compose_candidate[@]}" pull backend
-
-          if ! "${compose_candidate[@]}" up -d --wait --wait-timeout 180; then
-            echo "Deployment failed; restoring the previously recorded backend image." >&2
-            if [[ -f "$current" ]]; then
-              docker compose \
-                --project-name grit \
-                --env-file "$target/.env" \
-                --env-file "$current" \
-                -f "$target/compose.yaml" \
-                up -d --wait --wait-timeout 180 backend
-            fi
-            rm -f "$candidate"
-            exit 1
-          fi
-
-          mv "$candidate" "$current"
+          python3 /volume1/docker/grit/deploy.py deploy "$BACKEND_IMAGE"
