@@ -23,6 +23,11 @@ def atomic(path, content):
         os.fsync(stream.fileno())
     os.chmod(tmp, 0o600)
     tmp.replace(path)
+    directory = os.open(str(path.parent), os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
 
 
 class Deployment:
