@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import Mock
 
 spec = importlib.util.spec_from_file_location('deployment', Path(__file__).parents[1] / 'deploy.py')
 module = importlib.util.module_from_spec(spec)
@@ -25,6 +26,9 @@ class FakeDeployment(module.Deployment):
     def compose(self, *args):
         self.events.append(('compose', args))
         return ''
+
+    def address(self, slot, image):
+        return "172.18.0.2" if slot == "blue" else "172.18.0.3"
 
     def wait_ready(self, slot, image):
         self.events.append(('ready', slot))
@@ -131,6 +135,49 @@ class DeploymentTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.d.deploy('ghcr.io/don-zo/grit-backend:latest', bootstrap=True)
         self.assertFalse(self.d.journal.exists())
+
+
+class CandidateIdentityTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.d = module.Deployment(self.temp.name)
+        self.container = {'State': {'Running': True}, 'Image': 'sha256:expected',
+                          'NetworkSettings': {'Networks': {'grit-app': {'IPAddress': '172.18.0.2'}}}}
+        self.calls = []
+
+        def docker(*args, **kwargs):
+            self.calls.append(args)
+            body = self.container if args[0] == 'container' else {'Id': 'sha256:expected'}
+            return subprocess.CompletedProcess(args, 0, json.dumps([body]), '')
+        self.d.docker = docker
+
+    def tearDown(self):
+        self.d.lock.close()
+        self.temp.cleanup()
+
+    def test_checks_immutable_running_image_before_probing_http(self):
+        self.container['Image'] = 'sha256:different'
+        with self.assertRaisesRegex(RuntimeError, 'image mismatch'):
+            self.d.candidate_ready('blue', NEW)
+        self.assertFalse(any(call[0] == 'exec' for call in self.calls))
+
+    def test_stopped_container_cannot_pass_identity_check(self):
+        self.container['State']['Running'] = False
+        with self.assertRaisesRegex(RuntimeError, 'image mismatch'):
+            self.d.address('blue', NEW)
+
+    def test_proxy_rejects_response_from_unexpected_upstream(self):
+        self.d.compose = lambda *args: json.dumps({'services': {'proxy': {'ports': [{'published': '14036'}]}}})
+        response = Mock()
+        response.read.return_value = b'{"status":"UP"}'
+        response.headers = {'X-Grit-Slot': 'invalid', 'X-Grit-Revision': 'invalid'}
+        context = Mock()
+        context.__enter__ = Mock(return_value=response)
+        context.__exit__ = Mock(return_value=False)
+        from unittest.mock import patch
+        with patch.object(module.urllib.request, 'urlopen', return_value=context):
+            with self.assertRaisesRegex(RuntimeError, 'upstream slot mismatch'):
+                self.d.proxy_check({'active': 'blue', 'images': {'blue': NEW}})
 
 
 if __name__ == '__main__':
